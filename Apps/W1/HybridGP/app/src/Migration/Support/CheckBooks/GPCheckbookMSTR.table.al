@@ -184,6 +184,7 @@ table 40099 "GP Checkbook MSTR"
         BankAccount: Record "Bank Account";
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
     begin
+        GPCompanyMigrationSettings.FindFirst();
         if FindSet() then
             repeat
                 if not BankAccount.Get(CHEKBKID) then begin
