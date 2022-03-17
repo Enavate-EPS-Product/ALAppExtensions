@@ -182,6 +182,7 @@ table 40099 "GP Checkbook MSTR"
     procedure MoveStagingData()
     var
         BankAccount: Record "Bank Account";
+        CheckBookTransactions: Record "GP Checkbook Transactions";
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
     begin
         GPCompanyMigrationSettings.FindFirst();
@@ -198,6 +199,8 @@ table 40099 "GP Checkbook MSTR"
                         BankAccount."Bank Acc. Posting Group" := GetBankAccPostingGroup(ACTINDX);
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
+
+                        CheckBookTransactions.MoveStagingData(CHEKBKID, GetAccountNumber(ACTINDX));
                     end;
                 end;
             until Next() = 0;
@@ -237,6 +240,16 @@ table 40099 "GP Checkbook MSTR"
             BankAccountPostingGroup."G/L Account No." := CopyStr(GPAccount.AcctNum, 1, 20);
             BankAccountPostingGroup.Insert(true);
             exit(BankAccountPostingGroup.Code);
+        end;
+    end;
+
+    local procedure GetAccountNumber(AcctIndex: Integer): Code[20]
+    var
+        BankAccountPostingGroup: Record "Bank Account Posting Group";
+        GPAccount: Record "GP Account";
+    begin
+        if GPAccount.Get(AcctIndex) then begin
+            exit(CopyStr(GPAccount.AcctNum, 1, 20));
         end;
     end;
 

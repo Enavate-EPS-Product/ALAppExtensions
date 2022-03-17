@@ -216,8 +216,59 @@ table 40101 "GP Checkbook Transactions"
         }
     }
 
-    procedure MoveStagingData(CheckbookId: Code[15]; PostingGroup: Code[20])
-    begin
+    var
+        PostingGroupCodeTxt: Label 'GP', Locked = true;
+        BankBatchNameTxt: Label 'GPBANK', Locked = true;
 
+
+    procedure MoveStagingData(BankAccount: Text; BankAccountNo: Code[20])
+    var
+        GenJournalLine: Record "Gen. Journal Line";
+        DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
+        Amount: Decimal;
+    begin
+        SetRange(CHEKBKID, BankAccount);
+        if FindSet() then
+            repeat
+                /*  
+                    GP CMTrxType we support
+                    -- 2 = cash receipt
+                    -- 3 = payment
+                */
+                if CMTrxType = 2 then begin
+                    Amount := TRXAMNT;
+                end else begin
+                    Amount := -TRXAMNT;
+                end;
+
+                DataMigrationFacadeHelper.CreateGeneralJournalBatchIfNeeded(CopyStr(BankBatchNameTxt, 1, 7), '', '');
+
+                DataMigrationFacadeHelper.CreateGeneralJournalLine(GenJournalLine,
+                    BankBatchNameTxt,
+                    Format(CMRECNUM),
+                    DSCRIPTN,
+                    GenJournalLine."Account Type"::"Bank Account",
+                    BankAccountNo,
+                    TRXDATE,
+                    0D,
+                    Amount,
+                    Amount,
+                    '',
+                    ''
+                );
+
+                GenJournalLine.Validate("Bal. Account Type", GenJournalLine."Bal. Account Type"::"Bank Account");
+                if CMTrxType = 2 then begin
+                    GenJournalLine.Validate("Document Type", GenJournalLine."Document Type"::" ");
+                    GenJournalLine.Validate("Bal. Account Type", GenJournalLine."Bal. Account Type"::Customer);
+                    GenJournalLine.Validate("Source Code", 'CASHRECJNL');
+                end else begin
+                    GenJournalLine.Validate("Document Type", GenJournalLine."Document Type"::Payment);
+                    GenJournalLine.Validate("Bal. Account Type", GenJournalLine."Bal. Account Type"::Vendor);
+                    GenJournalLine.Validate("Source Code", 'PAYMENTJNL');
+                end;
+                GenJournalLine.Modify(true);
+
+            until Next() = 0;
     end;
 }

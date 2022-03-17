@@ -9,11 +9,17 @@ codeunit 139700 "GP Checkbook Tests"
     var
         Assert: Codeunit Assert;
         GPCheckbookMSTRTable: Record "GP Checkbook MSTR";
+        GPCheckbookTransactionsTable: Record "GP Checkbook Transactions";
         BankAccountPostingGroup: Record "Bank Account Posting Group";
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
         BankAccount: Record "Bank Account";
         InvalidBankAccountMsg: Label '%1 should not have been created.', Comment = '%1 - bank account no.', Locked = true;
         MissingBankAccountMsg: Label '%1 should have been created.', Comment = '%1 - bank account no.', Locked = true;
+        MyBankStr1: Label 'MyBank01', Comment = 'Bank name', Locked = true;
+        MyBankStr2: Label 'MyBank02', Comment = 'Bank name', Locked = true;
+        MyBankStr3: Label 'MyBank03', Comment = 'Bank name', Locked = true;
+        MyBankStr4: Label 'MyBank04', Comment = 'Bank name', Locked = true;
+        MyBankStr5: Label 'MyBank05', Comment = 'Bank name', Locked = true;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -58,25 +64,26 @@ codeunit 139700 "GP Checkbook Tests"
 
         // [WHEN] Checkbook migration code is called
         Migrate();
+        HelperFunctions.PostGLTransactions();
 
         // [THEN] Active Bank Accounts are created
         Assert.RecordCount(BankAccount, 3);
 
         // [THEN] Active Bank Accounts are created with correct settings
-        BankAccount.SetRange("No.", 'MyBank01');
-        Assert.IsFalse(BankAccount.FindFirst(), StrSubstNo(InvalidBankAccountMsg, 'MyBank01'));
+        BankAccount.SetRange("No.", MyBankStr1);
+        Assert.IsFalse(BankAccount.FindFirst(), StrSubstNo(InvalidBankAccountMsg, MyBankStr1));
 
-        BankAccount.SetRange("No.", 'MyBank02');
-        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, 'MyBank02'));
+        BankAccount.SetRange("No.", MyBankStr2);
+        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, MyBankStr2));
 
-        BankAccount.SetRange("No.", 'MyBank03');
-        Assert.IsFalse(BankAccount.FindFirst(), StrSubstNo(InvalidBankAccountMsg, 'MyBank03'));
+        BankAccount.SetRange("No.", MyBankStr3);
+        Assert.IsFalse(BankAccount.FindFirst(), StrSubstNo(InvalidBankAccountMsg, MyBankStr3));
 
-        BankAccount.SetRange("No.", 'MyBank04');
-        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, 'MyBank04'));
+        BankAccount.SetRange("No.", MyBankStr4);
+        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, MyBankStr4));
 
-        BankAccount.SetRange("No.", 'MyBank05');
-        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, 'MyBank05'));
+        BankAccount.SetRange("No.", MyBankStr5);
+        Assert.IsTrue(BankAccount.FindFirst(), StrSubstNo(MissingBankAccountMsg, MyBankStr5));
     end;
 
     local procedure ClearTables()
@@ -103,32 +110,42 @@ codeunit 139700 "GP Checkbook Tests"
     local procedure CreateCheckbookData()
     begin
         GPCheckbookMSTRTable.Init();
-        GPCheckbookMSTRTable.CHEKBKID := 'MyBank01';
+        GPCheckbookMSTRTable.CHEKBKID := MyBankStr1;
         GPCheckbookMSTRTable.INACTIVE := true;
         GPCheckbookMSTRTable.Insert(true);
 
         GPCheckbookMSTRTable.Reset();
         GPCheckbookMSTRTable.Init();
-        GPCheckbookMSTRTable.CHEKBKID := 'MyBank02';
+        GPCheckbookMSTRTable.CHEKBKID := MyBankStr2;
         GPCheckbookMSTRTable.INACTIVE := false;
         GPCheckbookMSTRTable.Insert(true);
 
         GPCheckbookMSTRTable.Reset();
         GPCheckbookMSTRTable.Init();
-        GPCheckbookMSTRTable.CHEKBKID := 'MyBank03';
+        GPCheckbookMSTRTable.CHEKBKID := MyBankStr3;
         GPCheckbookMSTRTable.INACTIVE := true;
         GPCheckbookMSTRTable.Insert(true);
 
         GPCheckbookMSTRTable.Reset();
         GPCheckbookMSTRTable.Init();
-        GPCheckbookMSTRTable.CHEKBKID := 'MyBank04';
+        GPCheckbookMSTRTable.CHEKBKID := MyBankStr4;
         GPCheckbookMSTRTable.INACTIVE := false;
         GPCheckbookMSTRTable.Insert(true);
 
         GPCheckbookMSTRTable.Reset();
         GPCheckbookMSTRTable.Init();
-        GPCheckbookMSTRTable.CHEKBKID := 'MyBank05';
+        GPCheckbookMSTRTable.CHEKBKID := MyBankStr5;
         GPCheckbookMSTRTable.INACTIVE := false;
         GPCheckbookMSTRTable.Insert(true);
+
+        // Transactions
+        GPCheckbookTransactionsTable.Init();
+        GPCheckbookTransactionsTable.CMRECNUM := 497.00;
+        GPCheckbookTransactionsTable.CHEKBKID := MyBankStr1;
+        GPCheckbookTransactionsTable.CMTrxType := 3;
+        GPCheckbookTransactionsTable.TRXDATE := 20230801D;
+        GPCheckbookTransactionsTable.TRXAMNT := -395.59;
+        GPCheckbookTransactionsTable.Insert(true);
+
     end;
 }

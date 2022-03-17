@@ -63,6 +63,7 @@ Codeunit 4037 "Helper Functions"
         DocNoOutofBalanceMsg: Label 'Document No. %1 is out of balance by %2. Transactions will not be created. Please check the amount in the import file.', Comment = '%1 = Balance Amount', Locked = true;
         CustomerBatchNameTxt: Label 'GPCUST', Locked = true;
         VendorBatchNameTxt: Label 'GPVEND', Locked = true;
+        BankBatchNameTxt: Label 'GPBANK', Locked = true;
         GlDocNoTxt: Label 'G00001', Locked = true;
         MigrationTypeTxt: Label 'Great Plains';
         ImportedEntityTxt: Label 'Imported %1 data file.', Locked = true;
@@ -1329,6 +1330,17 @@ Codeunit 4037 "Helper Functions"
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10));
         end;
 
+        OnSkipPostingBankBatches(SkipPosting);
+        if not SkipPosting then begin
+            // Post the Bank Batch, if created...
+            JournalBatchName := BankBatchNameTxt;
+            GenJnlLine.Reset();
+            GenJnlLine.SetRange("Journal Template Name", 'GENERAL');
+            GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+            if not GenJnlLine.IsEmpty() then
+                PostGLBatch(CopyStr(JournalBatchName, 1, 10));
+        end;
+
         // Remove posted batches
         RemoveBatches();
         DurationAsInt := CurrentDateTime() - StartTime;
@@ -1893,6 +1905,11 @@ Codeunit 4037 "Helper Functions"
 
     [IntegrationEvent(false, false)]
     local procedure OnSkipPostingVendorBatches(var SkipPosting: Boolean)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnSkipPostingBankBatches(var SkipPosting: Boolean)
     begin
     end;
 
