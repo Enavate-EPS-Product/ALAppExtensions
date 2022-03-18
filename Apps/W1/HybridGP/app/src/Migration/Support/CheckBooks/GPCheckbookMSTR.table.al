@@ -200,7 +200,7 @@ table 40099 "GP Checkbook MSTR"
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
 
-                        CheckBookTransactions.MoveStagingData(CHEKBKID, GetAccountNumber(ACTINDX));
+                        CheckBookTransactions.MoveStagingData(CHEKBKID, BankAccount."Bank Account No.");
                     end;
                 end;
             until Next() = 0;
