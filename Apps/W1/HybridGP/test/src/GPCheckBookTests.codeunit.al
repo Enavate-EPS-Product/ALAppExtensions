@@ -4,6 +4,7 @@ codeunit 139700 "GP Checkbook Tests"
 
     EventSubscriberInstance = Manual;
     Subtype = Test;
+    Permissions = tableData "Bank Account Ledger Entry" = rimd;
     TestPermissions = Disabled;
 
     var
@@ -38,6 +39,9 @@ codeunit 139700 "GP Checkbook Tests"
         // [GIVEN] There are no records in the BankAcount table
         ClearTables();
         GenJournalLine.DeleteAll();
+        BankAccountLedger.Reset();
+        BankAccountLedger.SetFilter("Bank Account No.", '%1|%2|%3|%4|%5', MyBankStr1, MyBankStr2, MyBankStr3, MyBankStr4, MyBankStr5);
+        BankAccountLedger.DeleteAll();
 
         // [GIVEN] Some records are created in the staging table
         CreateCheckbookData();
@@ -94,6 +98,8 @@ codeunit 139700 "GP Checkbook Tests"
         // [GIVEN] There are no records in the BankAcount table
         ClearTables();
         GenJournalLine.DeleteAll();
+        BankAccountLedger.Reset();
+        BankAccountLedger.SetFilter("Bank Account No.", '%1|%2|%3|%4|%5', MyBankStr1, MyBankStr2, MyBankStr3, MyBankStr4, MyBankStr5);
         BankAccountLedger.DeleteAll();
 
         // [GIVEN] Some records are created in the staging table
