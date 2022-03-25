@@ -216,52 +216,99 @@ table 40101 "GP Checkbook Transactions"
         }
     }
 
-    var
-        PostingGroupCodeTxt: Label 'GP', Locked = true;
-        BankBatchNameTxt: Label 'GPBANK', Locked = true;
 
-
-    procedure MoveStagingData(BankAccount: Text; BankAccountNo: Code[20])
+    procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
         GenJournalLine: Record "Gen. Journal Line";
         GenJournalBatch: Record "Gen. Journal Batch";
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
-        Amount: Decimal;
+        AccountNo: Code[20];
     begin
-        SetRange(CHEKBKID, BankAccount);
+        SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
             repeat
-                /*  
-                    GP CMTrxType we support
-                    -- 2 = cash receipt
-                    -- 3 = payment
-                */
                 if CMTrxType = 2 then begin
-                    Amount := TRXAMNT;
+                    AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode) /* GL Account Number based off of account index */
                 end else begin
-                    Amount := -TRXAMNT;
+                    AccountNo := CMLinkID;  /* Vendor ID */
                 end;
-
-                CreateGeneralJournalBatchIfNeeded(CopyStr(BankBatchNameTxt, 1, 7), CMTrxType);
 
                 CreateGeneralJournalLine(GenJournalLine,
                     Format(CMRECNUM),
                     DSCRIPTN,
                     TRXDATE,
+                    AccountNo,
+                    TRXAMNT,
                     BankAccountNo,
-                    Amount,
                     CMTrxType
                 );
 
             until Next() = 0;
     end;
 
-    local procedure CreateGeneralJournalBatchIfNeeded(GeneralJournalBatchCode: Code[10]; TrxType: Integer)
+    procedure CreateGeneralJournalLine(var GenJournalLine: Record "Gen. Journal Line"; DocumentNo: Code[20]; Description: Text[50]; PostingDate: Date; AccountNo: Code[20]; TrxAmount: Decimal; BankAccountNo: Code[20]; CMTrxType: Integer)
+    var
+        GenJournalLineCurrent: Record "Gen. Journal Line";
+        GenJournalTemplate: Record "Gen. Journal Template";
+        JournalTemplateName: Code[10];
+        AccountType: Enum "Gen. Journal Account Type";
+        DocumentType: Enum "Gen. Journal Document Type";
+        LineNum: Integer;
+    begin
+        CreateGeneralJournalBatchIfNeeded(CMTrxType);
+
+        /*  
+            GP CMTrxType we support
+            -- 2 = cash receipt
+            -- 3 = payment
+        */
+        if CMTrxType = 2 then begin
+            DocumentType := DocumentType::" ";
+            JournalTemplateName := 'CASHRCPT';
+            AccountType := AccountType::"G/L Account"
+            /* AccountNo will be GL Account number -- offset account */
+        end else begin
+            DocumentType := DocumentType::Payment;
+            JournalTemplateName := 'PAYMENT';
+            AccountType := AccountType::Vendor;
+            /* AccountNo will be Vendor account number */
+        end;
+
+        GenJournalLineCurrent.SetRange("Journal Template Name", JournalTemplateName);
+        GenJournalLineCurrent.SetRange("Journal Batch Name", 'GPBANK');
+        if GenJournalLineCurrent.FindLast then
+            LineNum := GenJournalLineCurrent."Line No." + 10000
+        else
+            LineNum := 10000;
+
+        GenJournalTemplate.Get(JournalTemplateName);
+
+        GenJournalLine.Init();
+        GenJournalLine.SetHideValidation(true);
+        GenJournalLine.Validate("Posting Date", PostingDate);
+        GenJournalLine.Validate("Document Type", DocumentType);
+        GenJournalLine.Validate("Document No.", DocumentNo);
+        GenJournalLine.Validate("Account Type", AccountType);
+        GenJournalLine.Validate("Account No.", AccountNo);
+        GenJournalLine.Validate(Description, Description);
+        GenJournalLine.Validate(Amount, TrxAmount);
+        GenJournalLine.Validate("Bal. Account Type", GenJournalLine."Bal. Account Type"::"Bank Account");
+        GenJournalLine.Validate("Bal. Account No.", BankAccountNo);
+
+        GenJournalLine.Validate("Source Code", GenJournalTemplate."Source Code");
+        GenJournalLine.Validate("Journal Template Name", JournalTemplateName);
+        GenJournalLine.Validate("Journal Batch Name", 'GPBANK');
+        GenJournalLine.Validate("Line No.", LineNum);
+        GenJournalLine.Validate("Document Date", PostingDate);
+        GenJournalLine.Insert(true);
+    end;
+
+    local procedure CreateGeneralJournalBatchIfNeeded(TrxType: Integer)
     var
         GenJournalBatch: Record "Gen. Journal Batch";
         TemplateName: Code[10];
     begin
-        GenJournalBatch.SetRange(Name, GeneralJournalBatchCode);
+        GenJournalBatch.SetRange(Name, 'GPBANK');
 
         if TrxType = 2 then begin
             GenJournalBatch.SetRange("Journal Template Name", 'CASHRCPT');
@@ -273,69 +320,28 @@ table 40101 "GP Checkbook Transactions"
 
         if not GenJournalBatch.FindFirst then begin
             GenJournalBatch.Init();
-            GenJournalBatch.Validate(Name, GeneralJournalBatchCode);
+            GenJournalBatch.Validate(Name, 'GPBANK');
 
             if TrxType = 2 then begin
                 GenJournalBatch.Validate("Journal Template Name", 'CASHRCPT');
-            end else begin
-                GenJournalBatch.Validate("Journal Template Name", 'PAYMENT');
-            end;
-
-            GenJournalBatch.SetupNewBatch;
-
-            if TrxType = 2 then begin
                 GenJournalBatch.Validate("No. Series", 'GJNL-RCPT');
             end else begin
+                GenJournalBatch.Validate("Journal Template Name", 'PAYMENT');
                 GenJournalBatch.Validate("No. Series", 'GJNL-PMT');
             end;
 
-            GenJournalBatch.Validate(Name, GeneralJournalBatchCode);
-            GenJournalBatch.Validate(Description, GeneralJournalBatchCode);
+            GenJournalBatch.SetupNewBatch;
             GenJournalBatch.Insert(true);
         end;
     end;
 
-    procedure CreateGeneralJournalLine(var GenJournalLine: Record "Gen. Journal Line"; DocumentNo: Code[20]; Description: Text[50]; PostingDate: Date; AccountNo: Code[20]; Amount: Decimal; CMTrxType: Integer)
+    local procedure GetBankAccPostingAccountNo(BankAccPostingGroup: Code[20]): Code[20]
     var
-        GenJournalLineCurrent: Record "Gen. Journal Line";
-        GenJournalTemplate: Record "Gen. Journal Template";
-        JournalTemplateName: Code[10];
-        LineNum: Integer;
+        BankAccountPostingGroup: Record "Bank Account Posting Group";
     begin
-        if CMTrxType = 2 then begin
-            JournalTemplateName := 'CASHRCPT';
-        end else begin
-            JournalTemplateName := 'PAYMENT';
-        end;
+        if BankAccountPostingGroup.Get(BankAccPostingGroup) then
+            exit(BankAccountPostingGroup."G/L Account No.");
 
-        GenJournalLineCurrent.SetRange("Journal Batch Name", BankBatchNameTxt);
-        GenJournalLineCurrent.SetRange("Journal Template Name", JournalTemplateName);
-        if GenJournalLineCurrent.FindLast then
-            LineNum := GenJournalLineCurrent."Line No." + 10000
-        else
-            LineNum := 10000;
-
-        GenJournalTemplate.Get(JournalTemplateName);
-
-        GenJournalLine.Init();
-        GenJournalLine.SetHideValidation(true);
-        GenJournalLine.Validate("Source Code", GenJournalTemplate."Source Code");
-        GenJournalLine.Validate("Journal Template Name", JournalTemplateName);
-        GenJournalLine.Validate("Journal Batch Name", BankBatchNameTxt);
-        GenJournalLine.Validate("Line No.", LineNum);
-        GenJournalLine.Validate("Account Type", GenJournalLine."Account Type"::"Bank Account");
-        GenJournalLine.Validate("Document No.", DocumentNo);
-        GenJournalLine.Validate(Description, Description);
-        GenJournalLine.Validate("Document Date", PostingDate);
-        GenJournalLine.Validate("Posting Date", PostingDate);
-        GenJournalLine.Validate("Account No.", AccountNo);
-        GenJournalLine.Validate(Amount, Amount);
-        GenJournalLine.Validate("Amount (LCY)", Amount);
-        GenJournalLine.Validate("Bal. Gen. Posting Type", GenJournalLine."Bal. Gen. Posting Type"::" ");
-        GenJournalLine.Validate("Bal. Gen. Bus. Posting Group", '');
-        GenJournalLine.Validate("Bal. Gen. Prod. Posting Group", '');
-        GenJournalLine.Validate("Bal. VAT Prod. Posting Group", '');
-        GenJournalLine.Validate("Bal. VAT Bus. Posting Group", '');
-        GenJournalLine.Insert(true);
+        exit('InvalidAccount');
     end;
 }

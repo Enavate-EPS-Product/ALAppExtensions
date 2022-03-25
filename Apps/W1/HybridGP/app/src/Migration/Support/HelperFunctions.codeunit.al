@@ -1335,10 +1335,16 @@ Codeunit 4037 "Helper Functions"
             // Post the Bank Batch, if created...
             JournalBatchName := BankBatchNameTxt;
             GenJnlLine.Reset();
-            GenJnlLine.SetRange("Journal Template Name", 'GENERAL');
+            GenJnlLine.SetRange("Journal Template Name", 'CASHRCPT');
             GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
             if not GenJnlLine.IsEmpty() then
-                PostGLBatch(CopyStr(JournalBatchName, 1, 10));
+                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'CASHRCPT');
+
+            GenJnlLine.Reset();
+            GenJnlLine.SetRange("Journal Template Name", 'PAYMENT');
+            GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+            if not GenJnlLine.IsEmpty() then
+                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'PAYMENT');
         end;
 
         // Remove posted batches
@@ -1348,15 +1354,20 @@ Codeunit 4037 "Helper Functions"
     end;
 
     procedure PostGLBatch(JournalBatchName: Code[10])
+    begin
+        PostGLBatch(JournalBatchName, 'GENERAL');
+    end;
+
+    procedure PostGLBatch(JournalBatchName: Code[10]; JournalTemplateName: Code[10])
     var
         GenJnlLine: Record "Gen. Journal Line";
         TotalBalance: Decimal;
     begin
         GenJnlLine.Reset();
-        GenJnlLine.SetRange("Journal Template Name", 'GENERAL');
+        GenJnlLine.SetRange("Journal Template Name", JournalTemplateName);
         GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
-        // Do not care about balances for Customer and Vendor batches
-        if (JournalBatchName <> CustomerBatchNameTxt) and (JournalBatchName <> VendorBatchNameTxt) then begin
+        // Do not care about balances for Customer, Vendor, and Bank batches
+        if (JournalBatchName <> CustomerBatchNameTxt) and (JournalBatchName <> VendorBatchNameTxt) and (JournalBatchName <> BankBatchNameTxt) then begin
             repeat
                 TotalBalance := TotalBalance + GenJnlLine.Amount;
             until GenJnlLine.Next() = 0;
@@ -1422,6 +1433,26 @@ Codeunit 4037 "Helper Functions"
         If GenJnlLine.Count() = 1 then begin
             GenJnlLine.DeleteAll();
             if GenJnlBatch.Get('GENERAL', JournalBatchName) then
+                GenJnlBatch.Delete();
+        end;
+
+        // Bank Batch
+        JournalBatchName := BankBatchNameTxt;
+        GenJnlLine.Reset();
+        GenJnlLine.SetRange("Journal Template Name", 'CASHRCPT');
+        GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+        If GenJnlLine.Count() = 1 then begin
+            GenJnlLine.DeleteAll();
+            if GenJnlBatch.Get('CASHRCPT', JournalBatchName) then
+                GenJnlBatch.Delete();
+        end;
+
+        GenJnlLine.Reset();
+        GenJnlLine.SetRange("Journal Template Name", 'PAYMENT');
+        GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+        If GenJnlLine.Count() = 1 then begin
+            GenJnlLine.DeleteAll();
+            if GenJnlBatch.Get('PAYMENT', JournalBatchName) then
                 GenJnlBatch.Delete();
         end;
     end;
