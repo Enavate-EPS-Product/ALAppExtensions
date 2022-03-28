@@ -222,8 +222,6 @@ table 40101 "GP Checkbook Transactions"
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
         GenJournalLine: Record "Gen. Journal Line";
-        GenJournalBatch: Record "Gen. Journal Batch";
-        DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
         AccountNo: Code[20];
     begin
         CashReceiptTypeId := 2;
@@ -278,7 +276,7 @@ table 40101 "GP Checkbook Transactions"
 
         GenJournalLineCurrent.SetRange("Journal Template Name", JournalTemplateName);
         GenJournalLineCurrent.SetRange("Journal Batch Name", 'GPBANK');
-        if GenJournalLineCurrent.FindLast then
+        if GenJournalLineCurrent.FindLast() then
             LineNum := GenJournalLineCurrent."Line No." + 10000
         else
             LineNum := 10000;
@@ -308,7 +306,6 @@ table 40101 "GP Checkbook Transactions"
     local procedure CreateGeneralJournalBatchIfNeeded(TrxType: Integer)
     var
         GenJournalBatch: Record "Gen. Journal Batch";
-        TemplateName: Code[10];
     begin
         GenJournalBatch.SetRange(Name, 'GPBANK');
 
@@ -320,7 +317,7 @@ table 40101 "GP Checkbook Transactions"
             GenJournalBatch.SetRange("No. Series", 'GJNL-PMT');
         end;
 
-        if not GenJournalBatch.FindFirst then begin
+        if not GenJournalBatch.FindFirst() then begin
             GenJournalBatch.Init();
             GenJournalBatch.Validate(Name, 'GPBANK');
 
@@ -332,7 +329,7 @@ table 40101 "GP Checkbook Transactions"
                 GenJournalBatch.Validate("No. Series", 'GJNL-PMT');
             end;
 
-            GenJournalBatch.SetupNewBatch;
+            GenJournalBatch.SetupNewBatch();
             GenJournalBatch.Insert(true);
         end;
     end;
