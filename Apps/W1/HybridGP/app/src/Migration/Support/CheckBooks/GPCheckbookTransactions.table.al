@@ -230,11 +230,10 @@ table 40101 "GP Checkbook Transactions"
         SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
             repeat
-                if CMTrxType = CashReceiptTypeId then begin
+                if CMTrxType = CashReceiptTypeId then
                     AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode) /* GL Account Number based off of account index */
-                end else begin
+                else
                     AccountNo := CMLinkID;  /* Vendor ID */
-                end;
 
                 CreateGeneralJournalLine(GenJournalLine,
                     Format(CMRECNUM),
