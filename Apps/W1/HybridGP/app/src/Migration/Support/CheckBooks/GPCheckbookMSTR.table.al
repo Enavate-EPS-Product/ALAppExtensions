@@ -182,13 +182,13 @@ table 40099 "GP Checkbook MSTR"
     procedure MoveStagingData()
     var
         BankAccount: Record "Bank Account";
-        CheckBookTransactions: Record "GP Checkbook Transactions";
+        GPCheckbookTransactionsTable: Record "GP Checkbook Transactions";
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
     begin
         GPCompanyMigrationSettings.FindFirst();
         if FindSet() then
             repeat
-                if not BankAccount.Get(CHEKBKID) then begin
+                if not BankAccount.Get(CHEKBKID) then
                     if GPCompanyMigrationSettings."Migrate Inactive Checkbooks" or not INACTIVE then begin
                         BankAccount.Init();
                         BankAccount."No." := DelChr(CHEKBKID, '>', ' ');
@@ -200,26 +200,25 @@ table 40099 "GP Checkbook MSTR"
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
 
-                        CheckBookTransactions.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
+                        GPCheckbookTransactionsTable.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
                     end;
-                end;
             until Next() = 0;
     end;
 
     local procedure UpdateBankInfo(BankId: Text[15]; var BankAccount: Record "Bank Account")
     var
-        CMBankMSTR: Record "GP Bank MSTR";
+        GPBankMSTRTable: Record "GP Bank MSTR";
     begin
-        if CMBankMSTR.Get(BankId) then begin
-            BankAccount.Address := DelChr(CMBankMSTR.ADDRESS1, '>', ' ');
-            BankAccount."Address 2" := CopyStr(DelChr(CMBankMSTR.ADDRESS2, '>', ' '), 1, 50);
-            BankAccount.City := CopyStr(DelChr(CMBankMSTR.CITY, '>', ' '), 1, 30);
-            BankAccount."Phone No." := DelChr(CMBankMSTR.PHNUMBR1, '>', ' ');
-            BankAccount."Transit No." := DelChr(CMBankMSTR.TRNSTNBR, '>', ' ');
-            BankAccount."Fax No." := DelChr(CMBankMSTR.FAXNUMBR, '>', ' ');
-            BankAccount.County := DelChr(CMBankMSTR.STATE, '>', ' ');
-            BankAccount."Post Code" := DelChr(CMBankMSTR.ZIPCODE, '>', ' ');
-            BankAccount."Bank Branch No." := CopyStr(DelChr(CMBankMSTR.BNKBRNCH, '>', ' '), 1, 20);
+        if GPBankMSTRTable.Get(BankId) then begin
+            BankAccount.Address := DelChr(GPBankMSTRTable.ADDRESS1, '>', ' ');
+            BankAccount."Address 2" := CopyStr(DelChr(GPBankMSTRTable.ADDRESS2, '>', ' '), 1, 50);
+            BankAccount.City := CopyStr(DelChr(GPBankMSTRTable.CITY, '>', ' '), 1, 30);
+            BankAccount."Phone No." := DelChr(GPBankMSTRTable.PHNUMBR1, '>', ' ');
+            BankAccount."Transit No." := DelChr(GPBankMSTRTable.TRNSTNBR, '>', ' ');
+            BankAccount."Fax No." := DelChr(GPBankMSTRTable.FAXNUMBR, '>', ' ');
+            BankAccount.County := DelChr(GPBankMSTRTable.STATE, '>', ' ');
+            BankAccount."Post Code" := DelChr(GPBankMSTRTable.ZIPCODE, '>', ' ');
+            BankAccount."Bank Branch No." := CopyStr(DelChr(GPBankMSTRTable.BNKBRNCH, '>', ' '), 1, 20);
         end;
     end;
 
@@ -240,16 +239,6 @@ table 40099 "GP Checkbook MSTR"
             BankAccountPostingGroup."G/L Account No." := CopyStr(GPAccount.AcctNum, 1, 20);
             BankAccountPostingGroup.Insert(true);
             exit(BankAccountPostingGroup.Code);
-        end;
-    end;
-
-    local procedure GetAccountNumber(AcctIndex: Integer): Code[20]
-    var
-        BankAccountPostingGroup: Record "Bank Account Posting Group";
-        GPAccount: Record "GP Account";
-    begin
-        if GPAccount.Get(AcctIndex) then begin
-            exit(CopyStr(GPAccount.AcctNum, 1, 20));
         end;
     end;
 
