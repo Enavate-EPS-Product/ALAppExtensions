@@ -216,6 +216,8 @@ table 40101 "GP Checkbook Transactions"
         }
     }
 
+    var
+        CashReceiptTypeId: Integer;
 
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
@@ -224,10 +226,11 @@ table 40101 "GP Checkbook Transactions"
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
         AccountNo: Code[20];
     begin
+        CashReceiptTypeId := 2;
         SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
             repeat
-                if CMTrxType = 2 then begin
+                if CMTrxType = CashReceiptTypeId then begin
                     AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode) /* GL Account Number based off of account index */
                 end else begin
                     AccountNo := CMLinkID;  /* Vendor ID */
@@ -262,7 +265,7 @@ table 40101 "GP Checkbook Transactions"
             -- 2 = cash receipt
             -- 3 = payment
         */
-        if CMTrxType = 2 then begin
+        if CMTrxType = CashReceiptTypeId then begin
             DocumentType := DocumentType::" ";
             JournalTemplateName := 'CASHRCPT';
             AccountType := AccountType::"G/L Account"
@@ -322,7 +325,7 @@ table 40101 "GP Checkbook Transactions"
             GenJournalBatch.Init();
             GenJournalBatch.Validate(Name, 'GPBANK');
 
-            if TrxType = 2 then begin
+            if TrxType = CashReceiptTypeId then begin
                 GenJournalBatch.Validate("Journal Template Name", 'CASHRCPT');
                 GenJournalBatch.Validate("No. Series", 'GJNL-RCPT');
             end else begin
