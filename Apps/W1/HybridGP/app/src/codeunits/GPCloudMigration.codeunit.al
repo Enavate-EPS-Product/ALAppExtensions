@@ -134,4 +134,25 @@ codeunit 4025 "GP Cloud Migration"
         DataMigrationEntity.InsertRecord(Database::Item, HelperFunctions.GetNumberOfItems());
         exit(true);
     end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Hybrid Cloud Management", 'OnInsertDefaultTableMappings', '', false, false)]
+    local procedure OnInsertDefaultTableMappings(DeleteExisting: Boolean; ProductID: Text[250])
+    begin
+        UpdateOrInsertRecord(Database::MSFTCM20200, SourceTableNameSY40101);
+    end;
+
+    local procedure UpdateOrInsertRecord(TableID: Integer; SourceTableName: Text[128])
+    var
+        MigrationTableMapping: Record "Migration Table Mapping";
+        CurrentModuleInfo: ModuleInfo;
+    begin
+        NavApp.GetCurrentModuleInfo(CurrentModuleInfo);
+        if MigrationTableMapping.Get(CurrentModuleInfo.Id(), TableID) then
+            MigrationTableMapping.Delete();
+
+        MigrationTableMapping."App ID" := CurrentModuleInfo.Id();
+        MigrationTableMapping.Validate("Table ID", TableID);
+        MigrationTableMapping."Source Table Name" := SourceTableName;
+        MigrationTableMapping.Insert();
+    end;
 }
