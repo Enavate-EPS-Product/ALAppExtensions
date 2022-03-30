@@ -2,7 +2,6 @@ table 40101 "GP Checkbook Transactions"
 {
     ReplicateData = false;
     Extensible = false;
-    Permissions = tableData "Bank Account Ledger Entry" = rim;
 
     fields
     {

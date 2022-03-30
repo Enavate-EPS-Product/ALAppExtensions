@@ -41,6 +41,7 @@ codeunit 4025 "GP Cloud Migration"
         CompanyFailedToMigrateMsg: Label 'Migration did not start because the company setup is still in process.', Locked = true;
         InitiateMigrationMsg: Label 'Initiate GP Migration.', Locked = true;
         StartMigrationMsg: Label 'Start Migration', Locked = true;
+        SourceTableNameCM20200Lbl: Label 'CM20200', Locked = true;
 
     local procedure InitiateGPMigration()
     var
@@ -138,7 +139,7 @@ codeunit 4025 "GP Cloud Migration"
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Hybrid Cloud Management", 'OnInsertDefaultTableMappings', '', false, false)]
     local procedure OnInsertDefaultTableMappings(DeleteExisting: Boolean; ProductID: Text[250])
     begin
-        UpdateOrInsertRecord(Database::MSFTCM20200, SourceTableNameSY40101);
+        UpdateOrInsertRecord(Database::MSFTCM20200, SourceTableNameCM20200Lbl);
     end;
 
     local procedure UpdateOrInsertRecord(TableID: Integer; SourceTableName: Text[128])

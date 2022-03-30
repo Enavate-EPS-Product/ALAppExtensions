@@ -182,7 +182,7 @@ table 40099 "GP Checkbook MSTR"
     procedure MoveStagingData()
     var
         BankAccount: Record "Bank Account";
-        GPCheckbookTransactionsTable: Record "GP Checkbook Transactions";
+        MSFTCM20200Table: Record MSFTCM20200;
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
     begin
         GPCompanyMigrationSettings.FindFirst();
@@ -200,7 +200,7 @@ table 40099 "GP Checkbook MSTR"
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
 
-                        GPCheckbookTransactionsTable.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
+                        MSFTCM20200Table.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
                     end;
             until Next() = 0;
     end;

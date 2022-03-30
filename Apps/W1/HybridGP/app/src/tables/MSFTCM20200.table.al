@@ -1,4 +1,4 @@
-table 4032 MSFTCM20200
+table 40104 MSFTCM20200
 {
     ReplicateData = false;
     Extensible = false;
@@ -217,65 +217,72 @@ table 4032 MSFTCM20200
     }
 
     var
-        CashReceiptTypeId: Integer;
+        CMTransactionType: Option "",Deposit,Receipt,APCheck,"Withdrawl/Payroll Check",IncreaseAdjustment,DecreaseAdjustment,BankTransfer;
+        BankBatchNameTxt: Label 'GPBANK', Locked = true;
 
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
         GenJournalLine: Record "Gen. Journal Line";
+        HelperFunctions: Codeunit "Helper Functions";
+        JournalTemplateName: Code[10];
+        DocumentType: Enum "Gen. Journal Document Type";
+        AccountType: Enum "Gen. Journal Account Type";
+        NoSeries: Code[20];
         AccountNo: Code[20];
+        Amount: Decimal;
     begin
-        CashReceiptTypeId := 2;
         SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
             repeat
-                if CMTrxType = CashReceiptTypeId then
-                    AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode) /* GL Account Number based off of account index */
-                else
-                    AccountNo := CMLinkID;  /* Vendor ID */
+                case CMTrxType of
+                    CMTransactionType::Deposit, CMTransactionType::Receipt:
+                        begin
+                            AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
+                            DocumentType := DocumentType::" ";
+                            AccountType := AccountType::"G/L Account";
+                            JournalTemplateName := 'CASHRCPT';
+                            NoSeries := 'GJNL-RCPT';
+                            Amount := TRXAMNT;
+                        end;
+                    CMTransactionType::APCheck:
+                        begin
+                            AccountNo := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
+                            DocumentType := DocumentType::Payment;
+                            AccountType := AccountType::Vendor;
+                            JournalTemplateName := 'PAYMENT';
+                            NoSeries := 'GJNL-PMT';
+                            Amount := -TRXAMNT;
+                        end;
+                    else begin
+                            AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
+                            DocumentType := DocumentType::" ";
+                            AccountType := AccountType::"G/L Account";
+                            JournalTemplateName := 'GENERAL';
+                            NoSeries := 'GJNL-GEN';
+                            if CMTrxType in [CMTransactionType::"Withdrawl/Payroll Check", CMTransactionType::DecreaseAdjustment] then
+                                Amount := -TRXAMNT
+                            else
+                                Amount := TRXAMNT;
+                        end;
+                end;
 
-                CreateGeneralJournalLine(GenJournalLine,
-                    Format(CMRECNUM),
-                    DSCRIPTN,
-                    TRXDATE,
-                    AccountNo,
-                    TRXAMNT,
-                    BankAccountNo,
-                    CMTrxType
-                );
+                CreateGeneralJournalBatchIfNeeded(JournalTemplateName, NoSeries);
+                CreateGeneralJournalLine(GenJournalLine, DocumentType, JournalTemplateName, AccountType,
+                    Format(CMRECNUM), DSCRIPTN, TRXDATE, AccountNo, Amount, BankAccountNo, CMTrxType);
 
             until Next() = 0;
     end;
 
-    procedure CreateGeneralJournalLine(var GenJournalLine: Record "Gen. Journal Line"; DocumentNo: Code[20]; Description: Text[50]; PostingDate: Date; AccountNo: Code[20]; TrxAmount: Decimal; BankAccountNo: Code[20]; CMTrxType: Integer)
+    procedure CreateGeneralJournalLine(var GenJournalLine: Record "Gen. Journal Line"; DocumentType: Enum "Gen. Journal Document Type";
+                JournalTemplateName: Code[10]; AccountType: Enum "Gen. Journal Account Type"; DocumentNo: Code[20]; Description: Text[50];
+                PostingDate: Date; AccountNo: Code[20]; TrxAmount: Decimal; BankAccountNo: Code[20]; CMTrxType: Integer)
     var
         GenJournalLineCurrent: Record "Gen. Journal Line";
         GenJournalTemplate: Record "Gen. Journal Template";
-        JournalTemplateName: Code[10];
-        AccountType: Enum "Gen. Journal Account Type";
-        DocumentType: Enum "Gen. Journal Document Type";
         LineNum: Integer;
     begin
-        CreateGeneralJournalBatchIfNeeded(CMTrxType);
-
-        /*  
-            GP CMTrxType we support
-            -- 2 = cash receipt
-            -- 3 = payment
-        */
-        if CMTrxType = CashReceiptTypeId then begin
-            DocumentType := DocumentType::" ";
-            JournalTemplateName := 'CASHRCPT';
-            AccountType := AccountType::"G/L Account"
-            /* AccountNo will be GL Account number -- offset account */
-        end else begin
-            DocumentType := DocumentType::Payment;
-            JournalTemplateName := 'PAYMENT';
-            AccountType := AccountType::Vendor;
-            /* AccountNo will be Vendor account number */
-        end;
-
         GenJournalLineCurrent.SetRange("Journal Template Name", JournalTemplateName);
-        GenJournalLineCurrent.SetRange("Journal Batch Name", 'GPBANK');
+        GenJournalLineCurrent.SetRange("Journal Batch Name", BankBatchNameTxt);
         if GenJournalLineCurrent.FindLast() then
             LineNum := GenJournalLineCurrent."Line No." + 10000
         else
@@ -294,40 +301,27 @@ table 4032 MSFTCM20200
         GenJournalLine.Validate(Amount, TrxAmount);
         GenJournalLine.Validate("Bal. Account Type", GenJournalLine."Bal. Account Type"::"Bank Account");
         GenJournalLine.Validate("Bal. Account No.", BankAccountNo);
-
         GenJournalLine.Validate("Source Code", GenJournalTemplate."Source Code");
         GenJournalLine.Validate("Journal Template Name", JournalTemplateName);
-        GenJournalLine.Validate("Journal Batch Name", 'GPBANK');
+        GenJournalLine.Validate("Journal Batch Name", BankBatchNameTxt);
         GenJournalLine.Validate("Line No.", LineNum);
         GenJournalLine.Validate("Document Date", PostingDate);
         GenJournalLine.Insert(true);
     end;
 
-    local procedure CreateGeneralJournalBatchIfNeeded(TrxType: Integer)
+    local procedure CreateGeneralJournalBatchIfNeeded(JournalTemplateName: Code[10]; NoSeries: Code[20])
     var
         GenJournalBatch: Record "Gen. Journal Batch";
     begin
-        GenJournalBatch.SetRange(Name, 'GPBANK');
-
-        if TrxType = 2 then begin
-            GenJournalBatch.SetRange("Journal Template Name", 'CASHRCPT');
-            GenJournalBatch.SetRange("No. Series", 'GJNL-RCPT');
-        end else begin
-            GenJournalBatch.SetRange("Journal Template Name", 'PAYMENT');
-            GenJournalBatch.SetRange("No. Series", 'GJNL-PMT');
-        end;
+        GenJournalBatch.SetRange(Name, BankBatchNameTxt);
+        GenJournalBatch.SetRange("Journal Template Name", JournalTemplateName);
+        GenJournalBatch.SetRange("No. Series", NoSeries);
 
         if not GenJournalBatch.FindFirst() then begin
             GenJournalBatch.Init();
-            GenJournalBatch.Validate(Name, 'GPBANK');
-
-            if TrxType = CashReceiptTypeId then begin
-                GenJournalBatch.Validate("Journal Template Name", 'CASHRCPT');
-                GenJournalBatch.Validate("No. Series", 'GJNL-RCPT');
-            end else begin
-                GenJournalBatch.Validate("Journal Template Name", 'PAYMENT');
-                GenJournalBatch.Validate("No. Series", 'GJNL-PMT');
-            end;
+            GenJournalBatch.Validate(Name, BankBatchNameTxt);
+            GenJournalBatch.Validate("Journal Template Name", JournalTemplateName);
+            GenJournalBatch.Validate("No. Series", NoSeries);
 
             GenJournalBatch.SetupNewBatch();
             GenJournalBatch.Insert(true);
