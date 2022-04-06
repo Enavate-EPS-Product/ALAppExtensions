@@ -969,14 +969,14 @@ Codeunit 4037 "Helper Functions"
 
     procedure AnyCompaniesWithTooManySegments(var CompanyList: List of [Text])
     var
-        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
     begin
-        GPCompanyMigrationSettings.SetFilter(Replicate, '=%1', true);
-        GPCompanyMigrationSettings.SetFilter(NumberOfSegments, '>%1', 9);
-        if GPCompanyMigrationSettings.FindSet() then
+        MSFTGPCompanyMigrationSettingsTable.SetFilter(Replicate, '=%1', true);
+        MSFTGPCompanyMigrationSettingsTable.SetFilter(NumberOfSegments, '>%1', 9);
+        if MSFTGPCompanyMigrationSettingsTable.FindSet() then
             repeat
-                CompanyList.Add(GPCompanyMigrationSettings.Name);
-            until GPCompanyMigrationSettings.Next() = 0;
+                CompanyList.Add(MSFTGPCompanyMigrationSettingsTable.Name);
+            until MSFTGPCompanyMigrationSettingsTable.Next() = 0;
     end;
 
     local procedure GetSegmentsFromJson(JArray: JsonArray)
@@ -1329,24 +1329,30 @@ Codeunit 4037 "Helper Functions"
             if not GenJnlLine.IsEmpty() then
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10));
         end;
+        /*
+                OnSkipPostingBankBatches(SkipPosting);
+                if not SkipPosting then begin
+                    // Post the Bank Batch, if created...
+                    JournalBatchName := BankBatchNameTxt;
+                    GenJnlLine.Reset();
+                    GenJnlLine.SetRange("Journal Template Name", 'GENERAL');
+                    GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+                    if not GenJnlLine.IsEmpty() then
+                        PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'GENERAL');
 
-        OnSkipPostingBankBatches(SkipPosting);
-        if not SkipPosting then begin
-            // Post the Bank Batch, if created...
-            JournalBatchName := BankBatchNameTxt;
-            GenJnlLine.Reset();
-            GenJnlLine.SetRange("Journal Template Name", 'CASHRCPT');
-            GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
-            if not GenJnlLine.IsEmpty() then
-                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'CASHRCPT');
+                    GenJnlLine.Reset();
+                    GenJnlLine.SetRange("Journal Template Name", 'CASHRCPT');
+                    GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+                    if not GenJnlLine.IsEmpty() then
+                        PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'CASHRCPT');
 
-            GenJnlLine.Reset();
-            GenJnlLine.SetRange("Journal Template Name", 'PAYMENT');
-            GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
-            if not GenJnlLine.IsEmpty() then
-                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'PAYMENT');
-        end;
-
+                    GenJnlLine.Reset();
+                    GenJnlLine.SetRange("Journal Template Name", 'PAYMENT');
+                    GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
+                    if not GenJnlLine.IsEmpty() then
+                        PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'PAYMENT');
+                end;
+        */
         // Remove posted batches
         RemoveBatches();
         DurationAsInt := CurrentDateTime() - StartTime;
@@ -1367,7 +1373,7 @@ Codeunit 4037 "Helper Functions"
         GenJnlLine.SetRange("Journal Template Name", JournalTemplateName);
         GenJnlLine.SetRange("Journal Batch Name", JournalBatchName);
         // Do not care about balances for Customer, Vendor, and Bank batches
-        if (JournalBatchName <> CustomerBatchNameTxt) and (JournalBatchName <> VendorBatchNameTxt) and (JournalBatchName <> BankBatchNameTxt) then begin
+        if (JournalBatchName <> CustomerBatchNameTxt) and (JournalBatchName <> VendorBatchNameTxt) then begin
             repeat
                 TotalBalance := TotalBalance + GenJnlLine.Amount;
             until GenJnlLine.Next() = 0;
@@ -1496,13 +1502,13 @@ Codeunit 4037 "Helper Functions"
 
     procedure SetProcessesRunning(IsRunning: Boolean)
     var
-        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
     begin
-        GPCompanyMigrationSettings.SetRange(Replicate, true);
-        GPCompanyMigrationSettings.SetRange(Name, CompanyName());
-        if GPCompanyMigrationSettings.FindFirst() then begin
-            GPCompanyMigrationSettings.ProcessesAreRunning := IsRunning;
-            GPCompanyMigrationSettings.Modify();
+        MSFTGPCompanyMigrationSettingsTable.SetRange(Replicate, true);
+        MSFTGPCompanyMigrationSettingsTable.SetRange(Name, CompanyName());
+        if MSFTGPCompanyMigrationSettingsTable.FindFirst() then begin
+            MSFTGPCompanyMigrationSettingsTable.ProcessesAreRunning := IsRunning;
+            MSFTGPCompanyMigrationSettingsTable.Modify();
         end;
     end;
 

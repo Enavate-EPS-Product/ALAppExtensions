@@ -4,6 +4,7 @@ table 40104 MSFTCM20200
     Extensible = false;
     Permissions = tableData "Bank Account Ledger Entry" = rim;
     DataClassification = CustomerContent;
+    Description = 'GP Checkbook Transactions';
 
     fields
     {
@@ -27,6 +28,9 @@ table 40104 MSFTCM20200
         {
             DataClassification = CustomerContent;
         }
+        ///        1        2        3                  4                    5                  6                  7
+        ///     Deposit, Receipt, APCheck, "Withdrawl/Payroll Check", IncreaseAdjustment, DecreaseAdjustment, BankTransfer;
+        ///         
         field(6; CMTrxType; Integer)
         {
             DataClassification = CustomerContent;
@@ -223,6 +227,7 @@ table 40104 MSFTCM20200
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
         GenJournalLine: Record "Gen. Journal Line";
+        GPVendor: Record "GP Vendor";
         HelperFunctions: Codeunit "Helper Functions";
         JournalTemplateName: Code[10];
         DocumentType: Enum "Gen. Journal Document Type";
@@ -234,35 +239,33 @@ table 40104 MSFTCM20200
         SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
             repeat
+                AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
+                DocumentType := DocumentType::" ";
+                AccountType := AccountType::"G/L Account";
+                Amount := TRXAMNT;
+
                 case CMTrxType of
                     CMTransactionType::Deposit, CMTransactionType::Receipt:
                         begin
-                            AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
-                            DocumentType := DocumentType::" ";
-                            AccountType := AccountType::"G/L Account";
                             JournalTemplateName := 'CASHRCPT';
                             NoSeries := 'GJNL-RCPT';
-                            Amount := TRXAMNT;
                         end;
-                    CMTransactionType::APCheck:
+                    CMTransactionType::APCheck: /* CMLinkID -- Need to determine whether Payroll check (EmployeeID - UPR00100); otherwise it is Vendor */
                         begin
-                            AccountNo := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
                             DocumentType := DocumentType::Payment;
-                            AccountType := AccountType::Vendor;
                             JournalTemplateName := 'PAYMENT';
                             NoSeries := 'GJNL-PMT';
                             Amount := -TRXAMNT;
+                            if GPVendor.Get(CMLinkID) then begin
+                                AccountNo := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
+                                AccountType := AccountType::Vendor;
+                            end;
                         end;
                     else begin
-                            AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
-                            DocumentType := DocumentType::" ";
-                            AccountType := AccountType::"G/L Account";
                             JournalTemplateName := 'GENERAL';
                             NoSeries := 'GJNL-GEN';
                             if CMTrxType in [CMTransactionType::"Withdrawl/Payroll Check", CMTransactionType::DecreaseAdjustment] then
-                                Amount := -TRXAMNT
-                            else
-                                Amount := TRXAMNT;
+                                Amount := -TRXAMNT;
                         end;
                 end;
 

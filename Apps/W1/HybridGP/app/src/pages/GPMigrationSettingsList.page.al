@@ -1,6 +1,6 @@
 page 4021 "GP Migration Settings List"
 {
-    SourceTable = "GP Company Migration Settings";
+    SourceTable = MSFTGPCompanyMigrationSettings;
     SourceTableView = where(Replicate = CONST(true));
     PageType = ListPart;
     InsertAllowed = false;

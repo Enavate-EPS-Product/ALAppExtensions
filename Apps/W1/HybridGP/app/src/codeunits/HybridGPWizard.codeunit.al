@@ -138,12 +138,12 @@ codeunit 4015 "Hybrid GP Wizard"
 
     local procedure ProcessesAreRunning(): Boolean
     var
-        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
     begin
-        GPCompanyMigrationSettings.Reset();
-        GPCompanyMigrationSettings.SetRange(Replicate, true);
-        GPCompanyMigrationSettings.SetRange(ProcessesAreRunning, true);
-        if GPCompanyMigrationSettings.IsEmpty() then
+        MSFTGPCompanyMigrationSettingsTable.Reset();
+        MSFTGPCompanyMigrationSettingsTable.SetRange(Replicate, true);
+        MSFTGPCompanyMigrationSettingsTable.SetRange(ProcessesAreRunning, true);
+        if MSFTGPCompanyMigrationSettingsTable.IsEmpty() then
             exit(false);
 
         exit(true);
