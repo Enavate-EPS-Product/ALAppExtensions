@@ -94,7 +94,7 @@ page 4021 "GP Migration Settings List"
 
         Rec.Modify();
 
-        MigrateInactiveCheckbooks := false;
+        MigrateInactiveCheckbooks := true;
         if GPCompanyAdditionalSettings.Get(Rec.Name) then
             MigrateInactiveCheckbooks := GPCompanyAdditionalSettings."Migrate Inactive Checkbooks";
     end;
