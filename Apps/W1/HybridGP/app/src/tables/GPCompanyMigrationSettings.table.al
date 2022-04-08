@@ -98,49 +98,4 @@ table 4044 "GP Company Migration Settings"
         GlobalDimension1MustNotBeBlankErr: Label 'Global Dimension 1 cannot be blank.';
         GlobalDimension2MustNotBeBlankErr: Label 'Global Dimension 2 cannot be blank.';
         GlobalDimensionsCannotBeTheSameErr: Label 'Global Dimension 1 and Global Dimension 2 cannot be the same.';
-
-
-    trigger OnInsert()
-    var
-        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
-    begin
-        if MSFTGPCompanyMigrationSettingsTable.Get(Name) then
-            exit;
-
-        MSFTGPCompanyMigrationSettingsTable.Init();
-        MSFTGPCompanyMigrationSettingsTable.Name := Name;
-        MSFTGPCompanyMigrationSettingsTable.Replicate := Replicate;
-        MSFTGPCompanyMigrationSettingsTable."Global Dimension 1" := "Global Dimension 1";
-        MSFTGPCompanyMigrationSettingsTable."Global Dimension 2" := "Global Dimension 2";
-        MSFTGPCompanyMigrationSettingsTable."Migrate Inactive Customers" := "Migrate Inactive Customers";
-        MSFTGPCompanyMigrationSettingsTable."Migrate Inactive Vendors" := "Migrate Inactive Vendors";
-        MSFTGPCompanyMigrationSettingsTable.NumberOfSegments := NumberOfSegments;
-        MSFTGPCompanyMigrationSettingsTable.ProcessesAreRunning := ProcessesAreRunning;
-        MSFTGPCompanyMigrationSettingsTable.Insert(true);
-    end;
-
-    trigger OnDelete()
-    var
-        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
-    begin
-        if MSFTGPCompanyMigrationSettingsTable.Get(Name) then
-            MSFTGPCompanyMigrationSettingsTable.Delete(true);
-    end;
-
-    trigger OnModify()
-    var
-        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
-    begin
-        if not MSFTGPCompanyMigrationSettingsTable.Get(Name) then
-            exit;
-
-        MSFTGPCompanyMigrationSettingsTable.Replicate := Replicate;
-        MSFTGPCompanyMigrationSettingsTable."Global Dimension 1" := "Global Dimension 1";
-        MSFTGPCompanyMigrationSettingsTable."Global Dimension 2" := "Global Dimension 2";
-        MSFTGPCompanyMigrationSettingsTable."Migrate Inactive Customers" := "Migrate Inactive Customers";
-        MSFTGPCompanyMigrationSettingsTable."Migrate Inactive Vendors" := "Migrate Inactive Vendors";
-        MSFTGPCompanyMigrationSettingsTable.NumberOfSegments := NumberOfSegments;
-        MSFTGPCompanyMigrationSettingsTable.ProcessesAreRunning := ProcessesAreRunning;
-        MSFTGPCompanyMigrationSettingsTable.Modify(true);
-    end;
 }

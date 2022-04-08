@@ -183,13 +183,17 @@ table 40099 "GP Checkbook MSTR"
     var
         BankAccount: Record "Bank Account";
         MSFTCM20200Table: Record MSFTCM20200;
-        MSFTGPCompanyMigrationSettingsTable: Record MSFTGPCompanyMigrationSettings;
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        MigrateInactiveCheckbooks: Boolean;
     begin
-        MSFTGPCompanyMigrationSettingsTable.FindFirst();
+        MigrateInactiveCheckbooks := false;
+        if GPCompanyAdditionalSettings.Get(CompanyName()) then
+            MigrateInactiveCheckbooks := GPCompanyAdditionalSettings."Migrate Inactive Checkbooks";
+
         if FindSet() then
             repeat
                 if not BankAccount.Get(CHEKBKID) then
-                    if MSFTGPCompanyMigrationSettingsTable."Migrate Inactive Checkbooks" or not INACTIVE then begin
+                    if MigrateInactiveCheckbooks or not INACTIVE then begin
                         BankAccount.Init();
                         BankAccount."No." := DelChr(CHEKBKID, '>', ' ');
                         BankAccount.Name := DelChr(DSCRIPTN, '>', ' ');

@@ -92,5 +92,5 @@ permissionset 4029 "HybridGP - Objects"
                     table "GP Migration Errors" = X,
                     table "GP Segment Name" = X,
                     table MSFTCM20200 = X,
-                    table MSFTGPCompanyMigrationSettings = X;
+                    table "GP Company Additional Settings" = X;
 }
