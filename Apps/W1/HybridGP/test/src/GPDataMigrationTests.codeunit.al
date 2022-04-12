@@ -105,7 +105,9 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Vendor: Record Vendor;
         CompanyInformation: Record "Company Information";
+        OrderAddress: Record "Order Address";
         Country: Code[10];
+        VendorCount: Integer;
     begin
         // [SCENARIO] All Vendor are queried from GP
         // [GIVEN] GP data
@@ -114,8 +116,11 @@ codeunit 139664 "GP Data Migration Tests"
         // [WHEN] Data is imported
         CreateVendorData();
 
+        // When adding Vendors, update the expected count here
+        VendorCount := 54;
+
         // [then] Then the correct number of Vendors are imported
-        Assert.AreEqual(53, GPVendor.Count(), 'Wrong number of Vendor read');
+        Assert.AreEqual(VendorCount, GPVendor.Count(), 'Wrong number of Vendor read');
 
         // [then] Then fields for Vendor 1 are correctly imported to temporary table
         GPVendor.SetRange(VENDORID, '1160');
@@ -148,7 +153,7 @@ codeunit 139664 "GP Data Migration Tests"
         MigrateVendors(GPVendor);
 
         // [then] Then the correct number of Vendors are applied
-        Assert.AreEqual(53, Vendor.Count(), 'Wrong number of Migrated Vendors read');
+        Assert.AreEqual(VendorCount, Vendor.Count(), 'Wrong number of Migrated Vendors read');
 
         // [then] Then fields for Vendors 1 are correctly applied
         Vendor.SetRange("No.", '1160');
@@ -200,6 +205,35 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('Fort Worth', Vendor.City, 'City of Migrated Vendor is wrong');
         Assert.AreEqual('41327348230000', Vendor."Phone No.", 'Phone No. of Migrated Vendor is wrong');
         Assert.AreEqual('41327348300000', Vendor."Fax No.", 'Fax No. of Migrated Vendor is wrong');
+
+        // [WHEN] the Vendor phone and/or fax were default (00000000000000)
+        Vendor.Reset();
+        Vendor.SetRange("No.", 'ACETRAVE0002');
+        Vendor.FindFirst();
+
+        // [then] The phone and/or fax values are empty
+        Assert.AreEqual('', Vendor."Phone No.", 'Phone No. of Migrated Vendor should be empty');
+        Assert.AreEqual('', Vendor."Fax No.", 'Fax No. of Migrated Vendor should be empty');
+
+        // [WHEN] the Vendor address phone and/or fax were default (00000000000000)
+        OrderAddress.Reset();
+        OrderAddress.SetRange("Vendor No.", 'ACETRAVE0002');
+        OrderAddress.SetRange(Code, 'WAREHOUSE');
+        OrderAddress.FindFirst();
+
+        // [then] The phone and/or fax values are empty
+        Assert.AreEqual('', OrderAddress."Phone No.", 'Phone No. of Migrated Vendor Address should be empty');
+        Assert.AreEqual('', OrderAddress."Fax No.", 'Fax No. of Migrated Vendor Address should be empty');
+
+        // [WHEN] the Vendor address phone and/or fax were not default (00000000000000)
+        OrderAddress.Reset();
+        OrderAddress.SetRange("Vendor No.", 'ACETRAVE0002');
+        OrderAddress.SetRange(Code, 'Primary');
+        OrderAddress.FindFirst();
+
+        // [then] The phone and/or fax values will be set to the migrated value
+        Assert.AreEqual('61855501040000', OrderAddress."Phone No.", 'Phone No. of Migrated Vendor Address should be empty');
+        Assert.AreEqual('61855501040000', OrderAddress."Fax No.", 'Fax No. of Migrated Vendor Address should be empty');
     end;
 
     [Test]
@@ -1254,6 +1288,112 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendor.Insert();
 
         GPVendor.Init();
+        GPVendor.VENDORID := 'ACETRAVE0001';
+        GPVendor.VENDNAME := 'A Travel Company';
+        GPVendor.SEARCHNAME := 'A Travel Company';
+        GPVendor.VNDCHKNM := 'A Travel Company';
+        GPVendor.ADDRESS1 := '123 Riley Street';
+        GPVendor.ADDRESS2 := '';
+        GPVendor.CITY := 'Sydney';
+        GPVendor.VNDCNTCT := 'Greg Powell';
+        GPVendor.PHNUMBR1 := '29855501010000';
+        GPVendor.PYMTRMID := 'Net 30';
+        GPVendor.SHIPMTHD := 'OVERNIGHT';
+        GPVendor.COUNTRY := 'Australia';
+        GPVendor.PYMNTPRI := '1';
+        GPVendor.AMOUNT := 6713.27000;
+        GPVendor.FAXNUMBR := '29455501010000';
+        GPVendor.ZIPCODE := '2086';
+        GPVendor.STATE := 'NSW';
+        GPVendor.INET1 := '';
+        GPVendor.INET2 := ' ';
+        GPVendor.TAXSCHID := 'AUSNSWST+20';
+        GPVendor.UPSZONE := '';
+        GPVendor.TXIDNMBR := '';
+        GPVendor.Insert();
+
+        GPVendorAddress.Init();
+        GPVendorAddress.VENDORID := 'ACETRAVE0001';
+        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.VNDCNTCT := 'Greg Powell';
+        GPVendorAddress.ADDRESS1 := '123 Riley Street';
+        GPVendorAddress.ADDRESS2 := '';
+        GPVendorAddress.CITY := 'Sydney';
+        GPVendorAddress.STATE := 'NSW';
+        GPVendorAddress.ZIPCODE := '2086';
+        GPVendorAddress.PHNUMBR1 := '29855501010000';
+        GPVendorAddress.FAXNUMBR := '29455501010000';
+        GPVendorAddress.COUNTRY := 'Australia';
+        GPVendorAddress.Insert();
+
+        GPVendorAddress.Init();
+        GPVendorAddress.VENDORID := 'ACETRAVE0001';
+        GPVendorAddress.ADRSCODE := 'REMIT TO';
+        GPVendorAddress.VNDCNTCT := 'Greg Powell';
+        GPVendorAddress.ADDRESS1 := 'Box 342';
+        GPVendorAddress.ADDRESS2 := '';
+        GPVendorAddress.CITY := 'Sydney';
+        GPVendorAddress.STATE := 'NSW';
+        GPVendorAddress.ZIPCODE := '2000';
+        GPVendorAddress.PHNUMBR1 := '29855501020000';
+        GPVendorAddress.FAXNUMBR := '29455501020000';
+        GPVendorAddress.COUNTRY := 'Australia';
+        GPVendorAddress.Insert();
+
+        GPVendor.Init();
+        GPVendor.VENDORID := 'ACETRAVE0002';
+        GPVendor.VENDNAME := 'A Travel Company 2';
+        GPVendor.SEARCHNAME := 'A Travel Company 2';
+        GPVendor.VNDCHKNM := 'A Travel Company 2';
+        GPVendor.ADDRESS1 := '124 Riley Street';
+        GPVendor.ADDRESS2 := '';
+        GPVendor.CITY := 'Sydney';
+        GPVendor.VNDCNTCT := 'Greg Powell Jr.';
+        GPVendor.PHNUMBR1 := '00000000000000';
+        GPVendor.PYMTRMID := 'Net 30';
+        GPVendor.SHIPMTHD := 'OVERNIGHT';
+        GPVendor.COUNTRY := 'Australia';
+        GPVendor.PYMNTPRI := '1';
+        GPVendor.AMOUNT := 6713.27000;
+        GPVendor.FAXNUMBR := '00000000000000';
+        GPVendor.ZIPCODE := '2086';
+        GPVendor.STATE := 'NSW';
+        GPVendor.INET1 := '';
+        GPVendor.INET2 := ' ';
+        GPVendor.TAXSCHID := 'AUSNSWST+20';
+        GPVendor.UPSZONE := '';
+        GPVendor.TXIDNMBR := '';
+        GPVendor.Insert();
+
+        GPVendorAddress.Init();
+        GPVendorAddress.VENDORID := 'ACETRAVE0002';
+        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.VNDCNTCT := 'Greg Powell Jr.';
+        GPVendorAddress.ADDRESS1 := '124 Riley Street';
+        GPVendorAddress.ADDRESS2 := '';
+        GPVendorAddress.CITY := 'Sydney';
+        GPVendorAddress.STATE := 'NSW';
+        GPVendorAddress.ZIPCODE := '2086';
+        GPVendorAddress.PHNUMBR1 := '61855501040000';
+        GPVendorAddress.FAXNUMBR := '61855501040000';
+        GPVendorAddress.COUNTRY := 'Australia';
+        GPVendorAddress.Insert();
+
+        GPVendorAddress.Init();
+        GPVendorAddress.VENDORID := 'ACETRAVE0002';
+        GPVendorAddress.ADRSCODE := 'WAREHOUSE';
+        GPVendorAddress.VNDCNTCT := 'Greg Powell Jr.';
+        GPVendorAddress.ADDRESS1 := '124 Riley Street';
+        GPVendorAddress.ADDRESS2 := '';
+        GPVendorAddress.CITY := 'Sydney';
+        GPVendorAddress.STATE := 'NSW';
+        GPVendorAddress.ZIPCODE := '2086';
+        GPVendorAddress.PHNUMBR1 := '00000000000000';
+        GPVendorAddress.FAXNUMBR := '00000000000000';
+        GPVendorAddress.COUNTRY := 'Australia';
+        GPVendorAddress.Insert();
+
+        GPVendor.Init();
         GPVendor.VENDORID := 'ACME';
         GPVendor.VENDNAME := 'Acme Truck Line';
         GPVendor.SEARCHNAME := 'Acme Truck Line';
@@ -1839,59 +1979,6 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.ZIPCODE := '76114';
         GPVendorAddress.PHNUMBR1 := '41327348230000';
         GPVendorAddress.FAXNUMBR := '41327348300000';
-        GPVendorAddress.Insert();
-
-        GPVendor.Init();
-        GPVendor.VENDORID := 'ACETRAVE0001';
-        GPVendor.VENDNAME := 'A Travel Company';
-        GPVendor.SEARCHNAME := 'A Travel Company';
-        GPVendor.VNDCHKNM := 'A Travel Company';
-        GPVendor.ADDRESS1 := '123 Riley Street';
-        GPVendor.ADDRESS2 := '';
-        GPVendor.CITY := 'Sydney';
-        GPVendor.VNDCNTCT := 'Greg Powell';
-        GPVendor.PHNUMBR1 := '29855501010000';
-        GPVendor.PYMTRMID := 'Net 30';
-        GPVendor.SHIPMTHD := 'OVERNIGHT';
-        GPVendor.COUNTRY := 'Australia';
-        GPVendor.PYMNTPRI := '1';
-        GPVendor.AMOUNT := 6713.27000;
-        GPVendor.FAXNUMBR := '29455501010000';
-        GPVendor.ZIPCODE := '2086';
-        GPVendor.STATE := 'NSW';
-        GPVendor.INET1 := '';
-        GPVendor.INET2 := ' ';
-        GPVendor.TAXSCHID := 'AUSNSWST+20';
-        GPVendor.UPSZONE := '';
-        GPVendor.TXIDNMBR := '';
-        GPVendor.Insert();
-
-        GPVendorAddress.Init();
-        GPVendorAddress.VENDORID := 'ACETRAVE0001';
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
-        GPVendorAddress.VNDCNTCT := 'Greg Powell';
-        GPVendorAddress.ADDRESS1 := '123 Riley Street';
-        GPVendorAddress.ADDRESS2 := '';
-        GPVendorAddress.CITY := 'Sydney';
-        GPVendorAddress.STATE := 'NSW';
-        GPVendorAddress.ZIPCODE := '2086';
-        GPVendorAddress.PHNUMBR1 := '29855501010000';
-        GPVendorAddress.FAXNUMBR := '29455501010000';
-        GPVendorAddress.COUNTRY := 'Australia';
-        GPVendorAddress.Insert();
-
-        GPVendorAddress.Init();
-        GPVendorAddress.VENDORID := 'ACETRAVE0001';
-        GPVendorAddress.ADRSCODE := 'REMIT TO';
-        GPVendorAddress.VNDCNTCT := 'Greg Powell';
-        GPVendorAddress.ADDRESS1 := 'Box 342';
-        GPVendorAddress.ADDRESS2 := '';
-        GPVendorAddress.CITY := 'Sydney';
-        GPVendorAddress.STATE := 'NSW';
-        GPVendorAddress.ZIPCODE := '2000';
-        GPVendorAddress.PHNUMBR1 := '29855501020000';
-        GPVendorAddress.FAXNUMBR := '29455501020000';
-        GPVendorAddress.COUNTRY := 'Australia';
         GPVendorAddress.Insert();
     end;
 }

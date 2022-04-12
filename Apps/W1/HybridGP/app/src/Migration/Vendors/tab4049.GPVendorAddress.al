@@ -77,12 +77,14 @@ table 4049 "GP Vendor Address"
             OrderAddress."Address 2" := CopyStr(ADDRESS2, 1, 50);
             OrderAddress.City := CopyStr(CITY, 1, 30);
             OrderAddress.Contact := VNDCNTCT;
+            OrderAddress."Phone No." := PHNUMBR1;
+            OrderAddress."Fax No." := FAXNUMBR;
 
-            if (PHNUMBR1 <> '') and (CopyStr(PHNUMBR1, 1, 14) <> '00000000000000') then
-                OrderAddress."Phone No." := PHNUMBR1;
+            if (CopyStr(OrderAddress."Phone No.", 1, 14) = '00000000000000') then
+                OrderAddress."Phone No." := '';
 
-            if (FAXNUMBR <> '') and (CopyStr(FAXNUMBR, 1, 14) <> '00000000000000') then
-                OrderAddress."Fax No." := FAXNUMBR;
+            if (CopyStr(OrderAddress."Fax No.", 1, 14) = '00000000000000') then
+                OrderAddress."Fax No." := '';
 
             OrderAddress."Post Code" := ZIPCODE;
             OrderAddress.County := STATE;
