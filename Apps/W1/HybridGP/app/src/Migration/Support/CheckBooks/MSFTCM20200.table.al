@@ -250,7 +250,7 @@ table 40104 MSFTCM20200
                             JournalTemplateName := 'CASHRCPT';
                             NoSeries := 'GJNL-RCPT';
                         end;
-                    CMTransactionType::APCheck: /* CMLinkID -- Need to determine whether Payroll check (EmployeeID - UPR00100); otherwise it is Vendor */
+                    CMTransactionType::APCheck:
                         begin
                             DocumentType := DocumentType::Payment;
                             JournalTemplateName := 'PAYMENT';
