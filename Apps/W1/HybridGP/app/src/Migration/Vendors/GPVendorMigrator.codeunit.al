@@ -160,10 +160,10 @@ codeunit 4022 "GP Vendor Migrator"
             GPVendor.ZIPCODE := GPVendorAddress.ZIPCODE;
             GPVendor.COUNTRY := GPVendorAddress.COUNTRY;
 
-            if (GPVendorAddress.PHNUMBR1 <> '') and (CopyStr(GPVendorAddress.PHNUMBR1, 1, 14) <> '00000000000000') then
+            if (CopyStr(GPVendorAddress.PHNUMBR1, 1, 14) <> '00000000000000') then
                 GPVendor.PHNUMBR1 := GPVendorAddress.PHNUMBR1;
 
-            if (GPVendorAddress.FAXNUMBR <> '') and (CopyStr(GPVendorAddress.FAXNUMBR, 1, 14) <> '00000000000000') then
+            if (CopyStr(GPVendorAddress.FAXNUMBR, 1, 14) <> '00000000000000') then
                 GPVendor.FAXNUMBR := GPVendorAddress.FAXNUMBR;
         end;
 
