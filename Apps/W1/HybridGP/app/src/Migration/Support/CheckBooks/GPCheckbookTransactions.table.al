@@ -1,5 +1,7 @@
 table 40101 "GP Checkbook Transactions"
 {
+    ObsoleteState = Pending;
+    ObsoleteReason = 'Using new staging table, MSFTCM20200, which includes all transactions from GP.';
     ReplicateData = false;
     Extensible = false;
 
