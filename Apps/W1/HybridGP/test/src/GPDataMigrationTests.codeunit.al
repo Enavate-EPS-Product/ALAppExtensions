@@ -26,11 +26,15 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Customer: Record "Customer";
         GenBusPostingGroup: Record "Gen. Business Posting Group";
+        CustomerCount: Integer;
     begin
         // [SCENARIO] All Customers are queried from GP
 
         // [GIVEN] GP data
         Initialize();
+
+        // When adding Customers, update the expected count here
+        CustomerCount := 3;
 
         GenBusPostingGroup.Init();
         GenBusPostingGroup.Validate(GenBusPostingGroup.Code, 'GP');
@@ -40,7 +44,7 @@ codeunit 139664 "GP Data Migration Tests"
         CreateCustomerData();
 
         // [then] Then the correct number of Customers are imported
-        Assert.AreEqual(3, GPCustomer.Count(), 'Wrong number of Customers read');
+        Assert.AreEqual(CustomerCount, GPCustomer.Count(), 'Wrong number of Customers read');
 
         // [then] Then fields for Customer 1 are correctly imported to temporary table
         GPCustomer.SetRange(CUSTNMBR, '!WOW!');
@@ -73,7 +77,7 @@ codeunit 139664 "GP Data Migration Tests"
         MigrateCustomers(GPCustomer);
 
         // [then] Then the correct number of Customers are applied
-        Assert.AreEqual(3, Customer.Count(), 'Wrong number of Migrated Customers read');
+        Assert.AreEqual(CustomerCount, Customer.Count(), 'Wrong number of Migrated Customers read');
 
         // [then] Then fields for Customer 1 are correctly applied
         Customer.SetRange("No.", '!WOW!');
@@ -85,8 +89,6 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('', Customer.Address, 'Address of Migrated Customer is wrong');
         Assert.AreEqual('Toyota Land', Customer."Address 2", 'Address2 of Migrated Customer is wrong');
         Assert.AreEqual('!What a city!', Customer.City, 'City of Migrated Customer is wrong');
-        Assert.AreEqual('00000000000000', Customer."Phone No.", 'Phone No. of Migrated Customer is wrong');
-        Assert.AreEqual('00000000000000', Customer."Fax No.", 'Fax No. of Migrated Customer is wrong');
         Assert.AreEqual('84953', Customer."Post Code", 'Post Code of Migrated Customer is wrong');
         Assert.AreEqual('USA', Customer."Country/Region Code", 'Country/Region of Migrated Customer is wrong');
         Assert.AreEqual('KNOBL-CHUCK-001', Customer."Salesperson Code", 'Salesperson Code of Migrated Customer is wrong');
@@ -97,6 +99,20 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('2% EOM/NET', Customer."Payment Terms Code", 'Payment Terms Code of Migrated Customer is wrong');
         Assert.AreEqual('S-N-NO-%S', Customer."Tax Area Code", 'Tax Area Code of Migrated Customer is wrong');
         Assert.AreEqual(true, Customer."Tax Liable", 'Tax Liable of Migrated Customer is wrong');
+
+        // [WHEN] the Customer phone and/or fax were default (00000000000000)
+        // [then] The phone and/or fax values are empty 
+        Assert.AreEqual('', Customer."Phone No.", 'Phone No. of Migrated Customer should be empty');
+        Assert.AreEqual('', Customer."Fax No.", 'Fax No. of Migrated Customer should be empty');
+
+        // [WHEN] the Customer phone and/or fax were not default (00000000000000)
+        Customer.Reset();
+        Customer.SetRange("No.", '"AMERICAN"');
+        Customer.FindFirst();
+
+        // [then] The phone and/or fax values will be set to the migrated value
+        Assert.AreEqual('31847240170000', Customer."Phone No.", 'Phone No. of Migrated Customer is wrong');
+        Assert.AreEqual('31847240200000', Customer."Fax No.", 'Fax No. of Migrated Customer is wrong');
     end;
 
     [Test]
