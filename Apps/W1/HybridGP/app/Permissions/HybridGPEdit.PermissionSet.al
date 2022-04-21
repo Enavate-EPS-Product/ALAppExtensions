@@ -66,5 +66,6 @@ permissionset 4031 "HybridGP - Edit"
                     tabledata "GP Company Migration Settings" = IMD,
                     tabledata "GP Migration Errors" = IMD,
                     tabledata "GP Segment Name" = IMD,
+                    tabledata MSFTCM20200 = IMD,
                     tabledata "GP Company Additional Settings" = IMD;
 }

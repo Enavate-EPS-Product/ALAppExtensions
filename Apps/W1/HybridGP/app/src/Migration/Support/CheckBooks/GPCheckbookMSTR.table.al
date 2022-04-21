@@ -182,6 +182,7 @@ table 40099 "GP Checkbook MSTR"
     procedure MoveStagingData()
     var
         BankAccount: Record "Bank Account";
+        MSFTCM20200Table: Record MSFTCM20200;
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         MigrateInactiveCheckbooks: Boolean;
     begin
@@ -202,24 +203,26 @@ table 40099 "GP Checkbook MSTR"
                         BankAccount."Bank Acc. Posting Group" := GetBankAccPostingGroup(ACTINDX);
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
+
+                        //MSFTCM20200Table.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
                     end;
             until Next() = 0;
     end;
 
     local procedure UpdateBankInfo(BankId: Text[15]; var BankAccount: Record "Bank Account")
     var
-        CMBankMSTR: Record "GP Bank MSTR";
+        GPBankMSTRTable: Record "GP Bank MSTR";
     begin
-        if CMBankMSTR.Get(BankId) then begin
-            BankAccount.Address := DelChr(CMBankMSTR.ADDRESS1, '>', ' ');
-            BankAccount."Address 2" := CopyStr(DelChr(CMBankMSTR.ADDRESS2, '>', ' '), 1, 50);
-            BankAccount.City := CopyStr(DelChr(CMBankMSTR.CITY, '>', ' '), 1, 30);
-            BankAccount."Phone No." := DelChr(CMBankMSTR.PHNUMBR1, '>', ' ');
-            BankAccount."Transit No." := DelChr(CMBankMSTR.TRNSTNBR, '>', ' ');
-            BankAccount."Fax No." := DelChr(CMBankMSTR.FAXNUMBR, '>', ' ');
-            BankAccount.County := DelChr(CMBankMSTR.STATE, '>', ' ');
-            BankAccount."Post Code" := DelChr(CMBankMSTR.ZIPCODE, '>', ' ');
-            BankAccount."Bank Branch No." := CopyStr(DelChr(CMBankMSTR.BNKBRNCH, '>', ' '), 1, 20);
+        if GPBankMSTRTable.Get(BankId) then begin
+            BankAccount.Address := DelChr(GPBankMSTRTable.ADDRESS1, '>', ' ');
+            BankAccount."Address 2" := CopyStr(DelChr(GPBankMSTRTable.ADDRESS2, '>', ' '), 1, 50);
+            BankAccount.City := CopyStr(DelChr(GPBankMSTRTable.CITY, '>', ' '), 1, 30);
+            BankAccount."Phone No." := DelChr(GPBankMSTRTable.PHNUMBR1, '>', ' ');
+            BankAccount."Transit No." := DelChr(GPBankMSTRTable.TRNSTNBR, '>', ' ');
+            BankAccount."Fax No." := DelChr(GPBankMSTRTable.FAXNUMBR, '>', ' ');
+            BankAccount.County := DelChr(GPBankMSTRTable.STATE, '>', ' ');
+            BankAccount."Post Code" := DelChr(GPBankMSTRTable.ZIPCODE, '>', ' ');
+            BankAccount."Bank Branch No." := CopyStr(DelChr(GPBankMSTRTable.BNKBRNCH, '>', ' '), 1, 20);
         end;
     end;
 
