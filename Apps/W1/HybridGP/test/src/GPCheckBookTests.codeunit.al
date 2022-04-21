@@ -118,7 +118,6 @@ codeunit 139700 "GP Checkbook Tests"
         // [WHEN] Checkbook migration code is called
         Migrate();
 
-
         // [THEN] Active Bank Accounts are created
         Assert.RecordCount(BankAccount, 3);
 
