@@ -25,14 +25,15 @@ Codeunit 4037 "Helper Functions"
                     tabledata "Gen. Journal Line" = rimd,
                     tabledata "G/L - Item Ledger Relation" = rimd,
                     tabledata "G/L Register" = rimd,
-                    tableData "Bank Account" = rimd,
-                    tableData "Bank Account Posting Group" = rimd,
-                    tableData "Bank Account Ledger Entry" = rimd,
-                    tableData "Bank Acc. Reconciliation" = rimd,
-                    tableData "Bank Acc. Reconciliation Line" = rimd,
-                    tableData "Purchase Header" = rimd,
-                    tableData "Purchase Line" = rimd,
-                    tableData "Over-Receipt Code" = rimd;
+                    tabledata "Bank Account" = rimd,
+                    tabledata "Bank Account Posting Group" = rimd,
+                    tabledata "Bank Account Ledger Entry" = rimd,
+                    tabledata "Bank Acc. Reconciliation" = rimd,
+                    tabledata "Bank Acc. Reconciliation Line" = rimd,
+                    tabledata "Purchase Header" = rimd,
+                    tabledata "Purchase Line" = rimd,
+                    tabledata "Over-Receipt Code" = rimd,
+                    tabledata "Accounting Period" = rimd;
 
     var
         GPConfiguration: Record "GP Configuration";
@@ -586,6 +587,11 @@ Codeunit 4037 "Helper Functions"
         CreateOpenPOsImp();
     end;
 
+    procedure CreateFiscalPeriods()
+    begin
+        CreateFiscalPeriodsImp();
+    end;
+
     procedure CreateSetupRecordsIfNeeded()
     var
         CompanyInformation: Record "Company Information";
@@ -1071,9 +1077,11 @@ Codeunit 4037 "Helper Functions"
         GPSegments: Record "GP Segments";
         GPFiscalPeriods: Record "GP Fiscal Periods";
         GPPaymentTerms: Record "GP Payment Terms";
-        GPBankMaster: Record "GP Bank MSTR";
-        GPCheckbookMaster: Record "GP Checkbook MSTR";
+        GPBankMSTR: Record "GP Bank MSTR";
+        GPCheckbookMSTR: Record "GP Checkbook MSTR";
         GPCheckbookTransactions: Record "GP Checkbook Transactions";
+        MSFTCM20200Table: Record MSFTCM20200;
+        MSFTSY40101Table: Record MSFTSY40101;
     begin
         GPAccount.DeleteAll();
         GPGLTransactions.DeleteAll();
@@ -1095,9 +1103,12 @@ Codeunit 4037 "Helper Functions"
         GPFiscalPeriods.DeleteAll();
         GPPaymentTerms.DeleteAll();
 
-        GPBankMaster.DeleteAll();
-        GPCheckbookMaster.DeleteAll();
+        GPBankMSTR.DeleteAll();
+        GPCheckbookMSTR.DeleteAll();
         GPCheckbookTransactions.DeleteAll();
+
+        MSFTCM20200Table.DeleteAll();
+        MSFTSY40101Table.DeleteAll();
 
         Session.LogMessage('00007GH', 'Cleaned up staging tables.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
     end;
@@ -1111,14 +1122,14 @@ Codeunit 4037 "Helper Functions"
         Dimension: Record Dimension;
         DimensionValue: Record "Dimension Value";
         DimensionSetEntry: Record "Dimension Set Entry";
-        DetailedCustLedgerEntry: Record "Detailed Cust. Ledg. Entry";
+        DetailedCustLedgEntry: Record "Detailed Cust. Ledg. Entry";
         Vendor: Record Vendor;
         VendorLedgerEntry: Record "Vendor Ledger Entry";
         DetailedVendorLedgEntry: Record "Detailed Vendor Ledg. Entry";
         DataMigrationStatus: Record "Data Migration Status";
         Item: Record Item;
         ItemLedgerEntry: Record "Item Ledger Entry";
-        AvgCodeAdjmtEntryPoint: Record "Avg. Cost Adjmt. Entry Point";
+        AvgCostAdjmtEntryPoint: Record "Avg. Cost Adjmt. Entry Point";
         ValueEntry: Record "Value Entry";
         ItemUnitOfMeasure: Record "Item Unit of Measure";
         PaymentTerms: Record "Payment Terms";
@@ -1142,12 +1153,13 @@ Codeunit 4037 "Helper Functions"
         PurchaseHeader: Record "Purchase Header";
         PurchaseLine: Record "Purchase Line";
         OverReceiptCode: Record "Over-Receipt Code";
+        AccountingPeriod: Record "Accounting Period";
     begin
         GPConfiguration.DeleteAll();
         GLEntry.DeleteAll(true);
         GLRegister.DeleteAll(true);
         CustLedgerEntry.DeleteAll(true);
-        DetailedCustLedgerEntry.DeleteAll(true);
+        DetailedCustLedgEntry.DeleteAll(true);
         Customer.DeleteAll(true);
         PurchaseLine.ModifyAll("Qty. Rcd. Not Invoiced", 0);
         PurchaseLine.DeleteAll(true);
@@ -1156,7 +1168,7 @@ Codeunit 4037 "Helper Functions"
         DetailedVendorLedgEntry.DeleteAll(true);
         Vendor.DeleteAll(true);
         ItemLedgerEntry.DeleteAll(true);
-        AvgCodeAdjmtEntryPoint.DeleteAll(true);
+        AvgCostAdjmtEntryPoint.DeleteAll(true);
         ValueEntry.DeleteAll(true);
         PostValueEntryToGL.DeleteAll(true);
         TrackingSpecification.DeleteAll(true);
@@ -1198,6 +1210,8 @@ Codeunit 4037 "Helper Functions"
         CleanupVatPostingSetup();
         GenJournalLine.DeleteAll(true);
         GLAccount.DeleteAll(true);
+
+        AccountingPeriod.DeleteAll();
 
         Commit();
         Session.LogMessage('00007GI', 'Cleaned up before Synchronization.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
@@ -1778,6 +1792,13 @@ Codeunit 4037 "Helper Functions"
         GPPOPPOHeader.MoveStagingData();
         Session.LogMessage('0000CQP', 'Created Open Purchase Orders', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
         SetOpenPurchaseOrdersCreated();
+    end;
+
+    local procedure CreateFiscalPeriodsImp()
+    var
+        GPFiscalPeriods: Record "GP Fiscal Periods";
+    begin
+
     end;
 
     local procedure SetDimentionsCreated()

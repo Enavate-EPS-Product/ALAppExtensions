@@ -42,6 +42,7 @@ codeunit 4025 "GP Cloud Migration"
         InitiateMigrationMsg: Label 'Initiate GP Migration.', Locked = true;
         StartMigrationMsg: Label 'Start Migration', Locked = true;
         SourceTableNameCM20200Lbl: Label 'CM20200', Locked = true;
+        SourceTableNameSY40101Lbl: Label 'SY40101', Locked = true;
 
     local procedure InitiateGPMigration()
     var
@@ -140,6 +141,7 @@ codeunit 4025 "GP Cloud Migration"
     local procedure OnInsertDefaultTableMappings(DeleteExisting: Boolean; ProductID: Text[250])
     begin
         UpdateOrInsertRecord(Database::MSFTCM20200, SourceTableNameCM20200Lbl);
+        UpdateOrInsertRecord(Database::MSFTSY40101, SourceTableNameSY40101Lbl);
     end;
 
     local procedure UpdateOrInsertRecord(TableID: Integer; SourceTableName: Text[128])

@@ -1,6 +1,5 @@
 table 40104 MSFTCM20200
 {
-    ReplicateData = false;
     Extensible = false;
     Permissions = tableData "Bank Account Ledger Entry" = rim;
     DataClassification = CustomerContent;
