@@ -193,7 +193,7 @@ table 40099 "GP Checkbook MSTR"
             repeat
                 if not BankAccount.Get(CHEKBKID) then
                     if MigrateInactiveCheckbooks or not INACTIVE then begin
-                        BankAccount.Init();
+                        Clear(BankAccount);
                         BankAccount."No." := DelChr(CHEKBKID, '>', ' ');
                         BankAccount.Name := DelChr(DSCRIPTN, '>', ' ');
                         BankAccount."Bank Account No." := DelChr(BNKACTNM, '>', ' ');
