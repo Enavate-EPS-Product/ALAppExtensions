@@ -11,11 +11,9 @@ codeunit 139700 "GP Checkbook Tests"
         Assert: Codeunit Assert;
         GPAccount: Record "GP Account";
         GPCheckbookMSTRTable: Record "GP Checkbook MSTR";
-        Vendor: Record Vendor;
         MSFTCM20200Table: Record MSFTCM20200;
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
-        VendorPostingGroup: Record "Vendor Posting Group";
         BankAccount: Record "Bank Account";
         GenJournalTemplate: Record "Gen. Journal Template";
         InvalidBankAccountMsg: Label '%1 should not have been created.', Comment = '%1 - bank account no.', Locked = true;
@@ -25,7 +23,6 @@ codeunit 139700 "GP Checkbook Tests"
         MyBankStr3: Label 'MyBank03', Comment = 'Bank name', Locked = true;
         MyBankStr4: Label 'MyBank04', Comment = 'Bank name', Locked = true;
         MyBankStr5: Label 'MyBank05', Comment = 'Bank name', Locked = true;
-        GPBankAccountPostingGroupLbl: Label 'GPBANKGROUP', Comment = 'Posting Group name', Locked = true;
 
     [Test]
     [TransactionModel(TransactionModel::AutoCommit)]
@@ -57,19 +54,10 @@ codeunit 139700 "GP Checkbook Tests"
         Assert.RecordCount(BankAccount, 5);
 
         // [THEN] General Journal Lines are created
-        GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
-        GenJournalLine.SetFilter("Journal Template Name", 'CASHRCPT');
-        Assert.RecordCount(GenJournalLine, 3);
-
-        GenJournalLine.Reset();
-        GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
-        GenJournalLine.SetFilter("Journal Template Name", 'PAYMENT');
-        Assert.RecordCount(GenJournalLine, 5);
-
         GenJournalLine.Reset();
         GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
         GenJournalLine.SetFilter("Journal Template Name", 'GENERAL');
-        Assert.RecordCount(GenJournalLine, 4);
+        Assert.RecordCount(GenJournalLine, 12);
 
         // [WHEN] Batches are posted.
         HelperFunctions.PostGLTransactions();
@@ -139,18 +127,8 @@ codeunit 139700 "GP Checkbook Tests"
 
         // [THEN] General Journal Lines are created
         GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
-        GenJournalLine.SetFilter("Journal Template Name", 'CASHRCPT');
-        Assert.RecordCount(GenJournalLine, 1);
-
-        GenJournalLine.Reset();
-        GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
-        GenJournalLine.SetFilter("Journal Template Name", 'PAYMENT');
-        Assert.RecordCount(GenJournalLine, 3);
-
-        GenJournalLine.Reset();
-        GenJournalLine.SetFilter("Journal Batch Name", 'GPBANK');
         GenJournalLine.SetFilter("Journal Template Name", 'GENERAL');
-        Assert.RecordCount(GenJournalLine, 4);
+        Assert.RecordCount(GenJournalLine, 8);
 
         // [WHEN] Batches are posted.
         HelperFunctions.PostGLTransactions();
@@ -189,7 +167,6 @@ codeunit 139700 "GP Checkbook Tests"
         repeat
             MigrateGL(GPAccount);
         until GPAccount.Next() = 0;
-        CreateVendor();
         GPCheckbookMSTRTable.MoveStagingData();
     end;
 
@@ -448,24 +425,13 @@ codeunit 139700 "GP Checkbook Tests"
     local procedure CreateGenJournalTemplates()
     begin
         GenJournalTemplate.Reset();
-        GenJournalTemplate.SetRange(Name, 'CASHRCPT');
+        GenJournalTemplate.SetRange(Name, 'GENERAL');
         if not GenJournalTemplate.FindFirst then begin
             GenJournalTemplate.Init();
-            GenJournalTemplate.Validate(Name, 'CASHRCPT');
-            GenJournalTemplate.Validate(Description, 'Cash receipts');
-            GenJournalTemplate.Validate("Source Code", 'CASHRECJNL');
-            GenJournalTemplate.Validate("No. Series", 'GJNL-RCPT');
-            GenJournalTemplate.Insert(true);
-        end;
-
-        GenJournalTemplate.Reset();
-        GenJournalTemplate.SetRange(Name, 'PAYMENT');
-        if not GenJournalTemplate.FindFirst then begin
-            GenJournalTemplate.Init();
-            GenJournalTemplate.Validate(Name, 'PAYMENT');
-            GenJournalTemplate.Validate(Description, 'Payments');
-            GenJournalTemplate.Validate("Source Code", 'PAYMENTJNL');
-            GenJournalTemplate.Validate("No. Series", 'GJNL-PMT');
+            GenJournalTemplate.Validate(Name, 'GENERAL');
+            GenJournalTemplate.Validate(Description, 'General');
+            GenJournalTemplate.Validate("Source Code", 'GENJNL');
+            GenJournalTemplate.Validate("No. Series", 'GJNL-GEN');
             GenJournalTemplate.Insert(true);
         end;
     end;
@@ -477,28 +443,5 @@ codeunit 139700 "GP Checkbook Tests"
     begin
         GPAccountMigrator.OnMigrateGlAccount(GLAccDataMigrationFacade, GPAccount.RecordId());
         GPAccountMigrator.OnMigrateAccountTransactions(GLAccDataMigrationFacade, GPAccount.RecordId());
-    end;
-
-    local procedure CreateVendor()
-    begin
-        if not Vendor.Get('1000') then begin
-            Vendor.Init();
-            Vendor.Validate("No.", '1000');
-            Vendor.Validate(Name, 'Test Vendor');
-            Vendor.Validate("Vendor Posting Group", CreateVendorPostingGroup());
-            Vendor.Insert(true);
-        end;
-    end;
-
-    local procedure CreateVendorPostingGroup(): Code[20]
-    begin
-        if not VendorPostingGroup.Get('GPVEND') then begin
-            VendorPostingGroup.Init();
-            VendorPostingGroup.Validate(Code, 'GPVEND');
-            VendorPostingGroup.Validate("Payables Account", '140');
-            VendorPostingGroup.Insert(true);
-        end;
-
-        exit(VendorPostingGroup.Code);
     end;
 }
