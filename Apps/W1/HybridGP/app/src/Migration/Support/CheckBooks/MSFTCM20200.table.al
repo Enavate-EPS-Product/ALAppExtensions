@@ -224,14 +224,14 @@ table 40104 MSFTCM20200
 
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
-        AccountNo: Code[20];
+        PostingAccountNumber: Code[20];
     begin
-        AccountNo := GetBankAccPostingAccountNo(BankAccPostingGroupCode);
         SetRange(CHEKBKID, CheckbookID);
         if FindSet() then
-            repeat
-                CreateGeneralJournalLine(Format(CMRECNUM), DSCRIPTN, DT2Date(TRXDATE), AccountNo, TRXAMNT, BankAccountNo);
-            until Next() = 0;
+            if GetBankAccPostingAccountNumber(PostingAccountNumber, BankAccPostingGroupCode) then
+                repeat
+                    CreateGeneralJournalLine(Format(CMRECNUM), DSCRIPTN, DT2Date(TRXDATE), PostingAccountNumber, TRXAMNT, BankAccountNo);
+                until Next() = 0;
     end;
 
     procedure CreateGeneralJournalLine(DocumentNo: Code[20]; Description: Text[50]; PostingDate: Date; OffsetAccount: Code[20]; TrxAmount: Decimal; BankAccount: Code[20])
@@ -297,13 +297,14 @@ table 40104 MSFTCM20200
         end;
     end;
 
-    local procedure GetBankAccPostingAccountNo(BankAccPostingGroup: Code[20]): Code[20]
+    local procedure GetBankAccPostingAccountNumber(var GLAccountNumber: Code[20]; BankAccPostingGroup: Code[20]): Boolean
     var
         BankAccountPostingGroup: Record "Bank Account Posting Group";
     begin
-        if BankAccountPostingGroup.Get(BankAccPostingGroup) then
-            exit(BankAccountPostingGroup."G/L Account No.");
+        if not BankAccountPostingGroup.Get(BankAccPostingGroup) then
+            exit(false);
 
-        exit('InvalidAccount');
+        GLAccountNumber := BankAccountPostingGroup."G/L Account No.";
+        exit(true);
     end;
 }
