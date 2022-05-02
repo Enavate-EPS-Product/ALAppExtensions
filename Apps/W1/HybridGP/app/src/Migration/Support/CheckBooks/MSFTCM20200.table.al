@@ -221,6 +221,7 @@ table 40104 MSFTCM20200
 
     var
         BatchNameTxt: Label 'GPBANK', Locked = true;
+        BankWarningTxt: Label 'Unable to get %1 posting account.', Comment = '%1 = Posting Group', Locked = true;
 
     procedure MoveStagingData(BankAccountNo: Code[20]; BankAccPostingGroupCode: Code[20]; CheckbookID: Text[15])
     var
@@ -300,9 +301,12 @@ table 40104 MSFTCM20200
     local procedure GetBankAccPostingAccountNumber(var GLAccountNumber: Code[20]; BankAccPostingGroup: Code[20]): Boolean
     var
         BankAccountPostingGroup: Record "Bank Account Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
     begin
-        if not BankAccountPostingGroup.Get(BankAccPostingGroup) then
+        if not BankAccountPostingGroup.Get(BankAccPostingGroup) then begin
+            Session.LogMessage('', StrSubstNo(BankWarningTxt, BankAccPostingGroup), Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', HelperFunctions.GetTelemetryCategory());
             exit(false);
+        end;
 
         GLAccountNumber := BankAccountPostingGroup."G/L Account No.";
         exit(true);
