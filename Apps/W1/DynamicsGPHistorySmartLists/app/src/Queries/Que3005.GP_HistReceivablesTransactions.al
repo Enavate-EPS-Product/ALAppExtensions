@@ -60,6 +60,18 @@ query 3005 GPHistReceivablesTrx
             {
                 Caption = 'Cash Amount';
             }
+            column(ORTRXAMT; ORTRXAMT)
+            {
+                Caption = 'Original Transaction Amount';
+            }
+            column(COMDLRAM; COMDLRAM)
+            {
+                Caption = 'Commission Amount';
+            }
+            column(DINVPDOF; DINVPDOF)
+            {
+                Caption = 'Date Invoice Paid Off';
+            }
             column(DISTKNAM; DISTKNAM)
             {
                 Caption = 'Terms Disc Taken';

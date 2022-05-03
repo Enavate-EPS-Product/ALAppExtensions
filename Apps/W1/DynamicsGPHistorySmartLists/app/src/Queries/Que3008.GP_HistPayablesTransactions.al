@@ -35,6 +35,10 @@ query 3008 GPHistPayablesTrx
             {
                 Caption = 'Description';
             }
+            column(TEN99AMNT; TEN99AMNT)
+            {
+                Caption = '1099 Amount';
+            }
             column(TRDISAMT; TRDISAMT)
             {
                 Caption = 'Trade Discount';

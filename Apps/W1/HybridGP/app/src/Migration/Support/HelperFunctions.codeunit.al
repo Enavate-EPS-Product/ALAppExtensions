@@ -1353,18 +1353,6 @@ Codeunit 4037 "Helper Functions"
             GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
             if not GenJournalLine.IsEmpty() then
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'GENERAL');
-
-            GenJournalLine.Reset();
-            GenJournalLine.SetRange("Journal Template Name", 'CASHRCPT');
-            GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
-            if not GenJournalLine.IsEmpty() then
-                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'CASHRCPT');
-
-            GenJournalLine.Reset();
-            GenJournalLine.SetRange("Journal Template Name", 'PAYMENT');
-            GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
-            if not GenJournalLine.IsEmpty() then
-                PostGLBatch(CopyStr(JournalBatchName, 1, 10), 'PAYMENT');
         end;
 
         // Remove posted batches
@@ -1459,26 +1447,9 @@ Codeunit 4037 "Helper Functions"
         // Bank Batch
         JournalBatchName := BankBatchNameTxt;
         GenJournalLine.Reset();
-        GenJournalLine.SetRange("Journal Template Name", 'CASHRCPT');
-        GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
-        If GenJournalLine.Count() = 1 then begin
-            GenJournalLine.DeleteAll();
-            if GenJournalBatch.Get('CASHRCPT', JournalBatchName) then
-                GenJournalBatch.Delete();
-        end;
-
-        GenJournalLine.Reset();
-        GenJournalLine.SetRange("Journal Template Name", 'PAYMENT');
-        GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
-        If GenJournalLine.Count() = 1 then begin
-            GenJournalLine.DeleteAll();
-            if GenJournalBatch.Get('PAYMENT', JournalBatchName) then
-                GenJournalBatch.Delete();
-        end;
-
-        GenJournalLine.Reset();
         GenJournalLine.SetRange("Journal Template Name", 'GENERAL');
         GenJournalLine.SetRange("Journal Batch Name", JournalBatchName);
+        GenJournalLine.SetRange("Account Type", GenJournalLine."Account Type"::"Bank Account");
         If GenJournalLine.Count() = 1 then begin
             GenJournalLine.DeleteAll();
             if GenJournalBatch.Get('GENERAL', JournalBatchName) then
@@ -1989,5 +1960,15 @@ Codeunit 4037 "Helper Functions"
         DataMigrationError."Scheduled For Retry" := false;
         DataMigrationError."Error Message" := ErrorMessage;
         DataMigrationError.Insert();
+    end;
+
+    procedure CleanGPPhoneOrFaxNumber(InValue: Text[30]) OutValue: Text[21]
+    begin
+        OutValue := CopyStr(InValue, 1, 21);
+
+        if (CopyStr(InValue, 1, 14) = '00000000000000') then
+            OutValue := '';
+
+        exit(OutValue);
     end;
 }
