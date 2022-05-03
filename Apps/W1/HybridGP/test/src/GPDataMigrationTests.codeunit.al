@@ -408,10 +408,6 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('USD', VendorBankAccount."Currency Code", 'Currency Code of VendorBankAccount is wrong.');
         Assert.AreEqual(ValidIBANStr, VendorBankAccount.IBAN, 'IBAN of VendorBankAccount is wrong.');
         Assert.AreEqual(ValidSwiftCodeStr, VendorBankAccount."SWIFT Code", 'SWIFT Code of VendorBankAccount is wrong.');
-        Assert.AreEqual('124 Main Street', VendorBankAccount.Address, 'Address of VendorBankAccount is wrong.');
-        Assert.AreEqual('', VendorBankAccount."Address 2", 'Address 2 of VendorBankAccount is wrong.');
-        Assert.AreEqual('Orlando', VendorBankAccount.City, 'City of VendorBankAccount is wrong.');
-        Assert.AreEqual('32830', VendorBankAccount."Post Code", 'Post Code of VendorBankAccount is wrong.');
 
         // [WHEN] the Vendor has a Remit To bank account
         Vendor.Reset();
