@@ -1,4 +1,4 @@
-table 40106 MSFTSY40101
+table 40108 MSFTSY40101
 {
     DataClassification = CustomerContent;
     fields
