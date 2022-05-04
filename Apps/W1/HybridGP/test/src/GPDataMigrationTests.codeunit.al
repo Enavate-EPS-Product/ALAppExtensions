@@ -24,6 +24,11 @@ codeunit 139664 "GP Data Migration Tests"
         VendorIdWithBankStr3: Label 'Vendor003', Comment = 'Vendor Id with bank account information', Locked = true;
         ValidSwiftCodeStr: Label 'BOFAUS3N', Comment = 'Valid SWIFT Code', Locked = true;
         ValidIBANStr: Label 'GB33BUKB20201555555555', Comment = 'Valid IBAN code', Locked = true;
+        AddressCodeRemitTo: Label 'REMIT TO', Comment = 'GP ADRSCODE', Locked = true;
+        AddressCodePrimary: Label 'PRIMARY', Comment = 'GP ADRSCODE', Locked = true;
+        AddressCodeWarehouse: Label 'WAREHOUSE', Comment = 'GP ADRSCODE', Locked = true;
+        AddressCodeOther: Label 'OTHER', Comment = 'Dummy GP ADRSCODE', Locked = true;
+        AddressCodeOther2: Label 'OTHER2', Comment = 'Dummy GP ADRSCODE', Locked = true;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -238,7 +243,7 @@ codeunit 139664 "GP Data Migration Tests"
         // [WHEN] the Vendor address phone and/or fax were default (00000000000000)
         OrderAddress.Reset();
         OrderAddress.SetRange("Vendor No.", 'ACETRAVE0002');
-        OrderAddress.SetRange(Code, 'WAREHOUSE');
+        OrderAddress.SetRange(Code, AddressCodeWarehouse);
         OrderAddress.FindFirst();
 
         // [then] The phone and/or fax values are empty
@@ -248,7 +253,7 @@ codeunit 139664 "GP Data Migration Tests"
         // [WHEN] the Vendor address phone and/or fax were not default (00000000000000)
         OrderAddress.Reset();
         OrderAddress.SetRange("Vendor No.", 'ACETRAVE0002');
-        OrderAddress.SetRange(Code, 'Primary');
+        OrderAddress.SetRange(Code, AddressCodePrimary);
         OrderAddress.FindFirst();
 
         // [then] The phone and/or fax values will be set to the migrated value
@@ -369,11 +374,11 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [then] Then fields for the first record are correctly imported to temporary table
         MSFTSY06000.SetRange(CustomerVendor_ID, VendorIdWithBankStr1);
-        MSFTSY06000.SetRange(ADRSCODE, 'REMIT TO');
+        MSFTSY06000.SetRange(ADRSCODE, AddressCodeRemitTo);
         MSFTSY06000.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr1, MSFTSY06000.CustomerVendor_ID, 'CustomerVendor_ID of MSFTSY06000 is wrong.');
-        Assert.AreEqual('REMIT TO', MSFTSY06000.ADRSCODE, 'ADRSCODE of MSFTSY06000 is wrong.');
+        Assert.AreEqual(AddressCodeRemitTo, MSFTSY06000.ADRSCODE, 'ADRSCODE of MSFTSY06000 is wrong.');
         Assert.AreEqual('V01_RemitTo', MSFTSY06000.EFTBankCode, 'EFTBankCode of MSFTSY06000 is wrong.');
         Assert.AreEqual('V01_RemitTo_Name', MSFTSY06000.BANKNAME, 'BANKNAME of MSFTSY06000 is wrong.');
         Assert.AreEqual('01234', MSFTSY06000.EFTBankBranchCode, 'EFTBankBranchCode of MSFTSY06000 is wrong.');
@@ -1422,7 +1427,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := 'ACETRAVE0001';
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := 'Greg Powell';
         GPVendorAddress.ADDRESS1 := '123 Riley Street';
         GPVendorAddress.ADDRESS2 := '';
@@ -1435,7 +1440,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := 'ACETRAVE0001';
-        GPVendorAddress.ADRSCODE := 'REMIT TO';
+        GPVendorAddress.ADRSCODE := AddressCodeRemitTo;
         GPVendorAddress.VNDCNTCT := 'Greg Powell';
         GPVendorAddress.ADDRESS1 := 'Box 342';
         GPVendorAddress.ADDRESS2 := '';
@@ -1473,7 +1478,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := 'ACETRAVE0002';
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := 'Greg Powell Jr.';
         GPVendorAddress.ADDRESS1 := '124 Riley Street';
         GPVendorAddress.ADDRESS2 := '';
@@ -1486,7 +1491,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := 'ACETRAVE0002';
-        GPVendorAddress.ADRSCODE := 'WAREHOUSE';
+        GPVendorAddress.ADRSCODE := AddressCodeWarehouse;
         GPVendorAddress.VNDCNTCT := 'Greg Powell Jr.';
         GPVendorAddress.ADDRESS1 := '124 Riley Street';
         GPVendorAddress.ADDRESS2 := '';
@@ -2074,7 +2079,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := 'V3130';
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := 'Test Contact';
         GPVendorAddress.ADDRESS1 := 'P.O. Box10159';
         GPVendorAddress.ADDRESS2 := '2201a Jacsboro Highway 2';
@@ -2143,7 +2148,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
-        GPVendorAddress.ADRSCODE := 'REMIT TO';
+        GPVendorAddress.ADRSCODE := AddressCodeRemitTo;
         GPVendorAddress.VNDCNTCT := GPVendor.VNDCNTCT;
         GPVendorAddress.ADDRESS1 := GPVendor.ADDRESS1;
         GPVendorAddress.ADDRESS2 := GPVendor.ADDRESS2;
@@ -2156,7 +2161,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := GPVendor.VNDCNTCT;
         GPVendorAddress.ADDRESS1 := GPVendor.ADDRESS1 + '_Primary';
         GPVendorAddress.ADDRESS2 := GPVendor.ADDRESS2;
@@ -2169,7 +2174,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'REMIT TO';
+        MSFTSY06000.ADRSCODE := AddressCodeRemitTo;
         MSFTSY06000.EFTBankCode := 'V01_RemitTo';
         MSFTSY06000.BANKNAME := 'V01_RemitTo_Name';
         MSFTSY06000.EFTBankBranchCode := '01234';
@@ -2182,7 +2187,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'PRIMARY';
+        MSFTSY06000.ADRSCODE := AddressCodePrimary;
         MSFTSY06000.EFTBankCode := 'V01_Primary';
         MSFTSY06000.BANKNAME := 'V01_Primary_Name';
         MSFTSY06000.EFTBankBranchCode := '12345';
@@ -2195,7 +2200,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'OTHER';
+        MSFTSY06000.ADRSCODE := AddressCodeOther;
         MSFTSY06000.EFTBankCode := 'V01_Other';
         MSFTSY06000.BANKNAME := 'V01_Other_Name';
         MSFTSY06000.EFTBankBranchCode := '23450';
@@ -2234,7 +2239,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := GPVendor.VNDCNTCT;
         GPVendorAddress.ADDRESS1 := GPVendor.ADDRESS1;
         GPVendorAddress.ADDRESS2 := GPVendor.ADDRESS2;
@@ -2247,7 +2252,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'PRIMARY';
+        MSFTSY06000.ADRSCODE := AddressCodePrimary;
         MSFTSY06000.EFTBankCode := 'V02_Primary';
         MSFTSY06000.BANKNAME := 'V02_Primary_Name';
         MSFTSY06000.EFTBankBranchCode := '23456';
@@ -2260,7 +2265,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'OTHER';
+        MSFTSY06000.ADRSCODE := AddressCodeOther;
         MSFTSY06000.EFTBankCode := 'V02_Other';
         MSFTSY06000.BANKNAME := 'V02_Other_Name';
         MSFTSY06000.EFTBankBranchCode := '23458';
@@ -2299,7 +2304,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
-        GPVendorAddress.ADRSCODE := 'PRIMARY';
+        GPVendorAddress.ADRSCODE := AddressCodePrimary;
         GPVendorAddress.VNDCNTCT := GPVendor.VNDCNTCT;
         GPVendorAddress.ADDRESS1 := GPVendor.ADDRESS1;
         GPVendorAddress.ADDRESS2 := GPVendor.ADDRESS2;
@@ -2312,7 +2317,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'OTHER';
+        MSFTSY06000.ADRSCODE := AddressCodeOther;
         MSFTSY06000.EFTBankCode := 'V03_Other';
         MSFTSY06000.BANKNAME := 'V03_Other_Name';
         MSFTSY06000.EFTBankBranchCode := '34567';
@@ -2325,7 +2330,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         MSFTSY06000.Init();
         MSFTSY06000.CustomerVendor_ID := GPVendor.VENDORID;
-        MSFTSY06000.ADRSCODE := 'OTHER2';
+        MSFTSY06000.ADRSCODE := AddressCodeOther2;
         MSFTSY06000.EFTBankCode := 'V03_Other2';
         MSFTSY06000.BANKNAME := 'V03_Other2_Name';
         MSFTSY06000.EFTBankBranchCode := '34567';
