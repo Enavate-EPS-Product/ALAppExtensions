@@ -19,6 +19,7 @@ codeunit 4022 "GP Vendor Migrator"
         GPVendor.Get(RecordIdToMigrate);
         MigrateVendorDetails(GPVendor, Sender);
         MigrateVendorAddresses(GPVendor);
+        MigrateVendorEFTBankInformation(GPVendor);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Vendor Data Migration Facade", 'OnMigrateVendorPostingGroups', '', true, true)]
@@ -226,6 +227,17 @@ codeunit 4022 "GP Vendor Migrator"
             repeat
                 GPVendorAddress.MoveStagingData();
             until GPVendorAddress.Next() = 0;
+    end;
+
+    local procedure MigrateVendorEFTBankInformation(GPVendor: Record "GP Vendor")
+    var
+        MSFTSY06000: Record MSFTSY06000;
+    begin
+        MSFTSY06000.SetRange(CustomerVendor_ID, GPVendor.VENDORID);
+        if MSFTSY06000.FindSet() then
+            repeat
+                MSFTSY06000.MoveStagingData();
+            until MSFTSY06000.Next() = 0;
     end;
 
     procedure GetAll()
