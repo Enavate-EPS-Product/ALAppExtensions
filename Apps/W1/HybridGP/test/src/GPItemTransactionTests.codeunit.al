@@ -212,7 +212,7 @@ codeunit 139665 "GP Item Transaction Tests"
         GLAccount.Init();
         GLAccount."No." := '1300';
         GLAccount.Name := 'Inventory - Retail/Parts';
-        GLAccount."Account Type" := 0;
+        GLAccount."Account Type" := GLAccount."Account Type"::Posting;
         GLAccount.Insert();
     end;
 

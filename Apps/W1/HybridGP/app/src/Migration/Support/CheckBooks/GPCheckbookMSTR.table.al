@@ -182,6 +182,7 @@ table 40099 "GP Checkbook MSTR"
     procedure MoveStagingData()
     var
         BankAccount: Record "Bank Account";
+        MSFTCM20200Table: Record MSFTCM20200;
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         MigrateInactiveCheckbooks: Boolean;
     begin
@@ -200,6 +201,8 @@ table 40099 "GP Checkbook MSTR"
                         BankAccount."Bank Acc. Posting Group" := GetBankAccPostingGroup(ACTINDX);
                         UpdateBankInfo(DelChr(BANKID, '>', ' '), BankAccount);
                         BankAccount.Insert(true);
+
+                        MSFTCM20200Table.MoveStagingData(BankAccount."No.", BankAccount."Bank Acc. Posting Group", CHEKBKID);
                     end;
             until Next() = 0;
     end;

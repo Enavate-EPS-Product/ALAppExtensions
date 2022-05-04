@@ -31,6 +31,34 @@ query 3008 GPHistPayablesTrx
             {
                 Caption = 'Document Amount';
             }
+            column(TRXDSCRN; TRXDSCRN)
+            {
+                Caption = 'Description';
+            }
+            column(TEN99AMNT; TEN99AMNT)
+            {
+                Caption = '1099 Amount';
+            }
+            column(TRDISAMT; TRDISAMT)
+            {
+                Caption = 'Trade Discount';
+            }
+            column(MSCCHAMT; MSCCHAMT)
+            {
+                Caption = 'Misc Amount';
+            }
+            column(FRTAMNT; FRTAMNT)
+            {
+                Caption = 'Freight Amount';
+            }
+            column(TAXAMNT; TAXAMNT)
+            {
+                Caption = 'Tax Amount';
+            }
+            column(PYMTRMID; PYMTRMID)
+            {
+                Caption = 'Payment Terms';
+            }
         }
     }
 
