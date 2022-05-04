@@ -8,13 +8,13 @@ codeunit 139700 "GP Checkbook Tests"
     TestPermissions = Disabled;
 
     var
-        Assert: Codeunit Assert;
         GPAccount: Record "GP Account";
         GPCheckbookMSTRTable: Record "GP Checkbook MSTR";
         MSFTCM20200Table: Record MSFTCM20200;
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         BankAccount: Record "Bank Account";
+        Assert: Codeunit Assert;
         GenJournalTemplate: Record "Gen. Journal Template";
         InvalidBankAccountMsg: Label '%1 should not have been created.', Comment = '%1 - bank account no.', Locked = true;
         MissingBankAccountMsg: Label '%1 should have been created.', Comment = '%1 - bank account no.', Locked = true;
