@@ -68,5 +68,6 @@ permissionset 4032 "HybridGP - Read"
                     tabledata "GP Segment Name" = R,
                     tabledata MSFTCM20200 = R,
                     tabledata "GP Company Additional Settings" = R,
-                    tabledata MSFTSY40101 = R;
+                    tabledata MSFTSY40101 = R,
+                    tabledata MSFTSY06000 = R;
 }

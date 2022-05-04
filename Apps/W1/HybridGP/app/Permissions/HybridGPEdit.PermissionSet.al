@@ -68,5 +68,6 @@ permissionset 4031 "HybridGP - Edit"
                     tabledata "GP Segment Name" = IMD,
                     tabledata MSFTCM20200 = IMD,
                     tabledata "GP Company Additional Settings" = IMD,
-                    tabledata MSFTSY40101 = IMD;
+                    tabledata MSFTSY40101 = IMD,
+                    tabledata MSFTSY06000 = IMD;
 }

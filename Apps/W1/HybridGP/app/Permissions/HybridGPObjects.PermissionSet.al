@@ -93,5 +93,6 @@ permissionset 4029 "HybridGP - Objects"
                     table "GP Segment Name" = X,
                     table MSFTCM20200 = X,
                     table "GP Company Additional Settings" = X,
-                    table MSFTSY40101 = X;
+                    table MSFTSY40101 = X,
+                    table MSFTSY06000 = X;
 }
