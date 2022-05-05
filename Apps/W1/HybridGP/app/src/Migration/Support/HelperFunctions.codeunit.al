@@ -1749,9 +1749,9 @@ Codeunit 4037 "Helper Functions"
 
     local procedure CreateCheckBooksImp()
     var
-        CheckBookMaster: Record "GP Checkbook MSTR";
+        GPCheckbookMSTR: Record "GP Checkbook MSTR";
     begin
-        CheckBookMaster.MoveStagingData();
+        GPCheckbookMSTR.MoveStagingData();
         Session.LogMessage('0000CAB', 'Created Checkbooks', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
         SetCheckBooksCreated();
     end;
@@ -1767,9 +1767,9 @@ Codeunit 4037 "Helper Functions"
 
     local procedure CreateFiscalPeriodsImp()
     var
-        GPFiscalPeriods: Record "GP Fiscal Periods";
+        MSFTSY40101: Record MSFTSY40101;
     begin
-
+        MSFTSY40101.MoveStagingData();
     end;
 
     local procedure SetDimentionsCreated()
@@ -1894,6 +1894,7 @@ Codeunit 4037 "Helper Functions"
     procedure CreatePostMigrationData(): Boolean
     begin
         // this procedure might run multiple times depending upon migration errors.
+
         if not CheckBooksCreated() then
             CreateCheckbooks();
 
