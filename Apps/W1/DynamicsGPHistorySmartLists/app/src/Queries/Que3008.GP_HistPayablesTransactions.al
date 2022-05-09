@@ -59,6 +59,18 @@ query 3008 GPHistPayablesTrx
             {
                 Caption = 'Payment Terms';
             }
+            column(TEN99TYPE; TEN99TYPE)
+            {
+                Caption = '1099 Type';
+            }
+            column(TEN99BOXNUMBER; TEN99BOXNUMBER)
+            {
+                Caption = '1099 Box Value';
+            }
+            column(PONUMBER; PONUMBER)
+            {
+                Caption = 'PO Number';
+            }
         }
     }
 
