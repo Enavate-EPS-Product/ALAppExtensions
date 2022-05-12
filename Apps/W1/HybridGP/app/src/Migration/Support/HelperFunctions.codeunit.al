@@ -1770,6 +1770,8 @@ Codeunit 4037 "Helper Functions"
         MSFTSY40101: Record MSFTSY40101;
     begin
         MSFTSY40101.MoveStagingData();
+        Session.LogMessage('', 'Created Fiscal Periods', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
+        SetOpenFiscalPeriodsCreated();
     end;
 
     local procedure SetDimentionsCreated()
@@ -1811,6 +1813,13 @@ Codeunit 4037 "Helper Functions"
     begin
         GPConfiguration.GetSingleInstance();
         GPConfiguration."Open Purchase Orders Created" := true;
+        GPConfiguration.Modify();
+    end;
+
+    local procedure SetOpenFiscalPeriodsCreated()
+    begin
+        GPConfiguration.GetSingleInstance();
+        GPConfiguration."Fiscal Periods Created" := true;
         GPConfiguration.Modify();
     end;
 
@@ -1857,6 +1866,12 @@ Codeunit 4037 "Helper Functions"
         exit(GPConfiguration."Open Purchase Orders Created");
     end;
 
+    local procedure FiscalPeriodsCreated(): Boolean
+    begin
+        GPConfiguration.GetSingleInstance();
+        exit(GPConfiguration."Fiscal Periods Created");
+    end;
+
     procedure PreMigrationCleanupCompleted(): Boolean
     begin
         GPConfiguration.GetSingleInstance();
@@ -1895,13 +1910,16 @@ Codeunit 4037 "Helper Functions"
     begin
         // this procedure might run multiple times depending upon migration errors.
 
+        if not FiscalPeriodsCreated() then
+            CreateFiscalPeriods();
+
         if not CheckBooksCreated() then
             CreateCheckbooks();
 
         if not OpenPurchaseOrdersCreated() then
             CreateOpenPOs();
 
-        if CheckBooksCreated() and OpenPurchaseOrdersCreated() then
+        if CheckBooksCreated() and OpenPurchaseOrdersCreated() and FiscalPeriodsCreated() then
             exit(true);
 
         exit(false);
