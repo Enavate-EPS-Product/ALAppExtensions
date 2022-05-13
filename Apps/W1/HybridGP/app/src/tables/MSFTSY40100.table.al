@@ -96,6 +96,7 @@ table 40107 MSFTSY40100
                 if FindFirst() then begin
                     AccountingPeriod.Init();
                     AccountingPeriod.Validate("Starting Date", DT2Date(Rec.PERIODDT));
+                    AccountingPeriod.Validate(Name, CopyStr(Rec.PERNAME.TrimEnd(), 1, 10));
                     if i = 1 then begin
                         AccountingPeriod."New Fiscal Year" := true;
                         InventorySetup.Get();
