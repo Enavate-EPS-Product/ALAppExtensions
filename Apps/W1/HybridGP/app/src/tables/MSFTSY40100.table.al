@@ -85,6 +85,7 @@ table 40107 MSFTSY40100
     var
         AccountingPeriod: Record "Accounting Period";
         InventorySetup: Record "Inventory Setup";
+        OutlookSynchTypeConv: Codeunit "Outlook Synch. Type Conv";
         i: Integer;
     begin
         Rec.Reset();
@@ -95,7 +96,7 @@ table 40107 MSFTSY40100
                 Rec.SetFilter(PERIODID, Format(i));
                 if FindFirst() then begin
                     AccountingPeriod.Init();
-                    AccountingPeriod.Validate("Starting Date", DT2Date(Rec.PERIODDT));
+                    AccountingPeriod.Validate("Starting Date", DT2Date(OutlookSynchTypeConv.LocalDT2UTC(Rec.PERIODDT)));
                     AccountingPeriod.Validate(Name, CopyStr(Rec.PERNAME.TrimEnd(), 1, 10));
                     if i = 1 then begin
                         AccountingPeriod."New Fiscal Year" := true;
