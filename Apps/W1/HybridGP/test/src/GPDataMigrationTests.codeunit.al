@@ -29,6 +29,7 @@ codeunit 139664 "GP Data Migration Tests"
         AddressCodeWarehouse: Label 'WAREHOUSE', Comment = 'GP ADRSCODE', Locked = true;
         AddressCodeOther: Label 'OTHER', Comment = 'Dummy GP ADRSCODE', Locked = true;
         AddressCodeOther2: Label 'OTHER2', Comment = 'Dummy GP ADRSCODE', Locked = true;
+        CurrencyCodeUS: Label 'Z-US$', Comment = 'GP US Currency Code', Locked = true;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -358,6 +359,7 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor: Record Vendor;
         VendorBankAccount: Record "Vendor Bank Account";
         SwiftCode: Record "SWIFT Code";
+        Currency: Record Currency;
         VendorBankAccountCount: Integer;
     begin
         VendorBankAccountCount := 7;
@@ -384,7 +386,7 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('01234', MSFTSY06000.EFTBankBranchCode, 'EFTBankBranchCode of MSFTSY06000 is wrong.');
         Assert.AreEqual('123456789', MSFTSY06000.EFTBankAcct, 'EFTBankAcct of MSFTSY06000 is wrong.');
         Assert.AreEqual('123456789', MSFTSY06000.EFTTransitRoutingNo, 'EFTTransitRoutingNo of MSFTSY06000 is wrong.');
-        Assert.AreEqual('USD', MSFTSY06000.CURNCYID, 'CURNCYID of MSFTSY06000 is wrong.');
+        Assert.AreEqual(CurrencyCodeUS, MSFTSY06000.CURNCYID, 'CURNCYID of MSFTSY06000 is wrong.');
         Assert.AreEqual(ValidIBANStr, MSFTSY06000.IntlBankAcctNum, 'IntlBankAcctNum of MSFTSY06000 is wrong.');
         Assert.AreEqual(ValidSwiftCodeStr, MSFTSY06000.SWIFTADDR, 'SWIFTADDR of MSFTSY06000 is wrong.');
 
@@ -392,6 +394,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendor.Reset();
         GPVendor.SetFilter(VENDORID, '%1|%2|%3', VendorIdWithBankStr1, VendorIdWithBankStr2, VendorIdWithBankStr3);
         MigrateVendors(GPVendor);
+
+        // [then] Then the currencies will be migrated
+        Currency.Reset();
+        Currency.SetRange(Code, CurrencyCodeUS);
+        Currency.FindFirst();
+
+        Assert.AreEqual('US Dollars', Currency.Description, 'Description of Currency is wrong.');
 
         // [then] Then the correct number of Vendor Bank Accounts are imported
         VendorBankAccount.Reset();
@@ -410,7 +419,7 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('01234', VendorBankAccount."Bank Branch No.", 'Bank Branch No. of VendorBankAccount is wrong.');
         Assert.AreEqual('123456789', VendorBankAccount."Bank Account No.", 'Bank Account No. of VendorBankAccount is wrong.');
         Assert.AreEqual('123456789', VendorBankAccount."Transit No.", 'Transit No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('USD', VendorBankAccount."Currency Code", 'Currency Code of VendorBankAccount is wrong.');
+        Assert.AreEqual(CurrencyCodeUS, VendorBankAccount."Currency Code", 'Currency Code of VendorBankAccount is wrong.');
         Assert.AreEqual(ValidIBANStr, VendorBankAccount.IBAN, 'IBAN of VendorBankAccount is wrong.');
         Assert.AreEqual(ValidSwiftCodeStr, VendorBankAccount."SWIFT Code", 'SWIFT Code of VendorBankAccount is wrong.');
 
@@ -2091,12 +2100,33 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.Insert();
     end;
 
+    local procedure CreateGPCurrencies()
+    var
+        MSFTMC40200Table: Record MSFTMC40200;
+        CurrencyTable: Record Currency;
+    begin
+        MSFTMC40200Table.DeleteAll();
+
+        CurrencyTable.Reset();
+        CurrencyTable.SetRange(Code, CurrencyCodeUS);
+        CurrencyTable.DeleteAll();
+
+        // Currencies
+        MSFTMC40200Table.Init();
+        MSFTMC40200Table.CURNCYID := CurrencyCodeUS;
+        MSFTMC40200Table.CRNCYDSC := 'US Dollars';
+        MSFTMC40200Table.CRNCYSYM := '$';
+        MSFTMC40200Table.ISOCURRC := 'USD';
+        MSFTMC40200Table.Insert();
+    end;
+
     local procedure CreateGPVendorBankInformation()
     var
         Vendor: Record Vendor;
-        MSFTSY06000: Record MSFTSY06000;
+        MSFTSY06000Table: Record MSFTSY06000;
         VendorBankAccount: Record "Vendor Bank Account";
         SwiftCode: Record "SWIFT Code";
+
     begin
         MSFTSY06000.DeleteAll();
 
@@ -2119,6 +2149,8 @@ codeunit 139664 "GP Data Migration Tests"
         SwiftCode.Reset();
         SwiftCode.SetRange(Code, ValidSwiftCodeStr);
         SwiftCode.DeleteAll();
+
+        CreateGPCurrencies();
 
         // Vendor 1
         GPVendor.Init();
@@ -2180,7 +2212,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '01234';
         MSFTSY06000.EFTBankAcct := '123456789';
         MSFTSY06000.EFTTransitRoutingNo := '123456789';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2193,7 +2225,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '12345';
         MSFTSY06000.EFTBankAcct := '234567890';
         MSFTSY06000.EFTTransitRoutingNo := '234567891';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2206,7 +2238,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '23450';
         MSFTSY06000.EFTBankAcct := '34567894';
         MSFTSY06000.EFTTransitRoutingNo := '345678917';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2258,7 +2290,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '23456';
         MSFTSY06000.EFTBankAcct := '345678901';
         MSFTSY06000.EFTTransitRoutingNo := '345678910';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2271,7 +2303,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '23458';
         MSFTSY06000.EFTBankAcct := '45678947';
         MSFTSY06000.EFTTransitRoutingNo := '345678917';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2323,7 +2355,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '34567';
         MSFTSY06000.EFTBankAcct := '456789012';
         MSFTSY06000.EFTTransitRoutingNo := '456789102';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
@@ -2336,7 +2368,7 @@ codeunit 139664 "GP Data Migration Tests"
         MSFTSY06000.EFTBankBranchCode := '34567';
         MSFTSY06000.EFTBankAcct := '456789014';
         MSFTSY06000.EFTTransitRoutingNo := '456789104';
-        MSFTSY06000.CURNCYID := 'USD';
+        MSFTSY06000.CURNCYID := CurrencyCodeUS;
         MSFTSY06000.IntlBankAcctNum := ValidIBANStr;
         MSFTSY06000.SWIFTADDR := ValidSwiftCodeStr;
         MSFTSY06000.Insert();
