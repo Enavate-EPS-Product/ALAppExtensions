@@ -62,5 +62,7 @@ permissionsetextension 4026 "D365 BASIC ISV - HGP" extends "D365 BASIC ISV"
                   tabledata "GP Checkbook Transactions" = RIMD,
                   tabledata MSFTCM20200 = RIMD,
                   tabledata "GP Company Additional Settings" = RIMD,
-                  tabledata MSFTSY06000 = RIMD;
+                  tabledata MSFTSY06000 = RIMD,
+                  tabledata MSFTSY40100 = RIMD,
+                  tabledata MSFTSY40101 = RIMD;
 }
