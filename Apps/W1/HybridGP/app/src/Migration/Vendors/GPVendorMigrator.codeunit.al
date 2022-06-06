@@ -8,7 +8,6 @@ codeunit 4022 "GP Vendor Migrator"
         VendorBatchNameTxt: Label 'GPVEND', Locked = true;
         SourceCodeTxt: Label 'GENJNL', Locked = true;
         PostingGroupDescriptionTxt: Label 'Migrated from GP', Locked = true;
-        MigrationDefaultGenProdPostingGroupLbl: Label 'GP', Locked = true;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Vendor Data Migration Facade", 'OnMigrateVendor', '', true, true)]
     procedure OnMigrateVendor(var Sender: Codeunit "Vendor Data Migration Facade"; RecordIdToMigrate: RecordId)
@@ -389,7 +388,7 @@ codeunit 4022 "GP Vendor Migrator"
                         if (GPPM00100.PMAPINDX > 0) and GPAccount.Get(GPPM00100.PMAPINDX) and GLAccount.Get(GPAccount.AcctNum) then begin
                             // Ensure the GLAccount has a Gen. Prod. Posting Group, it's required based on validation for setting the accounts.
                             if GLAccount."Gen. Prod. Posting Group" = '' then begin
-                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
                                 GLAccount.Modify(true);
                             end;
 
@@ -399,7 +398,7 @@ codeunit 4022 "GP Vendor Migrator"
                         // Service Charge Acc.
                         if (GPPM00100.PMFINIDX > 0) and GPAccount.Get(GPPM00100.PMFINIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
                             if GLAccount."Gen. Prod. Posting Group" = '' then begin
-                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
                                 GLAccount.Modify(true);
                             end;
 
@@ -410,7 +409,7 @@ codeunit 4022 "GP Vendor Migrator"
                         // Payment Disc. Debit Acc.
                         if (GPPM00100.PMDTKIDX > 0) and GPAccount.Get(GPPM00100.PMDTKIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
                             if GLAccount."Gen. Prod. Posting Group" = '' then begin
-                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
                                 GLAccount.Modify(true);
                             end;
 
@@ -420,7 +419,7 @@ codeunit 4022 "GP Vendor Migrator"
                         // Payment Disc. Credit Acc.
                         if (GPPM00100.PMDAVIDX > 0) and GPAccount.Get(GPPM00100.PMDAVIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
                             if GLAccount."Gen. Prod. Posting Group" = '' then begin
-                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
                                 GLAccount.Modify(true);
                             end;
 
