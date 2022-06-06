@@ -3,9 +3,6 @@ table 40105 "GP Company Additional Settings"
     ReplicateData = false;
     DataPerCompany = false;
 
-    // Set to true so that we can extend this table in a PTE for development and testing
-    Extensible = true;
-
     fields
     {
         field(1; Name; Text[30])
