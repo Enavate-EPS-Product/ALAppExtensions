@@ -2,7 +2,9 @@ table 40105 "GP Company Additional Settings"
 {
     ReplicateData = false;
     DataPerCompany = false;
-    Extensible = false;
+
+    // Set to true so that we can extend this table in a PTE for development and testing
+    Extensible = true;
 
     fields
     {
@@ -13,6 +15,11 @@ table 40105 "GP Company Additional Settings"
         }
 
         field(10; "Migrate Inactive Checkbooks"; Boolean)
+        {
+            InitValue = true;
+            DataClassification = SystemMetadata;
+        }
+        field(11; "Migrate Vendor Classes"; Boolean)
         {
             InitValue = true;
             DataClassification = SystemMetadata;

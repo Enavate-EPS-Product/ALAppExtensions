@@ -8,6 +8,7 @@ codeunit 4022 "GP Vendor Migrator"
         VendorBatchNameTxt: Label 'GPVEND', Locked = true;
         SourceCodeTxt: Label 'GENJNL', Locked = true;
         PostingGroupDescriptionTxt: Label 'Migrated from GP', Locked = true;
+        MigrationDefaultGenProdPostingGroupLbl: Label 'GP', Locked = true;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Vendor Data Migration Facade", 'OnMigrateVendor', '', true, true)]
     procedure OnMigrateVendor(var Sender: Codeunit "Vendor Data Migration Facade"; RecordIdToMigrate: RecordId)
@@ -355,5 +356,91 @@ codeunit 4022 "GP Vendor Migrator"
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendorTransactions.FieldNo(DOCTYPE), JToken.AsObject(), 'DOCTYPE');
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendorTransactions.FieldNo(PYMTRMID), JToken.AsObject(), 'PYMTRMID');
         HelperFunctions.UpdateFieldWithValue(RecordVariant, GPVendorTransactions.FieldNo(GLDocNo), DocumentNo);
+    end;
+
+    procedure MigrateVendorClasses()
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPPM00200: Record "GP PM00200";
+        GPPM00100: Record "GP PM00100";
+        VendorPostingGroup: Record "Vendor Posting Group";
+        GPAccount: Record "GP Account";
+        GLAccount: Record "G/L Account";
+        Vendor: Record Vendor;
+        ClassId: Text[11];
+        MigrateVendorClasses: Boolean;
+    begin
+        if not GPPM00200.FindSet() then
+            exit;
+
+        MigrateVendorClasses := true;
+        if GPCompanyAdditionalSettings.Get(CompanyName()) then
+            MigrateVendorClasses := GPCompanyAdditionalSettings."Migrate Vendor Classes";
+
+        if MigrateVendorClasses then begin
+            repeat
+                ClassId := GPPM00200.VNDCLSID.Trim();
+                if (ClassId <> '') and Vendor.Get(GPPM00200.VENDORID) then begin
+                    if GPPM00100.Get(ClassId) and not VendorPostingGroup.Get(ClassId) then begin
+                        VendorPostingGroup.Validate("Code", ClassId);
+                        VendorPostingGroup.Validate("Description", GPPM00100.VNDCLDSC);
+
+                        // Payables Account
+                        if (GPPM00100.PMAPINDX > 0) and GPAccount.Get(GPPM00100.PMAPINDX) and GLAccount.Get(GPAccount.AcctNum) then begin
+                            // Ensure the GLAccount has a Gen. Prod. Posting Group, it's required based on validation for setting the accounts.
+                            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount.Modify(true);
+                            end;
+
+                            VendorPostingGroup.Validate("Payables Account", GPAccount.AcctNum);
+                        end;
+
+                        // Service Charge Acc.
+                        if (GPPM00100.PMFINIDX > 0) and GPAccount.Get(GPPM00100.PMFINIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
+                            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount.Modify(true);
+                            end;
+
+                            VendorPostingGroup.Validate("Service Charge Acc.", GPAccount.AcctNum);
+                        end;
+
+
+                        // Payment Disc. Debit Acc.
+                        if (GPPM00100.PMDTKIDX > 0) and GPAccount.Get(GPPM00100.PMDTKIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
+                            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount.Modify(true);
+                            end;
+
+                            VendorPostingGroup.Validate("Payment Disc. Debit Acc.", GPAccount.AcctNum);
+                        end;
+
+                        // Payment Disc. Credit Acc.
+                        if (GPPM00100.PMDAVIDX > 0) and GPAccount.Get(GPPM00100.PMDAVIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
+                            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                                GLAccount."Gen. Prod. Posting Group" := MigrationDefaultGenProdPostingGroupLbl;
+                                GLAccount.Modify(true);
+                            end;
+
+                            VendorPostingGroup.Validate("Payment Disc. Credit Acc.", GPAccount.AcctNum);
+                        end;
+
+                        // Payment Tolerance Debit Acc.
+                        // Payment Tolerance Credit Acc.
+                        if (GPPM00100.PMWRTIDX > 0) and GPAccount.Get(GPPM00100.PMWRTIDX) and GLAccount.Get(GPAccount.AcctNum) then begin
+                            VendorPostingGroup.Validate("Payment Tolerance Debit Acc.", GPAccount.AcctNum);
+                            VendorPostingGroup.Validate("Payment Tolerance Credit Acc.", GPAccount.AcctNum);
+                        end;
+
+                        VendorPostingGroup.Insert();
+                    end;
+
+                    Vendor.Validate("Vendor Posting Group", ClassId);
+                    Vendor.Modify(true);
+                end;
+            until GPPM00200.Next() = 0;
+        end;
     end;
 }
