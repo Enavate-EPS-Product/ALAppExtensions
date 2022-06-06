@@ -9,6 +9,8 @@ codeunit 139664 "GP Data Migration Tests"
     TestPermissions = Disabled;
 
     var
+        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPCustomer: Record "GP Customer";
         GPVendor: Record "GP Vendor";
         GPVendorAddress: Record "GP Vendor Address";
@@ -21,6 +23,18 @@ codeunit 139664 "GP Data Migration Tests"
         Assert: Codeunit Assert;
         GPDataMigrationTests: Codeunit "GP Data Migration Tests";
 
+
+    local procedure ConfigureMigrationSettings(MigrateVendorClasses: Boolean)
+    begin
+        GPCompanyMigrationSettings.Init();
+        GPCompanyMigrationSettings.Name := CompanyName();
+        GPCompanyMigrationSettings.Insert(true);
+
+        GPCompanyAdditionalSettings.Init();
+        GPCompanyAdditionalSettings.Name := GPCompanyMigrationSettings.Name;
+        GPCompanyAdditionalSettings."Migrate Vendor Classes" := MigrateVendorClasses;
+        GPCompanyAdditionalSettings.Insert(true);
+    end;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -460,6 +474,32 @@ codeunit 139664 "GP Data Migration Tests"
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestGPVendorClassesConfiguredToNotImport()
+    var
+        VendorPostingGroup: Record "Vendor Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
+    begin
+        // [SCENARIO] Vendors and their bank account information are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+
+        // [WHEN] Data is imported, and data is migrated, and configured to NOT import Vendor Classes
+        CreateVendorData();
+        CreateVendorClassData();
+        ConfigureMigrationSettings(false);
+
+        GPVendor.Reset();
+        GPVendor.SetFilter("VENDORID", '%1|%2|%3', 'ACME', 'ADEMCO', 'AIRCARG');
+        MigrateVendors(GPVendor);
+        HelperFunctions.CreatePostMigrationData();
+
+        // [then] Then the Vendor Posting Groups will NOT be migrated
+        VendorPostingGroup.SetFilter("Code", '%1|%2|%3', 'USA-US-C', 'USA-US-I', 'USA-US-M');
+        Assert.AreEqual(0, VendorPostingGroup.Count(), 'Vendor Posting Groups were created when they should not have been.');
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
     procedure TestGPVendorClassesImport()
     var
         Vendor: Record Vendor;
@@ -473,6 +513,7 @@ codeunit 139664 "GP Data Migration Tests"
         // [WHEN] Data is imported, and data is migrated
         CreateVendorData();
         CreateVendorClassData();
+        ConfigureMigrationSettings(true);
 
         GPVendor.Reset();
         GPVendor.SetFilter("VENDORID", '%1|%2|%3', 'ACME', 'ADEMCO', 'AIRCARG');
