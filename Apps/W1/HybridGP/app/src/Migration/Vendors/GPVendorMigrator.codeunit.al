@@ -464,7 +464,7 @@ codeunit 4022 "GP Vendor Migrator"
         VendorPostingGroup: Record "Vendor Posting Group";
         Vendor: Record Vendor;
         ClassId: Text[11];
-        AccountNumber: Text[75];
+        AccountNumber: Code[20];
         MigrateVendorClasses: Boolean;
     begin
         MigrateVendorClasses := true;
@@ -528,18 +528,18 @@ codeunit 4022 "GP Vendor Migrator"
         until GPPM00200.Next() = 0;
     end;
 
-    local procedure GetAccountNumber(GPAccountIndex: Integer): Text[75]
+    local procedure GetAccountNumber(GPAccountIndex: Integer): Code[20]
     var
         GPAccount: Record "GP Account";
     begin
         if (GPAccountIndex > 0) then
             if GPAccount.Get(GPAccountIndex) then
-                exit(GPAccount.AcctNum);
+                exit(CopyStr(GPAccount.AcctNum, 1, 20));
 
         exit('');
     end;
 
-    local procedure EnsureAccountHasGenProdPostingAccount(AccountNumber: Text[75])
+    local procedure EnsureAccountHasGenProdPostingAccount(AccountNumber: Code[20])
     var
         GLAccount: Record "G/L Account";
     begin
