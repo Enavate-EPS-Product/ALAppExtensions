@@ -73,6 +73,27 @@ page 4021 "GP Migration Settings List"
                         end;
                     end;
                 }
+                field("Migrate Vendor Classes"; MigrateVendorClasses)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Migrate Vendor Classes';
+                    ToolTip = 'Specifies whether to migrate Vendor Classes.';
+                    Width = 8;
+
+                    trigger OnValidate()
+                    var
+                        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+                    begin
+                        if not GPCompanyAdditionalSettings.Get(Rec.Name) then begin
+                            GPCompanyAdditionalSettings.Name := Rec.Name;
+                            GPCompanyAdditionalSettings."Migrate Vendor Classes" := MigrateVendorClasses;
+                            GPCompanyAdditionalSettings.Insert();
+                        end else begin
+                            GPCompanyAdditionalSettings."Migrate Vendor Classes" := MigrateVendorClasses;
+                            GPCompanyAdditionalSettings.Modify();
+                        end;
+                    end;
+                }
             }
         }
     }
@@ -95,8 +116,10 @@ page 4021 "GP Migration Settings List"
         Rec.Modify();
 
         MigrateInactiveCheckbooks := GPCompanyAdditionalSettings.GetMigrateInactiveCheckbooks();
+        MigrateVendorClasses := GPCompanyAdditionalSettings.GetMigrateVendorClasses();
     end;
 
     var
         MigrateInactiveCheckbooks: Boolean;
+        MigrateVendorClasses: Boolean;
 }

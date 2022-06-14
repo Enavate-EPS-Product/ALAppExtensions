@@ -17,6 +17,11 @@ table 40105 "GP Company Additional Settings"
             InitValue = true;
             DataClassification = SystemMetadata;
         }
+        field(11; "Migrate Vendor Classes"; Boolean)
+        {
+            InitValue = true;
+            DataClassification = SystemMetadata;
+        }
     }
 
     keys
@@ -36,5 +41,16 @@ table 40105 "GP Company Additional Settings"
             MigrateInactiveCheckbooks := Rec."Migrate Inactive Checkbooks";
 
         exit(MigrateInactiveCheckbooks);
+    end;
+
+    procedure GetMigrateVendorClasses(): Boolean
+    var
+        MigrateVendorClasses: Boolean;
+    begin
+        MigrateVendorClasses := true;
+        if Rec.Get(CompanyName()) then
+            MigrateVendorClasses := Rec."Migrate Vendor Classes";
+
+        exit(MigrateVendorClasses);
     end;
 }
