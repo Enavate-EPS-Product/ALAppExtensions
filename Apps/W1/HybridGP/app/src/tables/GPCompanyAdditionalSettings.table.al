@@ -2,7 +2,6 @@ table 40105 "GP Company Additional Settings"
 {
     ReplicateData = false;
     DataPerCompany = false;
-    Extensible = false;
 
     fields
     {
