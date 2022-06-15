@@ -463,6 +463,7 @@ codeunit 4022 "GP Vendor Migrator"
         GPPM00100: Record "GP PM00100";
         VendorPostingGroup: Record "Vendor Posting Group";
         Vendor: Record Vendor;
+        HelperFunctions: Codeunit "Helper Functions";
         ClassId: Text[11];
         AccountNumber: Code[20];
         MigrateVendorClasses: Boolean;
@@ -475,6 +476,9 @@ codeunit 4022 "GP Vendor Migrator"
             exit;
 
         repeat
+            Clear(GPPM00100);
+            Clear(VendorPostingGroup);
+
             ClassId := GPPM00200.VNDCLSID.Trim();
             if ClassId <> '' then
                 if not VendorPostingGroup.Get(ClassId) then
@@ -484,38 +488,38 @@ codeunit 4022 "GP Vendor Migrator"
                             VendorPostingGroup.Validate("Description", GPPM00100.VNDCLDSC);
 
                             // Payables Account
-                            AccountNumber := GetAccountNumber(GPPM00100.PMAPINDX);
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMAPINDX);
                             if AccountNumber <> '' then begin
-                                EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
                                 VendorPostingGroup.Validate("Payables Account", AccountNumber);
                             end;
 
                             // Service Charge Acc.
-                            AccountNumber := GetAccountNumber(GPPM00100.PMFINIDX);
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMFINIDX);
                             if AccountNumber <> '' then begin
-                                EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
                                 VendorPostingGroup.Validate("Service Charge Acc.", AccountNumber);
                             end;
 
                             // Payment Disc. Debit Acc.
-                            AccountNumber := GetAccountNumber(GPPM00100.PMDTKIDX);
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDTKIDX);
                             if AccountNumber <> '' then begin
-                                EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
                                 VendorPostingGroup.Validate("Payment Disc. Debit Acc.", AccountNumber);
                             end;
 
                             // Payment Disc. Credit Acc.
-                            AccountNumber := GetAccountNumber(GPPM00100.PMDAVIDX);
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDAVIDX);
                             if AccountNumber <> '' then begin
-                                EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
                                 VendorPostingGroup.Validate("Payment Disc. Credit Acc.", AccountNumber);
                             end;
 
                             // Payment Tolerance Debit Acc.
                             // Payment Tolerance Credit Acc.
-                            AccountNumber := GetAccountNumber(GPPM00100.PMWRTIDX);
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMWRTIDX);
                             if AccountNumber <> '' then begin
-                                EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
                                 VendorPostingGroup.Validate("Payment Tolerance Debit Acc.", AccountNumber);
                                 VendorPostingGroup.Validate("Payment Tolerance Credit Acc.", AccountNumber);
                             end;
@@ -526,29 +530,5 @@ codeunit 4022 "GP Vendor Migrator"
                             Vendor.Modify(true);
                         end;
         until GPPM00200.Next() = 0;
-    end;
-
-    local procedure GetAccountNumber(GPAccountIndex: Integer): Code[20]
-    var
-        GPAccount: Record "GP Account";
-    begin
-        if (GPAccountIndex > 0) then
-            if GPAccount.Get(GPAccountIndex) then
-                exit(CopyStr(GPAccount.AcctNum, 1, 20));
-
-        exit('');
-    end;
-
-    local procedure EnsureAccountHasGenProdPostingAccount(AccountNumber: Code[20])
-    var
-        GLAccount: Record "G/L Account";
-    begin
-        if GLAccount.Get(AccountNumber) then begin
-            // Ensure the GLAccount has a Gen. Prod. Posting Group.
-            if GLAccount."Gen. Prod. Posting Group" = '' then begin
-                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
-                GLAccount.Modify(true);
-            end;
-        end;
     end;
 }

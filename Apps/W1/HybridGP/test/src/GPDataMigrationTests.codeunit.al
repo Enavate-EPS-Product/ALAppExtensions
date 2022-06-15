@@ -597,11 +597,11 @@ codeunit 139664 "GP Data Migration Tests"
         VendorPostingGroup: Record "Vendor Posting Group";
         HelperFunctions: Codeunit "Helper Functions";
     begin
-        // [SCENARIO] Vendors and their bank account information are queried from GP
+        // [SCENARIO] Vendors and their class information are queried from GP
         // [GIVEN] GP data
         Initialize();
 
-        // [WHEN] Data is imported, and data is migrated, and configured to NOT import Vendor Classes
+        // [WHEN] Data is imported and migrated, but configured to NOT import Vendor Classes
         CreateVendorData();
         CreateVendorClassData();
         ConfigureMigrationSettings(false);
@@ -624,7 +624,7 @@ codeunit 139664 "GP Data Migration Tests"
         VendorPostingGroup: Record "Vendor Posting Group";
         HelperFunctions: Codeunit "Helper Functions";
     begin
-        // [SCENARIO] Vendors and their bank account information are queried from GP
+        // [SCENARIO] Vendors and their class information are queried from GP
         // [GIVEN] GP data
         Initialize();
 
@@ -653,10 +653,19 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('', VendorPostingGroup."Payment Tolerance Debit Acc.", 'Payment Tolerance Debit Acc. of VendorPostingGroup is incorrect.');
         Assert.AreEqual('', VendorPostingGroup."Payment Tolerance Credit Acc.", 'Payment Tolerance Credit Acc. of VendorPostingGroup is incorrect.');
 
-        // [WHEN] the Vendor has the Vendor Posting Group set
+        VendorPostingGroup.Get('USA-US-M');
+        Assert.AreEqual('USA-US-M', VendorPostingGroup.Code, 'Code of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('U.S. Vendors-Misc. Expenses', VendorPostingGroup.Description, 'Description of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Payables Account", 'Payables Account of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Service Charge Acc.", 'Service Charge Acc. of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Payment Disc. Debit Acc.", 'Payment Disc. Debit Acc. of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Payment Disc. Credit Acc.", 'Payment Disc. Credit Acc. of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Payment Tolerance Debit Acc.", 'Payment Tolerance Debit Acc. of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('', VendorPostingGroup."Payment Tolerance Credit Acc.", 'Payment Tolerance Credit Acc. of VendorPostingGroup is incorrect.');
+
         Vendor.Get('ACME');
 
-        // [then] The Remit To bank account will be the Vendor's preferred bank account
+        // [then] The Vendors have the correct Vendor Posting Group set
         Assert.AreEqual('USA-US-C', Vendor."Vendor Posting Group", 'Vendor Posting Group of migrated Vendor should be set.');
     end;
 
@@ -2545,7 +2554,6 @@ codeunit 139664 "GP Data Migration Tests"
     local procedure CreateVendorClassData()
     var
         GPAccount: Record "GP Account";
-        VendorPostingGroup: Record "Vendor Posting Group";
         GLAccount: Record "G/L Account";
     begin
         GPAccount.Init();
@@ -2641,20 +2649,20 @@ codeunit 139664 "GP Data Migration Tests"
         GPPM00100.Init();
         GPPM00100.VNDCLSID := 'USA-US-M';
         GPPM00100.VNDCLDSC := 'U.S. Vendors-Misc. Expenses';
-        GPPM00100.PMAPINDX := 35;
+        GPPM00100.PMAPINDX := 0;
         GPPM00100.PMCSHIDX := 0;
-        GPPM00100.PMDAVIDX := 36;
-        GPPM00100.PMDTKIDX := 139;
-        GPPM00100.PMFINIDX := 190;
-        GPPM00100.PMMSCHIX := 184;
-        GPPM00100.PMFRTIDX := 281;
-        GPPM00100.PMTAXIDX := 83;
+        GPPM00100.PMDAVIDX := 0;
+        GPPM00100.PMDTKIDX := 0;
+        GPPM00100.PMFINIDX := 0;
+        GPPM00100.PMMSCHIX := 0;
+        GPPM00100.PMFRTIDX := 0;
+        GPPM00100.PMTAXIDX := 0;
         GPPM00100.PMWRTIDX := 0;
-        GPPM00100.PMPRCHIX := 18;
+        GPPM00100.PMPRCHIX := 0;
         GPPM00100.PMRTNGIX := 0;
         GPPM00100.PMTDSCIX := 0;
-        GPPM00100.ACPURIDX := 447;
-        GPPM00100.PURPVIDX := 446;
+        GPPM00100.ACPURIDX := 0;
+        GPPM00100.PURPVIDX := 0;
         GPPM00100.Insert();
 
         GPPM00200.Init();

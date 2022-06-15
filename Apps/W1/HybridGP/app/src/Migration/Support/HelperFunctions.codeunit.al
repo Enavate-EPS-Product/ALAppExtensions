@@ -2008,4 +2008,28 @@ Codeunit 4037 "Helper Functions"
 
         exit(OutValue);
     end;
+
+    procedure GetGPAccountNumberByIndex(GPAccountIndex: Integer): Code[20]
+    var
+        GPAccount: Record "GP Account";
+    begin
+        if (GPAccountIndex > 0) then
+            if GPAccount.Get(GPAccountIndex) then
+                exit(CopyStr(GPAccount.AcctNum, 1, 20));
+
+        exit('');
+    end;
+
+    procedure EnsureAccountHasGenProdPostingAccount(AccountNumber: Code[20])
+    var
+        GLAccount: Record "G/L Account";
+    begin
+        if GLAccount.Get(AccountNumber) then begin
+            // Ensure the GLAccount has a Gen. Prod. Posting Group.
+            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
+                GLAccount.Modify(true);
+            end;
+        end;
+    end;
 }
