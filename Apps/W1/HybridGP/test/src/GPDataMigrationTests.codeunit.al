@@ -9,11 +9,15 @@ codeunit 139664 "GP Data Migration Tests"
     TestPermissions = Disabled;
 
     var
+        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPCustomer: Record "GP Customer";
         GPVendor: Record "GP Vendor";
         GPVendorAddress: Record "GP Vendor Address";
         GPSY06000: Record "GP SY06000";
         GPMC40200: Record "GP MC40200";
+        GPRM00101: Record "GP RM00101";
+        GPRM00201: Record "GP RM00201";
         CustomerFacade: Codeunit "Customer Data Migration Facade";
         CustomerMigrator: Codeunit "GP Customer Migrator";
         VendorMigrator: Codeunit "GP Vendor Migrator";
@@ -33,6 +37,17 @@ codeunit 139664 "GP Data Migration Tests"
         AddressCodeOther2: Label 'OTHER2', Comment = 'Dummy GP ADRSCODE', Locked = true;
         CurrencyCodeUS: Label 'Z-US$', Comment = 'GP US Currency Code', Locked = true;
 
+    local procedure ConfigureMigrationSettings(MigrateCustomerClasses: Boolean)
+    begin
+        GPCompanyMigrationSettings.Init();
+        GPCompanyMigrationSettings.Name := CompanyName();
+        GPCompanyMigrationSettings.Insert(true);
+
+        GPCompanyAdditionalSettings.Init();
+        GPCompanyAdditionalSettings.Name := GPCompanyMigrationSettings.Name;
+        GPCompanyAdditionalSettings."Migrate Customer Classes" := MigrateCustomerClasses;
+        GPCompanyAdditionalSettings.Insert(true);
+    end;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -49,10 +64,6 @@ codeunit 139664 "GP Data Migration Tests"
 
         // When adding Customers, update the expected count here
         CustomerCount := 3;
-
-        GenBusPostingGroup.Init();
-        GenBusPostingGroup.Validate(GenBusPostingGroup.Code, 'GP');
-        GenBusPostingGroup.Insert(true);
 
         // [WHEN] Data is imported
         CreateCustomerData();
@@ -83,7 +94,6 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('OH', GPCustomer.STATE, 'WebAdSTATEdr of Customer is wrong');
         Assert.AreEqual('S-N-NO-%S', GPCustomer.TAXSCHID, 'TAXSCHID of Customer is wrong');
         Assert.AreEqual('O4', GPCustomer.UPSZONE, 'UPSZONE of Customer is wrong');
-
 
         // [WHEN] data is migrated
         Customer.DeleteAll();
@@ -575,8 +585,93 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('V04_PRIMARY', Vendor."Preferred Bank Account Code", 'Preferred Bank Account Code of migrated Vendor should be Primary account.');
     end;
 
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestGPCustomerClassesConfiguredToNotImport()
+    var
+        CustomerPostingGroup: Record "Customer Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
+    begin
+        // [SCENARIO] Customers and their class information are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+
+        // [WHEN] Data is imported and migrated, but configured to NOT import Customer Classes
+        CreateCustomerData();
+        CreateCustomerClassData();
+        ConfigureMigrationSettings(false);
+
+        GPCustomer.Reset();
+        MigrateCustomers(GPCustomer);
+
+        HelperFunctions.CreatePostMigrationData();
+
+        // [then] Then the Customer Posting Groups will NOT be migrated
+        CustomerPostingGroup.SetFilter("Code", '%1|%2', 'USA-TEST-1', 'USA-TEST-2');
+        Assert.RecordCount(CustomerPostingGroup, 0);
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestGPCustomerClassesImport()
+    var
+        Customer: Record Customer;
+        CustomerPostingGroup: Record "Customer Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
+    begin
+        // [SCENARIO] Customers and their class information are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+
+        // [WHEN] Data is imported, and data is migrated
+        CreateCustomerData();
+        CreateCustomerClassData();
+        ConfigureMigrationSettings(true);
+
+        GPCustomer.Reset();
+        MigrateCustomers(GPCustomer);
+        HelperFunctions.CreatePostMigrationData();
+
+        // [then] Then the Customer Posting Groups will be migrated
+        CustomerPostingGroup.SetFilter("Code", '%1|%2', 'USA-TEST-1', 'USA-TEST-2');
+        Assert.AreEqual(2, CustomerPostingGroup.Count(), 'Customer Posting Groups were not created.');
+
+        // [then] Then fields for the first Customer Posting Groups will be correct
+        CustomerPostingGroup.Get('USA-TEST-1');
+        Assert.AreEqual('USA-TEST-1', CustomerPostingGroup.Code, 'Code of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('Test cust class 1', CustomerPostingGroup.Description, 'Description of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('1', CustomerPostingGroup."Receivables Account", 'Receivables Account of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('2', CustomerPostingGroup."Payment Disc. Debit Acc.", 'Payment Disc. Debit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('1', CustomerPostingGroup."Additional Fee Account", 'Additional Fee Account of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('2', CustomerPostingGroup."Payment Disc. Credit Acc.", 'Payment Disc. Credit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Tolerance Debit Acc.", 'Payment Tolerance Debit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Tolerance Credit Acc.", 'Payment Tolerance Credit Acc. of CustomerPostingGroup is incorrect.');
+
+        CustomerPostingGroup.Get('USA-TEST-2');
+        Assert.AreEqual('USA-TEST-2', CustomerPostingGroup.Code, 'Code of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('Test cust class 2', CustomerPostingGroup.Description, 'Description of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Receivables Account", 'Receivables Account of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Disc. Debit Acc.", 'Payment Disc. Debit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Additional Fee Account", 'Additional Fee Account of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Disc. Credit Acc.", 'Payment Disc. Credit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Tolerance Debit Acc.", 'Payment Tolerance Debit Acc. of CustomerPostingGroup is incorrect.');
+        Assert.AreEqual('', CustomerPostingGroup."Payment Tolerance Credit Acc.", 'Payment Tolerance Credit Acc. of CustomerPostingGroup is incorrect.');
+
+        // [then] The correct Customer Posting Groups are set
+        Customer.Get('!WOW!');
+        Assert.AreEqual('', Customer."Customer Posting Group", 'Customer Posting Group of migrated Customer should not be set.');
+
+        Customer.Get('"AMERICAN"');
+        Assert.AreEqual('USA-TEST-1', Customer."Customer Posting Group", 'Customer Posting Group of migrated Customer should be set.');
+
+        Customer.Get('#1');
+        Assert.AreEqual('USA-TEST-2', Customer."Customer Posting Group", 'Customer Posting Group of migrated Customer should be set.');
+    end;
+
     [Normal]
     local procedure Initialize()
+    var
+        GenBusPostingGroup: Record "Gen. Business Posting Group";
     begin
         if not BindSubscription(GPDataMigrationTests) then
             exit;
@@ -585,6 +680,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.DeleteAll();
         GPVendor.DeleteAll();
         GPSY06000.DeleteAll();
+        GPRM00101.DeleteAll();
+        GPRM00201.DeleteAll();
+
+        if not GenBusPostingGroup.Get('GP') then begin
+            GenBusPostingGroup.Validate(GenBusPostingGroup.Code, 'GP');
+            GenBusPostingGroup.Insert(true);
+        end;
 
         if UnbindSubscription(GPDataMigrationTests) then
             exit;
@@ -612,6 +714,81 @@ codeunit 139664 "GP Data Migration Tests"
 
     begin
         HelperFunctions.CreatePostMigrationData();
+    end;
+
+    local procedure CreateCustomerClassData()
+    var
+        GPAccount: Record "GP Account";
+        GLAccount: Record "G/L Account";
+    begin
+        GPRM00201.DeleteAll();
+        GPRM00101.DeleteAll();
+
+        if not GPAccount.Get('1') then begin
+            GPAccount.AcctNum := '1';
+            GPAccount.AcctIndex := 1;
+            GPAccount.Name := 'Test account 1';
+            GPAccount.Active := true;
+            GPAccount.Insert();
+
+            GLAccount.Init();
+            GLAccount.Validate("No.", GPAccount.AcctNum);
+            GLAccount.Validate(Name, GPAccount.Name);
+            GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
+            GLAccount.Insert();
+        end;
+
+        if not GPAccount.Get('2') then begin
+            GPAccount.AcctNum := '2';
+            GPAccount.AcctIndex := 2;
+            GPAccount.Name := 'Test account 2';
+            GPAccount.Active := true;
+            GPAccount.Insert();
+
+            GLAccount.Init();
+            GLAccount.Validate("No.", GPAccount.AcctNum);
+            GLAccount.Validate(Name, GPAccount.Name);
+            GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
+            GLAccount.Insert();
+        end;
+
+        GPRM00201.Init();
+        GPRM00201.CLASSID := 'USA-TEST-1';
+        GPRM00201.CLASDSCR := 'Test cust class 1';
+        GPRM00201.RMARACC := 1;
+        GPRM00201.RMTAKACC := 2;
+        GPRM00201.RMFCGACC := 1;
+        GPRM00201.RMAVACC := 2;
+        GPRM00201.RMWRACC := 0;
+        GPRM00201.Insert();
+
+        GPRM00201.Init();
+        GPRM00201.CLASSID := 'USA-TEST-2';
+        GPRM00201.CLASDSCR := 'Test cust class 2';
+        GPRM00201.RMARACC := 0;
+        GPRM00201.RMTAKACC := 0;
+        GPRM00201.RMFCGACC := 0;
+        GPRM00201.RMAVACC := 0;
+        GPRM00201.RMWRACC := 0;
+        GPRM00201.Insert();
+
+        GPRM00101.Init();
+        GPRM00101.CUSTNMBR := '!WOW!';
+        GPRM00101.CUSTNAME := 'Oh! What a feeling!';
+        GPRM00101.CUSTCLAS := '';
+        GPRM00101.Insert();
+
+        GPRM00101.Init();
+        GPRM00101.CUSTNMBR := '"AMERICAN"';
+        GPRM00101.CUSTNAME := '"American Clothing"';
+        GPRM00101.CUSTCLAS := 'USA-TEST-1';
+        GPRM00101.Insert();
+
+        GPRM00101.Init();
+        GPRM00101.CUSTNMBR := '#1';
+        GPRM00101.CUSTNAME := '#1 Company';
+        GPRM00101.CUSTCLAS := 'USA-TEST-2';
+        GPRM00101.Insert();
     end;
 
     local procedure CreateCustomerData()

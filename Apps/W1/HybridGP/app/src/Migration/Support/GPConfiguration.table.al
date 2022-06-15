@@ -74,6 +74,11 @@ table 4024 "GP Configuration"
             DataClassification = SystemMetadata;
             InitValue = false;
         }
+        field(17; "Customer Classes Created"; Boolean)
+        {
+            DataClassification = SystemMetadata;
+            InitValue = false;
+        }
     }
 
     keys

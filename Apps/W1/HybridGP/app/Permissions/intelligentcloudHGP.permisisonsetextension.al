@@ -64,5 +64,7 @@ permissionsetextension 4028 "INTELLIGENT CLOUD - HGP" extends "INTELLIGENT CLOUD
                   tabledata "GP Checkbook MSTR" = RIMD,
                   tabledata "GP Checkbook Transactions" = RIMD,
                   tabledata "GP MC40200" = RIMD,
-                  tabledata "GP SY06000" = RIMD;
+                  tabledata "GP SY06000" = RIMD,
+                  tabledata "GP RM00101" = RIMD,
+                  tabledata "GP RM00201" = RIMD;
 }
