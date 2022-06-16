@@ -400,8 +400,8 @@ codeunit 4018 "GP Customer Migrator"
 
             ClassId := GPRM00101.CUSTCLAS.Trim();
             if ClassId <> '' then
-                if not CustomerPostingGroup.Get(ClassId) then
-                    if Customer.Get(GPRM00101.CUSTNMBR) then
+                if Customer.Get(GPRM00101.CUSTNMBR) then begin
+                    if not CustomerPostingGroup.Get(ClassId) then
                         if GPRM00201.Get(ClassId) then begin
                             CustomerPostingGroup.Validate("Code", ClassId);
                             CustomerPostingGroup.Validate("Description", GPRM00201.CLASDSCR);
@@ -444,10 +444,11 @@ codeunit 4018 "GP Customer Migrator"
                             end;
 
                             CustomerPostingGroup.Insert();
-
-                            Customer.Validate("Customer Posting Group", ClassId);
-                            Customer.Modify(true);
                         end;
+
+                    Customer.Validate("Customer Posting Group", ClassId);
+                    Customer.Modify(true);
+                end;
         until GPRM00101.Next() = 0;
     end;
 }
