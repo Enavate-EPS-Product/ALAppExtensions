@@ -97,4 +97,15 @@ table 4024 "GP Configuration"
             Insert();
         end;
     end;
+
+    procedure IsAllPostMigrationDataCreated(): Boolean
+    begin
+        exit(
+                "CheckBooks Created" and
+                "Open Purchase Orders Created" and
+                "Fiscal Periods Created" and
+                "Vendor EFT Bank Acc. Created" and
+                "Customer Classes Created"
+            );
+    end;
 }

@@ -1919,6 +1919,8 @@ Codeunit 4037 "Helper Functions"
     end;
 
     procedure CreatePostMigrationData(): Boolean
+    var
+        GPConfiguration: Record "GP Configuration";
     begin
         // this procedure might run multiple times depending upon migration errors.
 
@@ -1937,10 +1939,7 @@ Codeunit 4037 "Helper Functions"
         if not CustomerClassesCreated() then
             CreateCustomerClasses();
 
-        if CheckBooksCreated() and OpenPurchaseOrdersCreated() and FiscalPeriodsCreated() and VendorEFTBankAccountsCreated() and CustomerClassesCreated() then
-            exit(true);
-
-        exit(false);
+        exit(GPConfiguration.IsAllPostMigrationDataCreated());
     end;
 
     procedure CheckMigrationStatus()

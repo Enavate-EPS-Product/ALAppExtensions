@@ -383,7 +383,7 @@ codeunit 4018 "GP Customer Migrator"
         CustomerPostingGroup: Record "Customer Posting Group";
         Customer: Record Customer;
         HelperFunctions: Codeunit "Helper Functions";
-        ClassId: Text[11];
+        ClassId: Text[20];
         AccountNumber: Code[20];
         MigrateCustomerClasses: Boolean;
     begin
