@@ -370,4 +370,60 @@ codeunit 4019 "GP Item Migrator"
                 exit(CostingMethodOption::Standard);
         end;
     end;
+
+    procedure MigrateItemClasses()
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
+        InventoryPostingGroup: Record "Inventory Posting Group";
+        InventoryPostingSetup: Record "Inventory Posting Setup";
+        Item: Record Item;
+        HelperFunctions: Codeunit "Helper Functions";
+        ClassId: Text[11];
+        AccountNumber: Code[20];
+        MigrateItemClasses: Boolean;
+    begin
+        MigrateItemClasses := true;
+        if GPCompanyAdditionalSettings.Get(CompanyName()) then
+            MigrateItemClasses := GPCompanyAdditionalSettings."Migrate Item Classes";
+
+        if not MigrateItemClasses or not GPIV00101.FindSet() then
+            exit;
+
+        repeat
+            Clear(GPIV40400);
+            Clear(InventoryPostingGroup);
+            Clear(InventoryPostingSetup);
+
+            ClassId := GPIV00101.ITMCLSCD.Trim();
+            if ClassId <> '' then
+                if Item.Get(GPIV00101.ITEMNMBR) then begin
+                    if not InventoryPostingGroup.Get(ClassId) then begin
+                        InventoryPostingGroup.Validate("Code", ClassId);
+                        InventoryPostingGroup.Validate("Description", GPIV40400.ITMCLSDC);
+                        InventoryPostingGroup.Insert();
+                    end;
+
+                    InventoryPostingSetup.SetRange("Invt. Posting Group Code", ClassId);
+                    if not InventoryPostingSetup.FindFirst() then
+                        if GPIV40400.Get(ClassId) then begin
+                            InventoryPostingSetup.Validate("Invt. Posting Group Code", ClassId);
+                            InventoryPostingSetup.Validate("Description", GPIV40400.ITMCLSDC);
+
+                            // Inventory Account
+                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPIV40400.IVIVINDX);
+                            if AccountNumber <> '' then begin
+                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+                                InventoryPostingSetup.Validate("Inventory Account", AccountNumber);
+                            end;
+
+                            InventoryPostingSetup.Insert();
+                        end;
+
+                    Item.Validate("Inventory Posting Group", ClassId);
+                    Item.Modify(true);
+                end;
+        until GPIV00101.Next() = 0;
+    end;
 }

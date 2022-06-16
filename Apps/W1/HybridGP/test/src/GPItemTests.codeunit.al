@@ -7,8 +7,24 @@ codeunit 139662 "GP Item Tests"
     TestPermissions = Disabled;
 
     var
+        GPCompanyMigrationSettings: Record "GP Company Migration Settings";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
         Assert: Codeunit Assert;
         ItemDataMigrationFacade: Codeunit "Item Data Migration Facade";
+
+    local procedure ConfigureMigrationSettings(MigrateItemClasses: Boolean)
+    begin
+        GPCompanyMigrationSettings.Init();
+        GPCompanyMigrationSettings.Name := CompanyName();
+        GPCompanyMigrationSettings.Insert(true);
+
+        GPCompanyAdditionalSettings.Init();
+        GPCompanyAdditionalSettings.Name := GPCompanyMigrationSettings.Name;
+        GPCompanyAdditionalSettings."Migrate Item Classes" := MigrateItemClasses;
+        GPCompanyAdditionalSettings.Insert(true);
+    end;
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
@@ -19,7 +35,7 @@ codeunit 139662 "GP Item Tests"
     begin
         // [SCENARIO] Items are migrated from GP
         // [GIVEN] There are no records in Item staging table
-        ClearTables();
+        Initialize();
 
         // [GIVEN] Some records are created in the staging table
         CreateStagingTableEntries(GPItem);
@@ -54,15 +70,179 @@ codeunit 139662 "GP Item Tests"
         until Item.Next() = 0;
     end;
 
-    local procedure ClearTables()
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestGPItemClassesConfiguredToNotImport()
     var
         GPItem: Record "GP Item";
-        ItemLedgerEntry: Record "Item Ledger Entry";
+        InventoryPostingGroup: Record "Inventory Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
+    begin
+        // [SCENARIO] Items and their class information are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+
+        // [WHEN] Data is imported and migrated, but configured to NOT import Item Classes
+        CreateStagingTableEntries(GPItem);
+        CreateItemClassData();
+        ConfigureMigrationSettings(false);
+
+        GPItem.FindSet();
+        repeat
+            Migrate(GPItem);
+        until GPItem.Next() = 0;
+
+        HelperFunctions.CreatePostMigrationData();
+
+        // [then] Then the Inventory Posting Groups will NOT be migrated
+        InventoryPostingGroup.SetFilter("Code", '%1|%2', 'TEST-1', 'TEST-2');
+        Assert.RecordCount(InventoryPostingGroup, 0);
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestGPItemClassesImport()
+    var
+        GPItem: Record "GP Item";
         Item: Record Item;
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
+        InventoryPostingGroup: Record "Inventory Posting Group";
+        InventoryPostingSetup: Record "Inventory Posting Setup";
+        HelperFunctions: Codeunit "Helper Functions";
+    begin
+        // [SCENARIO] Items and their class information are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+
+        // [WHEN] Data is imported and migrated, and configured to import Item Classes
+        CreateStagingTableEntries(GPItem);
+        CreateItemClassData();
+        ConfigureMigrationSettings(true);
+
+        GPItem.FindSet();
+        repeat
+            Migrate(GPItem);
+        until GPItem.Next() = 0;
+
+        HelperFunctions.CreatePostMigrationData();
+
+        // [then] Then the Inventory Posting Groups will be migrated
+        Item.SetFilter("No.", '%1|%2|%3', '1 1/2\"SASH BRSH', '12345ITEMNUMBER!@#$%', '4'' STEPLADDER');
+        Assert.AreEqual(true, Item.FindSet(), 'Could not find Items by code.');
+
+        GPIV00101.FindSet();
+        Assert.RecordCount(GPIV00101, 3);
+
+        GPIV40400.FindSet();
+        Assert.RecordCount(GPIV40400, 2);
+
+        InventoryPostingGroup.SetFilter("Code", '%1|%2', 'TEST-1', 'TEST-2');
+        Assert.AreEqual(true, InventoryPostingGroup.FindSet(), 'Could not find Inventory Posting Groups by code.');
+        Assert.RecordCount(InventoryPostingGroup, 2);
+
+        // [then] Then fields for the first Inventory Posting Setup will be correct
+        InventoryPostingSetup.SetRange("Invt. Posting Group Code", 'Test-1');
+        Assert.AreEqual(true, InventoryPostingSetup.FindFirst(), 'Could not find Inventory Posting Setup by code.');
+        Assert.AreEqual('TEST-1', InventoryPostingSetup."Invt. Posting Group Code", 'Invt. Posting Group Code of InventoryPostingSetup is incorrect.');
+        Assert.AreEqual('Test class 1', InventoryPostingSetup.Description, 'Description of InventoryPostingSetup is incorrect.');
+        Assert.AreEqual('1', InventoryPostingSetup."Inventory Account", 'Inventory Account of InventoryPostingSetup is incorrect.');
+
+        InventoryPostingSetup.SetRange("Invt. Posting Group Code", 'Test-2');
+        Assert.AreEqual(true, InventoryPostingSetup.FindFirst(), 'Could not find Inventory Posting Setup by code.');
+        Assert.AreEqual('TEST-2', InventoryPostingSetup."Invt. Posting Group Code", 'Invt. Posting Group Code of InventoryPostingSetup is incorrect.');
+        Assert.AreEqual('Test class 2', InventoryPostingSetup.Description, 'Description of InventoryPostingSetup is incorrect.');
+        Assert.AreEqual('', InventoryPostingSetup."Inventory Account", 'Inventory Account of InventoryPostingSetup is incorrect.');
+
+        // [then] The correct Inventory Posting Groups are set
+        Item.Get('1 1/2\"SASH BRSH');
+        Assert.AreEqual('TEST-1', Item."Inventory Posting Group", 'Inventory Posting Group of migrated Item is incorrect.');
+
+        Item.Get('12345ITEMNUMBER!@#$%');
+        Assert.AreEqual('TEST-1', Item."Inventory Posting Group", 'Inventory Posting Group of migrated Item is incorrect.');
+
+        Item.Get('4'' STEPLADDER');
+        Assert.AreEqual('TEST-2', Item."Inventory Posting Group", 'Inventory Posting Group of migrated Item is incorrect.');
+    end;
+
+    local procedure CreateItemClassData()
+    var
+        GPAccount: Record "GP Account";
+        GLAccount: Record "G/L Account";
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
+    begin
+        GPAccount.Init();
+        GPAccount.AcctNum := '1';
+        GPAccount.AcctIndex := 1;
+        GPAccount.Name := 'Account 1';
+        GPAccount.Active := true;
+        GPAccount.Insert();
+
+        GLAccount.Init();
+        GLAccount.Validate("No.", GPAccount.AcctNum);
+        GLAccount.Validate(Name, GPAccount.Name);
+        GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
+        GLAccount.Insert();
+
+        GPAccount.Init();
+        GPAccount.AcctNum := '2';
+        GPAccount.AcctIndex := 2;
+        GPAccount.Name := 'Account 2';
+        GPAccount.Active := true;
+        GPAccount.Insert();
+
+        GLAccount.Init();
+        GLAccount.Validate("No.", GPAccount.AcctNum);
+        GLAccount.Validate(Name, GPAccount.Name);
+        GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
+        GLAccount.Insert();
+
+        GPIV40400.Init();
+        GPIV40400.ITMCLSCD := 'TEST-1';
+        GPIV40400.ITMCLSDC := 'Test class 1';
+        GPIV40400.IVIVINDX := 1;
+        GPIV40400.Insert();
+
+        GPIV40400.Init();
+        GPIV40400.ITMCLSCD := 'TEST-2';
+        GPIV40400.ITMCLSDC := 'Test class 2';
+        GPIV40400.IVIVINDX := 0;
+        GPIV40400.Insert();
+
+        GPIV00101.Init();
+        GPIV00101.ITEMNMBR := '1 1/2\"SASH BRSH';
+        GPIV00101.ITMCLSCD := 'TEST-1';
+        GPIV00101.Insert();
+
+        GPIV00101.Init();
+        GPIV00101.ITEMNMBR := '12345ITEMNUMBER!@#$%';
+        GPIV00101.ITMCLSCD := 'TEST-1';
+        GPIV00101.Insert();
+
+        GPIV00101.Init();
+        GPIV00101.ITEMNMBR := '4'' STEPLADDER';
+        GPIV00101.ITMCLSCD := 'TEST-2';
+        GPIV00101.Insert();
+    end;
+
+    local procedure Initialize()
+    var
+        GPItem: Record "GP Item";
+        Item: Record Item;
+        GenBusPostingGroup: Record "Gen. Business Posting Group";
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
     begin
         GPItem.DeleteAll();
-        ItemLedgerEntry.DeleteAll();
         Item.DeleteAll();
+        GPIV00101.DeleteAll();
+        GPIV00101.DeleteAll();
+
+        if not GenBusPostingGroup.Get('GP') then begin
+            GenBusPostingGroup.Validate(GenBusPostingGroup.Code, 'GP');
+            GenBusPostingGroup.Insert(true);
+        end;
     end;
 
     local procedure Migrate(GPItem: Record "GP Item")
@@ -70,6 +250,14 @@ codeunit 139662 "GP Item Tests"
         GPItemMigrator: Codeunit "GP Item Migrator";
     begin
         GPItemMigrator.OnMigrateItem(ItemDataMigrationFacade, GPItem.RecordId());
+    end;
+
+    local procedure RunPostMigration()
+    var
+        HelperFunctions: Codeunit "Helper Functions";
+
+    begin
+        HelperFunctions.CreatePostMigrationData();
     end;
 
     local procedure CreateStagingTableEntries(var GPItem: Record "GP Item")

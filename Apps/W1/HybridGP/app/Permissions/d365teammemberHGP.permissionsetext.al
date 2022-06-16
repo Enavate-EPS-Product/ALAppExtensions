@@ -64,5 +64,7 @@ permissionsetextension 4027 "D365 TEAM MEMBER - HGP" extends "D365 TEAM MEMBER"
                   tabledata "GP Checkbook MSTR" = RIMD,
                   tabledata "GP Checkbook Transactions" = RIMD,
                   tabledata "GP MC40200" = RIMD,
-                  tabledata "GP SY06000" = RIMD;
+                  tabledata "GP SY06000" = RIMD,
+                  tabledata "GP IV00101" = RIMD,
+                  tabledata "GP IV40400" = RIMD;
 }

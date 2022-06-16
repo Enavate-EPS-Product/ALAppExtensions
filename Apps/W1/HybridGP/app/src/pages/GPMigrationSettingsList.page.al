@@ -73,6 +73,27 @@ page 4021 "GP Migration Settings List"
                         end;
                     end;
                 }
+                field("Migrate Item Classes"; MigrateItemClasses)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Migrate Item Classes';
+                    ToolTip = 'Specifies whether to migrate Item Classes.';
+                    Width = 8;
+
+                    trigger OnValidate()
+                    var
+                        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+                    begin
+                        if not GPCompanyAdditionalSettings.Get(Rec.Name) then begin
+                            GPCompanyAdditionalSettings.Name := Rec.Name;
+                            GPCompanyAdditionalSettings."Migrate Item Classes" := MigrateItemClasses;
+                            GPCompanyAdditionalSettings.Insert();
+                        end else begin
+                            GPCompanyAdditionalSettings."Migrate Item Classes" := MigrateItemClasses;
+                            GPCompanyAdditionalSettings.Modify();
+                        end;
+                    end;
+                }
             }
         }
     }
@@ -95,8 +116,10 @@ page 4021 "GP Migration Settings List"
         Rec.Modify();
 
         MigrateInactiveCheckbooks := GPCompanyAdditionalSettings.GetMigrateInactiveCheckbooks();
+        MigrateItemClasses := GPCompanyAdditionalSettings.GetMigrateItemClasses();
     end;
 
     var
         MigrateInactiveCheckbooks: Boolean;
+        MigrateItemClasses: Boolean;
 }

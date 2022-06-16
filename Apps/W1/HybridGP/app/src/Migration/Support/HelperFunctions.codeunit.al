@@ -554,6 +554,11 @@ Codeunit 4037 "Helper Functions"
         CreateVendorEFTBankAccountsImp();
     end;
 
+    procedure CreateItemClasses()
+    begin
+        CreateItemClassesImp();
+    end;
+
     procedure CreateSetupRecordsIfNeeded()
     var
         CompanyInformation: Record "Company Information";
@@ -1042,6 +1047,8 @@ Codeunit 4037 "Helper Functions"
         GPSY40101: Record "GP SY40101";
         GPSY06000: Record "GP SY06000";
         GPMC40200: Record "GP MC40200";
+        GPIV00101: Record "GP IV00101";
+        GPIV40400: Record "GP IV40400";
     begin
         GPAccount.DeleteAll();
         GPGLTransactions.DeleteAll();
@@ -1072,6 +1079,9 @@ Codeunit 4037 "Helper Functions"
 
         GPSY06000.DeleteAll();
         GPMC40200.DeleteAll();
+
+        GPIV00101.DeleteAll();
+        GPIV40400.DeleteAll();
 
         Session.LogMessage('00007GH', 'Cleaned up staging tables.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
     end;
@@ -1741,6 +1751,15 @@ Codeunit 4037 "Helper Functions"
         SetVendorEFTBankAccountsCreated();
     end;
 
+    local procedure CreateItemClassesImp()
+    var
+        GPItemMigrator: CodeUnit "GP Item Migrator";
+    begin
+        GPItemMigrator.MigrateItemClasses();
+        Session.LogMessage('', 'Created Item Classes', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
+        SetItemClassesCreated();
+    end;
+
     local procedure SetDimentionsCreated()
     begin
         GPConfiguration.GetSingleInstance();
@@ -1794,6 +1813,13 @@ Codeunit 4037 "Helper Functions"
     begin
         GPConfiguration.GetSingleInstance();
         GPConfiguration."Vendor EFT Bank Acc. Created" := true;
+        GPConfiguration.Modify();
+    end;
+
+    local procedure SetItemClassesCreated()
+    begin
+        GPConfiguration.GetSingleInstance();
+        GPConfiguration."Item Classes Created" := true;
         GPConfiguration.Modify();
     end;
 
@@ -1852,6 +1878,12 @@ Codeunit 4037 "Helper Functions"
         exit(GPConfiguration."Vendor EFT Bank Acc. Created");
     end;
 
+    local procedure ItemClassesCreated(): Boolean
+    begin
+        GPConfiguration.GetSingleInstance();
+        exit(GPConfiguration."Item Classes Created");
+    end;
+
     procedure PreMigrationCleanupCompleted(): Boolean
     begin
         GPConfiguration.GetSingleInstance();
@@ -1887,6 +1919,8 @@ Codeunit 4037 "Helper Functions"
     end;
 
     procedure CreatePostMigrationData(): Boolean
+    var
+        GPConfiguration: Record "GP Configuration";
     begin
         // this procedure might run multiple times depending upon migration errors.
 
@@ -1902,10 +1936,10 @@ Codeunit 4037 "Helper Functions"
         if not VendorEFTBankAccountsCreated() then
             CreateVendorEFTBankAccounts();
 
-        if CheckBooksCreated() and OpenPurchaseOrdersCreated() and FiscalPeriodsCreated() and VendorEFTBankAccountsCreated() then
-            exit(true);
+        if not ItemClassesCreated() then
+            CreateItemClasses();
 
-        exit(false);
+        exit(GPConfiguration.IsAllPostMigrationDataCreated());
     end;
 
     procedure CheckMigrationStatus()
@@ -1972,5 +2006,29 @@ Codeunit 4037 "Helper Functions"
             OutValue := '';
 
         exit(OutValue);
+    end;
+
+    procedure GetGPAccountNumberByIndex(GPAccountIndex: Integer): Code[20]
+    var
+        GPAccount: Record "GP Account";
+    begin
+        if (GPAccountIndex > 0) then
+            if GPAccount.Get(GPAccountIndex) then
+                exit(CopyStr(GPAccount.AcctNum, 1, 20));
+
+        exit('');
+    end;
+
+    procedure EnsureAccountHasGenProdPostingAccount(AccountNumber: Code[20])
+    var
+        GLAccount: Record "G/L Account";
+    begin
+        if GLAccount.Get(AccountNumber) then begin
+            // Ensure the GLAccount has a Gen. Prod. Posting Group.
+            if GLAccount."Gen. Prod. Posting Group" = '' then begin
+                GLAccount."Gen. Prod. Posting Group" := PostingGroupCodeTxt;
+                GLAccount.Modify(true);
+            end;
+        end;
     end;
 }
