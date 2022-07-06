@@ -26,6 +26,11 @@ table 40105 "GP Company Additional Settings"
             InitValue = false;
             DataClassification = SystemMetadata;
         }
+        field(13; "Migrate Item Classes"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+        }
     }
 
     keys
@@ -35,6 +40,16 @@ table 40105 "GP Company Additional Settings"
             Clustered = true;
         }
     }
+
+    procedure GetSingleCompanyInstance(CompanyName: Text[30]);
+    begin
+        Reset();
+        if not Get(CompanyName) then begin
+            Init();
+            Name := CompanyName;
+            Insert();
+        end;
+    end;
 
     procedure GetMigrateInactiveCheckbooks(): Boolean
     var
