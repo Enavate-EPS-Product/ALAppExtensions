@@ -99,7 +99,7 @@ codeunit 4017 "GP Account Migrator"
         GenJournalLine: Record "Gen. Journal Line";
         GPFiscalPeriods: Record "GP Fiscal Periods";
         Sender: Codeunit "Data Migration Facade Helper";
-        PostingGroupCode: Text;
+        PostingGroupCode: Code[10];
         DimSetID: Integer;
     begin
         GPGLTransactions.Reset();
@@ -113,8 +113,8 @@ codeunit 4017 "GP Account Migrator"
                     Sender.CreateGeneralJournalBatchIfNeeded(CopyStr(PostingGroupCode, 1, 10), '', '');
                     Sender.CreateGeneralJournalLine(
                         GenJournalLine,
-                        CopyStr(PostingGroupCode, 1, 10),
-                        CopyStr(GlDocNoTxt, 1, 20),
+                        PostingGroupCode,
+                        PostingGroupCode,
                         CopyStr(DescriptionTrxTxt, 1, 50),
                         GenJournalLine."Account Type"::"G/L Account",
                         CopyStr(GPAccount.AcctNum, 1, 20),
