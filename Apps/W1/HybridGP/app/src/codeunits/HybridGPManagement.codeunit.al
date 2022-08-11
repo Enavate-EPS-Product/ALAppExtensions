@@ -25,6 +25,12 @@ codeunit 4016 "Hybrid GP Management"
         HandleInitializationofGPSynchronization(RunId, SubscriptionId, NotificationText);
     end;
 
+    [EventSubscriber(ObjectType::Codeunit, CodeUnit::"Hybrid Cloud Management", 'OnBeforeShowProductSpecificSettingsPageStep', '', true, true)]
+    procedure OnBeforeShowProductSpecificSettingsPageStep(var HybridProductType: Record "Hybrid Product Type"; var ShowSettingsStep: Boolean)
+    begin
+        ShowSettingsStep := false;
+    end;
+
     local procedure UpdateStatusOnHybridReplicationCompleted(RunId: Text[50]; NotificationText: Text)
     var
         HybridReplicationDetail: Record "Hybrid Replication Detail";
