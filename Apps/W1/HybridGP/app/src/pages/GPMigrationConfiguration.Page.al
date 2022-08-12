@@ -14,13 +14,35 @@ page 4050 "GP Migration Configuration"
     {
         area(Content)
         {
-            group(Description)
+            label(DescriptionHeader)
             {
-                label(Instructions)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Use this page to configure the migration for all companies, or use the bottom table to configure for individual companies.';
-                }
+                ApplicationArea = All;
+                Caption = 'Description';
+                Style = Strong;
+            }
+            label(Intro)
+            {
+                ApplicationArea = All;
+                Caption = 'Use this page to configure the migration for all companies, and/or use the bottom table to configure for individual companies.';
+            }
+
+            label(DimensionHeader)
+            {
+                ApplicationArea = All;
+                Caption = 'GP Segments and BC Dimensions';
+                Style = Strong;
+            }
+
+            label(DimensionActionIntro)
+            {
+                ApplicationArea = All;
+                Caption = 'Use the Set All Dimensions button above to quickly assign dimensions for all companies, or the Per Company section below to set the dimensions on individual companies.';
+            }
+
+            label(SegmentExplanation)
+            {
+                ApplicationArea = All;
+                Caption = 'When setting dimensions, you will select the two segments from Dynamics GP you would like as the global dimensions. The remaining segments will automatically be set up as shortcut dimensions.';
             }
 
             group(Modules)

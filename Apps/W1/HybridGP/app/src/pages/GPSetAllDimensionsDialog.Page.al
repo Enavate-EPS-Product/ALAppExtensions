@@ -12,7 +12,7 @@ page 4052 "GP Set All Dimensions Dialog"
             label(HeaderText)
             {
                 ApplicationArea = All;
-                Caption = 'Select the Dimensions that you want to assign for all companies that have the specified segments.';
+                Caption = 'Select the two segments from Dynamics GP you would like as the global dimensions. The remaining segments will automatically be set up as shortcut dimensions.';
             }
 
             field("Dimension 1"; Dimension1)
