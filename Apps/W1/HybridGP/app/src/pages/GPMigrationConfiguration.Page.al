@@ -14,13 +14,35 @@ page 4050 "GP Migration Configuration"
     {
         area(Content)
         {
-            group(Description)
+            label(DescriptionHeader)
             {
-                label(Instructions)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Use this page to configure the migration for all companies, or use the bottom table to configure for individual companies.';
-                }
+                ApplicationArea = All;
+                Caption = 'Description';
+                Style = Strong;
+            }
+            label(Intro)
+            {
+                ApplicationArea = All;
+                Caption = 'Use this page to configure the migration for all companies, and/or use the bottom table to configure for individual companies.';
+            }
+
+            label(DimensionHeader)
+            {
+                ApplicationArea = All;
+                Caption = 'GP Segments and BC Dimensions';
+                Style = Strong;
+            }
+
+            label(DimensionActionIntro)
+            {
+                ApplicationArea = All;
+                Caption = 'Use the Set All Dimensions button above to quickly assign dimensions for all companies, or the Per Company section below to set the dimensions on individual companies.';
+            }
+
+            label(SegmentExplanation)
+            {
+                ApplicationArea = All;
+                Caption = 'When setting dimensions, you will select the two segments from Dynamics GP you would like as the global dimensions. The remaining segments will automatically be set up as shortcut dimensions.';
             }
 
             group(Modules)
@@ -373,13 +395,37 @@ page 4050 "GP Migration Configuration"
                         ResetAll();
                 end;
             }
+
+            action(SetDimensions)
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Set All Dimensions';
+                ToolTip = 'Attempt to set the Dimensions for all Companies.';
+                Promoted = true;
+                PromotedCategory = Process;
+                Image = Setup;
+
+                trigger OnAction()
+                var
+                    GPPopulateDimensionsDialog: Page "GP Set All Dimensions Dialog";
+                    SelectedDimension1: Text[30];
+                    SelectedDimension2: Text[30];
+                begin
+                    GPPopulateDimensionsDialog.RunModal();
+                    if GPPopulateDimensionsDialog.GetConfirmedYes() then begin
+                        SelectedDimension1 := GPPopulateDimensionsDialog.GetDimension1();
+                        SelectedDimension2 := GPPopulateDimensionsDialog.GetDimension2();
+
+                        if SelectedDimension1 <> '' then
+                            AssignDimension(1, SelectedDimension1);
+
+                        if SelectedDimension2 <> '' then
+                            AssignDimension(2, SelectedDimension2);
+                    end;
+                end;
+            }
         }
     }
-
-    procedure ShouldShowConfigMgmtPrompt(shouldShow: Boolean)
-    begin
-        ShowConfigMgmtPrompt := shouldShow;
-    end;
 
     procedure ShouldShowIntroductionNotification(shouldShow: Boolean)
     begin
@@ -497,12 +543,6 @@ page 4050 "GP Migration Configuration"
             if (not Confirm(CompanyMissingDimensionExitQst)) then
                 exit(false);
 
-        if not ShowConfigMgmtPrompt then
-            exit(true);
-
-        if (Confirm(IntelligentCloudManagementPageQst)) then
-            Page.Run(Page::"Intelligent Cloud Management");
-
         exit(true);
     end;
 
@@ -525,11 +565,39 @@ page 4050 "GP Migration Configuration"
         exit(false);
     end;
 
+    local procedure AssignDimension(DimensionNumber: Integer; DimensionLabel: Text[30])
+    var
+        GPCompanyAdditionalSettingsCompanies: Record "GP Company Additional Settings";
+    begin
+        GPCompanyAdditionalSettingsCompanies.SetFilter("Name", '<>%1', '');
+        if GPCompanyAdditionalSettingsCompanies.FindSet() then begin
+            repeat
+                if CompanyHasSegment(GPCompanyAdditionalSettingsCompanies.Name, DimensionLabel) then begin
+                    if DimensionNumber = 1 then
+                        GPCompanyAdditionalSettingsCompanies.Validate("Global Dimension 1", DimensionLabel);
+
+                    if DimensionNumber = 2 then
+                        GPCompanyAdditionalSettingsCompanies.Validate("Global Dimension 2", DimensionLabel);
+
+                    GPCompanyAdditionalSettingsCompanies.Modify();
+                end;
+            until GPCompanyAdditionalSettingsCompanies.Next() = 0;
+        end;
+    end;
+
+    local procedure CompanyHasSegment(CompanyName: Text[50]; SegmentName: Text[30]): Boolean
+    var
+        GPSegmentName: Record "GP Segment Name";
+    begin
+        GPSegmentName.SetRange("Company Name", CompanyName);
+        GPSegmentName.SetRange("Segment Name", SegmentName);
+
+        exit(GPSegmentName.FindFirst());
+    end;
+
     var
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
-        ShowConfigMgmtPrompt: Boolean;
         ShowIntroductionNotification: Boolean;
-        IntelligentCloudManagementPageQst: Label 'Would you like to open the Cloud Migration Management page?', Locked = true;
         IntroNotificationMsg: Label 'Use this configuration page to specify what information will be migrated from GP to Business Central.', Locked = true;
         CompanyMissingDimensionExitQst: Label 'A Company is missing a Dimension. Are you sure you want to exit?', Locked = true;
 }

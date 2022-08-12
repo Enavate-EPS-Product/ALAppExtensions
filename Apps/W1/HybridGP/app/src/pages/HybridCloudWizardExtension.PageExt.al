@@ -17,7 +17,6 @@ pageextension 4014 "Hybrid Cloud Wizard Extension" extends "Hybrid Cloud Setup W
 
         if GuidedExperience.IsAssistedSetupComplete(ObjectType::Page, PAGE::"Hybrid Cloud Setup Wizard") then begin
             GPMigrationConfiguration.ShouldShowIntroductionNotification(true);
-            GPMigrationConfiguration.ShouldShowConfigMgmtPrompt(true);
             GPMigrationConfiguration.Run();
             exit(true);
         end else
