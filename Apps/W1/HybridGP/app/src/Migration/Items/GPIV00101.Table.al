@@ -9,11 +9,19 @@ table 40116 "GP IV00101"
         {
             DataClassification = CustomerContent;
         }
+        field(5; ITEMTYPE; Integer)
+        {
+            DataClassification = CustomerContent;
+        }
         field(14; IVIVINDX; Integer)
         {
             DataClassification = CustomerContent;
         }
         field(29; ITMCLSCD; Text[11])
+        {
+            DataClassification = CustomerContent;
+        }
+        field(75; INACTIVE; Boolean)
         {
             DataClassification = CustomerContent;
         }
@@ -25,4 +33,9 @@ table 40116 "GP IV00101"
             Clustered = true;
         }
     }
+
+    procedure IsDiscontinued(): Boolean
+    begin
+        exit(ITEMTYPE = 2);
+    end;
 }

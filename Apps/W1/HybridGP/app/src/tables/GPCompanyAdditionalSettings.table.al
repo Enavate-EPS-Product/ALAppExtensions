@@ -156,6 +156,8 @@ table 40105 "GP Company Additional Settings"
                     Rec.Validate("Migrate Item Classes", false);
                     Rec.Validate("Migrate Open POs", false);
                     Rec.Validate("Migrate Only Inventory Master", false);
+                    Rec.Validate("Migrate Inactive Items", false);
+                    Rec.Validate("Migrate Discontinued Items", false);
                 end;
             end;
         }
@@ -269,6 +271,30 @@ table 40105 "GP Company Additional Settings"
                 end;
             end;
         }
+        field(27; "Migrate Inactive Items"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if Rec."Migrate Inactive Items" then begin
+                    Rec.Validate("Migrate Inventory Module", true);
+                end;
+            end;
+        }
+        field(28; "Migrate Discontinued Items"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if Rec."Migrate Discontinued Items" then begin
+                    Rec.Validate("Migrate Inventory Module", true);
+                end;
+            end;
+        }
     }
 
     keys
@@ -336,6 +362,18 @@ table 40105 "GP Company Additional Settings"
     begin
         GetSingleInstance();
         exit(Rec."Migrate Inactive Vendors");
+    end;
+
+    procedure GetMigrateInactiveItems(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Migrate Inactive Items");
+    end;
+
+    procedure GetMigrateDiscontinuedItems(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Migrate Discontinued Items");
     end;
 
     // Classes

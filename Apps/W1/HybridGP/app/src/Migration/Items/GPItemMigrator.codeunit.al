@@ -22,7 +22,27 @@ codeunit 4019 "GP Item Migrator"
             exit;
 
         GPItem.Get(RecordIdToMigrate);
+
+        if not ShouldMigrateItem(GPItem) then
+            exit;
+
         MigrateItemDetails(GPItem, Sender);
+    end;
+
+    local procedure ShouldMigrateItem(var GPItem: Record "GP Item"): Boolean
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPIV00101: Record "GP IV00101";
+    begin
+        if GPIV00101.Get(GPItem.No) then begin
+            if GPIV00101.INACTIVE and not GPCompanyAdditionalSettings.GetMigrateInactiveItems() then
+                exit(false);
+
+            if GPIV00101.IsDiscontinued() and not GPCompanyAdditionalSettings.GetMigrateDiscontinuedItems() then
+                exit(false);
+        end;
+
+        exit(true);
     end;
 
     procedure MigrateItemDetails(GPItem: Record "GP Item"; ItemDataMigrationFacade: Codeunit "Item Data Migration Facade")
@@ -62,16 +82,17 @@ codeunit 4019 "GP Item Migrator"
 
     procedure MigrateItemInventoryPostingGroup(var GPItem: Record "GP Item"; var Sender: Codeunit "Item Data Migration Facade")
     var
+        Item: Record Item;
         GPIV00101: Record "GP IV00101";
-        CurrentCompanyName: Text[30];
         ItemClassId: Text[11];
-        ConfiguredToMigrateItemClasses: Boolean;
     begin
-        ConfiguredToMigrateItemClasses := GPCompanyAdditionalSettings.GetMigrateItemClasses();
+        if not Sender.DoesItemExist(GPItem.No) then
+            exit;
+
         MigrateItemClassesIfNeeded(GPItem, Sender);
 
         if GPItem.ItemType = 0 then begin
-            if ConfiguredToMigrateItemClasses then
+            if GPCompanyAdditionalSettings.GetMigrateItemClasses() then
                 if GPIV00101.Get(GPItem.No) then
                     ItemClassId := GPIV00101.ITMCLSCD.Trim();
 
@@ -109,6 +130,9 @@ codeunit 4019 "GP Item Migrator"
             exit;
 
         if GPItem.Get(RecordIdToMigrate) then begin
+            if not Sender.DoesItemExist(GPItem.No) then
+                exit;
+
             if GPItem.ItemType = 0 then
                 case GetCostingMethod(GPItem) of
                     CostingMethodOption::Average:
@@ -397,7 +421,6 @@ codeunit 4019 "GP Item Migrator"
         InventoryPostingGroup: Record "Inventory Posting Group";
         InventoryPostingSetup: Record "Inventory Posting Setup";
         HelperFunctions: Codeunit "Helper Functions";
-        PostingGroupCode: Code[20];
     begin
         if DefaultAccountNumber = '' then
             DefaultAccountNumber := HelperFunctions.GetPostingAccountNumber(InventoryAccountName);
