@@ -268,6 +268,7 @@ codeunit 139679 "GP Settings Tests"
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Bank Module", 'Migrate Bank Module - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Payables Module", 'Migrate Payables Module - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Inventory Module", 'Migrate Inventory Module - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual('', GPCompanyAdditionalSettings."Global Dimension 1", 'Global Dimension 1 - Incorrect in value');
         Assert.AreEqual('', GPCompanyAdditionalSettings."Global Dimension 2", 'Global Dimension 2 - Incorrect value');
         Assert.AreEqual(0, GPCompanyAdditionalSettings."Oldest GL Year To Migrate", 'Migrate  GL Year To Migrate - Incorrect value');
@@ -275,7 +276,6 @@ codeunit 139679 "GP Settings Tests"
         // These settings should all be correct
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Inactive Customers", 'Migrate Inactive Customers - Incorrect value');
-        Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Customer Classes", 'Migrate Customer Classes - Incorrect value');
 
         // [WHEN] Inactive Customers is enabled, then the Receivables module must be enabled
@@ -299,7 +299,7 @@ codeunit 139679 "GP Settings Tests"
         // These settings should all be correct
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Inactive Customers", 'Migrate Inactive Customers - Incorrect value');
-        Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Customer Classes", 'Migrate Customer Classes - Incorrect value');
 
         // [WHEN] Open POs is enabled, then the Receivables module must be enabled
@@ -321,7 +321,7 @@ codeunit 139679 "GP Settings Tests"
         Assert.AreEqual(0, GPCompanyAdditionalSettings."Oldest GL Year To Migrate", 'Migrate  GL Year To Migrate - Incorrect value');
 
         // These settings should all be correct
-        Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Inactive Customers", 'Migrate Inactive Customers - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Customer Classes", 'Migrate Customer Classes - Incorrect value');
@@ -347,7 +347,7 @@ codeunit 139679 "GP Settings Tests"
         // These settings should all be correct
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Inactive Customers", 'Migrate Inactive Customers - Incorrect value');
-        Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Customer Classes", 'Migrate Customer Classes - Incorrect value');
     end;
 
@@ -429,7 +429,7 @@ codeunit 139679 "GP Settings Tests"
         // These settings should all be correct
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Inventory Module", 'Migrate Inventory Module - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Payables Module", 'Migrate Payables Module - Incorrect value');
-        Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Receivables Module", 'Migrate Receivables Module - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Item Classes", 'Migrate Item Classes - Incorrect value');
         Assert.AreEqual(true, GPCompanyAdditionalSettings."Migrate Open POs", 'Migrate Open POs - Incorrect value');
         Assert.AreEqual(false, GPCompanyAdditionalSettings."Migrate Inactive Customers", 'Migrate Inactive Customers - Incorrect value 3');
@@ -497,19 +497,27 @@ codeunit 139679 "GP Settings Tests"
         CompanyNameText := 'Company 1';
         GPCompanyAdditionalSettings.Name := CompanyNameText;
         GPCompanyAdditionalSettings.Insert();
+
+        GPCompanyMigrationSettings.Init();
         GPCompanyMigrationSettings.Name := CompanyNameText;
         GPCompanyMigrationSettings.Insert();
 
         CompanyNameText := 'Company 2';
+        GPCompanyAdditionalSettings.Init();
         GPCompanyAdditionalSettings.Name := CompanyNameText;
         GPCompanyAdditionalSettings.Insert();
+
+        GPCompanyMigrationSettings.Init();
         GPCompanyMigrationSettings.Name := CompanyNameText;
         GPCompanyMigrationSettings.Insert();
         TurnOnAllSettings(GPCompanyAdditionalSettings);
 
         CompanyNameText := 'Company 3';
+        GPCompanyAdditionalSettings.Init();
         GPCompanyAdditionalSettings.Name := CompanyNameText;
         GPCompanyAdditionalSettings.Insert();
+
+        GPCompanyMigrationSettings.Init();
         GPCompanyMigrationSettings.Name := CompanyNameText;
         GPCompanyMigrationSettings.Insert();
     end;
@@ -527,6 +535,11 @@ codeunit 139679 "GP Settings Tests"
         GPCompanyAdditionalSettings.Validate("Migrate Receivables Module", true);
         GPCompanyAdditionalSettings.Validate("Migrate Open POs", true);
         GPCompanyAdditionalSettings.Validate("Migrate Inventory Module", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Bank Master", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only GL Master", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Inventory Master", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Payables Master", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Rec. Master", true);
         GPCompanyAdditionalSettings.Modify();
     end;
 }
