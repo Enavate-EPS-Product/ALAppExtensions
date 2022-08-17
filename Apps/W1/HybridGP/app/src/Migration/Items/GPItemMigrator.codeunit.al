@@ -69,6 +69,7 @@ codeunit 4019 "GP Item Migrator"
     procedure OnMigrateItemPostingGroups(var Sender: Codeunit "Item Data Migration Facade"; RecordIdToMigrate: RecordId; ChartOfAccountsMigrated: Boolean)
     var
         GPItem: Record "GP Item";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
         if not ChartOfAccountsMigrated then
             exit;
@@ -76,11 +77,14 @@ codeunit 4019 "GP Item Migrator"
         if RecordIdToMigrate.TableNo() <> Database::"GP Item" then
             exit;
 
+        if GPCompanyAdditionalSettings.GetMigrateOnlyInventoryMaster() then
+            exit;
+
         if GPItem.Get(RecordIdToMigrate) then
             MigrateItemInventoryPostingGroup(GPItem, Sender);
     end;
 
-    procedure MigrateItemInventoryPostingGroup(var GPItem: Record "GP Item"; var Sender: Codeunit "Item Data Migration Facade")
+    procedure MigrateItemInventoryPostingGroup(GPItem: Record "GP Item"; var Sender: Codeunit "Item Data Migration Facade")
     var
         Item: Record Item;
         GPIV00101: Record "GP IV00101";

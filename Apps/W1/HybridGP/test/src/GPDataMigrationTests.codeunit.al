@@ -50,6 +50,7 @@ codeunit 139664 "GP Data Migration Tests"
         Customer: Record "Customer";
         GenBusPostingGroup: Record "Gen. Business Posting Group";
         GenJournalLine: Record "Gen. Journal Line";
+        HelperFunctions: Codeunit "Helper Functions";
         CustomerCount: Integer;
     begin
         // [SCENARIO] All Customers are queried from GP
@@ -75,6 +76,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [then] Then the correct number of Customers are imported
         Assert.AreEqual(CustomerCount, GPCustomer.Count(), 'Wrong number of Customers read');
+        Assert.AreEqual(CustomerCount, HelperFunctions.GetNumberOfCustomers(), 'Wrong number of Customers calculated');
 
         // [then] Then fields for Customer 1 are correctly imported to temporary table
         GPCustomer.SetRange(CUSTNMBR, '!WOW!');
@@ -257,6 +259,7 @@ codeunit 139664 "GP Data Migration Tests"
     procedure TestReceivablesDisabled()
     var
         Customer: Record "Customer";
+        HelperFunctions: Codeunit "Helper Functions";
         CustomerCount: Integer;
     begin
         // [SCENARIO] All Customers are queried from GP, but the Receivables Module is disabled
@@ -281,6 +284,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [THEN] Then the correct number of Customers are imported
         Assert.AreEqual(CustomerCount, GPCustomer.Count(), 'Wrong number of GPCustomers found.');
+        Assert.AreEqual(0, HelperFunctions.GetNumberOfCustomers(), 'Wrong number of Customers calculated.');
 
         // [WHEN] data is migrated
         Customer.DeleteAll();
@@ -298,6 +302,7 @@ codeunit 139664 "GP Data Migration Tests"
         CompanyInformation: Record "Company Information";
         OrderAddress: Record "Order Address";
         GenJournalLine: Record "Gen. Journal Line";
+        HelperFunctions: Codeunit "Helper Functions";
         Country: Code[10];
         VendorCount: Integer;
     begin
@@ -323,6 +328,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [THEN] Then the correct number of Vendors are imported
         Assert.AreEqual(VendorCount, GPVendor.Count(), 'Wrong number of Vendor read');
+        Assert.AreEqual(VendorCount, HelperFunctions.GetNumberOfVendors(), 'Wrong number of Vendors calculated.');
 
         // [then] Then fields for Vendor 1 are correctly imported to temporary table
         GPVendor.SetRange(VENDORID, '1160');
@@ -493,6 +499,7 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor: Record Vendor;
         CompanyInformation: Record "Company Information";
         OrderAddress: Record "Order Address";
+        HelperFunctions: Codeunit "Helper Functions";
         Country: Code[10];
         VendorCount: Integer;
     begin
@@ -517,6 +524,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [then] Then the correct number of GPVendors are imported
         Assert.AreEqual(VendorCount, GPVendor.Count(), 'Wrong number of GPVendors found.');
+        Assert.AreEqual(0, HelperFunctions.GetNumberOfVendors(), 'Wrong number of Vendors calculated.');
 
         // [WHEN] data is migrated
         Vendor.DeleteAll();
