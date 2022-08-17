@@ -306,7 +306,7 @@ page 4050 "GP Migration Configuration"
                 ToolTip = 'Attempt to set the Dimensions for all Companies.';
                 Promoted = true;
                 PromotedCategory = Process;
-                Image = Setup;
+                Image = Dimensions;
 
                 trigger OnAction()
                 var
