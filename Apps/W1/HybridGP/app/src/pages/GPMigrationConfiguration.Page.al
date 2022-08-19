@@ -313,16 +313,18 @@ page 4050 "GP Migration Configuration"
                     GPPopulateDimensionsDialog: Page "GP Set All Dimensions Dialog";
                     SelectedDimension1: Text[30];
                     SelectedDimension2: Text[30];
+                    BlanksClearValue: Boolean;
                 begin
                     GPPopulateDimensionsDialog.RunModal();
                     if GPPopulateDimensionsDialog.GetConfirmedYes() then begin
                         SelectedDimension1 := GPPopulateDimensionsDialog.GetDimension1();
                         SelectedDimension2 := GPPopulateDimensionsDialog.GetDimension2();
+                        BlanksClearValue := GPPopulateDimensionsDialog.GetBlanksClearValue();
 
-                        if SelectedDimension1 <> '' then
+                        if (SelectedDimension1 <> '') or BlanksClearValue then
                             AssignDimension(1, SelectedDimension1);
 
-                        if SelectedDimension2 <> '' then
+                        if (SelectedDimension2 <> '') or BlanksClearValue then
                             AssignDimension(2, SelectedDimension2);
                     end;
                 end;
@@ -463,7 +465,7 @@ page 4050 "GP Migration Configuration"
         GPCompanyAdditionalSettingsCompanies.SetFilter("Name", '<>%1', '');
         if GPCompanyAdditionalSettingsCompanies.FindSet() then begin
             repeat
-                if CompanyHasSegment(GPCompanyAdditionalSettingsCompanies.Name, DimensionLabel) then begin
+                if (DimensionLabel = '') or CompanyHasSegment(GPCompanyAdditionalSettingsCompanies.Name, DimensionLabel) then begin
                     if DimensionNumber = 1 then
                         GPCompanyAdditionalSettingsCompanies.Validate("Global Dimension 1", DimensionLabel);
 
