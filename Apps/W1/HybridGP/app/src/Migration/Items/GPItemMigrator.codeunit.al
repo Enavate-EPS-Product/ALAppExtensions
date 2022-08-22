@@ -433,7 +433,7 @@ codeunit 4019 "GP Item Migrator"
         PostingGroupCode: Code[20];
         AccountNumber: Code[20];
     begin
-        if not GPCompanyAdditionalSettings."Migrate Item Classes" then
+        if not GPCompanyAdditionalSettings.GetMigrateItemClasses() then
             exit;
 
         if not GPIV40400.FindSet() then

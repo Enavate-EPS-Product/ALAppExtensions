@@ -12,6 +12,7 @@ codeunit 139661 "GP Account Tests"
         Assert: Codeunit Assert;
         GLAccDataMigrationFacade: Codeunit "GL Acc. Data Migration Facade";
         MSGPAccountMigrationTests: Codeunit "GP Account Tests";
+        GPTestHelperFunctions: Codeunit "GP Test Helper Functions";
         InvalidAccountNoMsg: Label 'Account No. was expected to be %1 but it was %2 instead', Comment = '%1 - expected value; %2 - actual value', Locked = true;
         InvalidAccountTypeMsg: Label 'Account Type was expected to be %1 but it was %2 instead', Comment = '%1 - expected value; %2 - actual value', Locked = true;
         InvalidAccountCategoryMsg: Label 'Account Category was expected to be %1 but it was %2 instead', Comment = '%1 - expected value; %2 - actual value', Locked = true;
@@ -147,7 +148,10 @@ codeunit 139661 "GP Account Tests"
         CreateTrxData(GPGLTransactions);
 
         // [GIVEN] A limiting year is used
-        ConfigureMigrationSettings(2020);
+        GPTestHelperFunctions.CreateConfigurationSettings();
+        GPCompanyAdditionalSettings.GetSingleInstance();
+        GPCompanyAdditionalSettings.Validate("Oldest GL Year to Migrate", 2020);
+        GPCompanyAdditionalSettings.Modify();
 
         // [WHEN] MigrationAccounts is called
         GPAccount.FindSet();
@@ -752,17 +756,5 @@ codeunit 139661 "GP Account Tests"
         GPFiscalPeriods.PERIODDT := 20200101D;
         GPFiscalPeriods.PERDENDT := 20200101D;
         GPFiscalPeriods.Insert(true);
-    end;
-
-    local procedure ConfigureMigrationSettings(InitialHistYear: Integer)
-    begin
-        GPCompanyMigrationSettings.Init();
-        GPCompanyMigrationSettings.Name := CompanyName();
-        GPCompanyMigrationSettings.Insert(true);
-
-        GPCompanyAdditionalSettings.Init();
-        GPCompanyAdditionalSettings.Name := GPCompanyMigrationSettings.Name;
-        GPCompanyAdditionalSettings."Oldest GL Year to Migrate" := InitialHistYear;
-        GPCompanyAdditionalSettings.Insert(true);
     end;
 }

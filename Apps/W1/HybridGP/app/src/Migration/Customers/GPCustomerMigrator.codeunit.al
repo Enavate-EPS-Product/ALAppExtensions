@@ -16,6 +16,7 @@ codeunit 4018 "GP Customer Migrator"
     begin
         if RecordIdToMigrate.TableNo() <> Database::"GP Customer" then
             exit;
+
         GPCustomer.Get(RecordIdToMigrate);
         MigrateCustomerDetails(GPCustomer, Sender);
         MigrateCustomerAddresses(GPCustomer);
@@ -385,16 +386,14 @@ codeunit 4018 "GP Customer Migrator"
         HelperFunctions: Codeunit "Helper Functions";
         ClassId: Text[20];
         AccountNumber: Code[20];
-        MigrateCustomerClasses: Boolean;
     begin
+        if not GPCompanyAdditionalSettings.GetMigrateCustomerClasses() then
+            exit;
+
         if not GPRM00101.FindSet() then
             exit;
 
         if not GPRM00201.FindSet() then
-            exit;
-
-        MigrateCustomerClasses := GPCompanyAdditionalSettings.GetMigrateCustomerClasses();
-        if not MigrateCustomerClasses then
             exit;
 
         // Create the Customer Posting Groups

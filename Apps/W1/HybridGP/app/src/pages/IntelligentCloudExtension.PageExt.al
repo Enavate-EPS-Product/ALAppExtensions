@@ -1,6 +1,5 @@
 pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Management"
 {
-
     layout
     {
         addlast(FactBoxes)
@@ -10,23 +9,48 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
                 ApplicationArea = Basic, Suite;
                 Visible = FactBoxesVisible;
             }
+        }
+    }
 
+    actions
+    {
+        addafter(RunReplicationNow)
+        {
+            action(ConfigureGPMigration)
+            {
+                Enabled = HasRanSetupWizard;
+                ApplicationArea = Basic, Suite;
+                Caption = 'Configure GP Migration';
+                ToolTip = 'Configure migration settings for GP.';
+                Promoted = true;
+                PromotedCategory = Process;
+                Image = Setup;
+
+                trigger OnAction()
+                var
+                    HybridCompany: Record "Hybrid Company";
+                    GPSegmentName: Record "GP Segment Name";
+                begin
+                    Page.Run(Page::"GP Migration Configuration");
+                end;
+            }
         }
     }
 
     trigger OnOpenPage()
     var
         IntelligentCloudSetup: Record "Intelligent Cloud Setup";
+        HybridCompany: Record "Hybrid Company";
         HybridGPWizard: Codeunit "Hybrid GP Wizard";
     begin
         if IntelligentCloudSetup.Get() then
-            if IntelligentCloudSetup."Product ID" = HybridGPWizard.ProductId() then
-                FactBoxesVisible := true
-            else
-                FactBoxesVisible := false;
+            FactBoxesVisible := IntelligentCloudSetup."Product ID" = HybridGPWizard.ProductId();
+
+        HybridCompany.SetRange(Replicate, true);
+        HasRanSetupWizard := HybridCompany.FindFirst();
     end;
 
     var
         FactBoxesVisible: Boolean;
-
+        HasRanSetupWizard: Boolean;
 }

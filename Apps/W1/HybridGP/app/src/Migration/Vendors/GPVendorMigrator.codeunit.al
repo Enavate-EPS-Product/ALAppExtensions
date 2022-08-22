@@ -18,6 +18,7 @@ codeunit 4022 "GP Vendor Migrator"
     begin
         if RecordIdToMigrate.TableNo() <> Database::"GP Vendor" then
             exit;
+
         GPVendor.Get(RecordIdToMigrate);
         MigrateVendorDetails(GPVendor, Sender);
         MigrateVendorAddresses(GPVendor);
@@ -468,11 +469,11 @@ codeunit 4022 "GP Vendor Migrator"
         AccountNumber: Code[20];
         MigrateVendorClasses: Boolean;
     begin
-        if not GPPM00200.FindSet() then
-            exit;
-
         MigrateVendorClasses := GPCompanyAdditionalSettings.GetMigrateVendorClasses();
         if not MigrateVendorClasses then
+            exit;
+
+        if not GPPM00200.FindSet() then
             exit;
 
         repeat
