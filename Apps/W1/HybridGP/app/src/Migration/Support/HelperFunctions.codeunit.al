@@ -1093,7 +1093,7 @@ Codeunit 4037 "Helper Functions"
 
         GPRM00101.DeleteAll();
         GPRM00201.DeleteAll();
-        
+
         GPIV00101.DeleteAll();
         GPIV40400.DeleteAll();
 
@@ -1248,21 +1248,33 @@ Codeunit 4037 "Helper Functions"
     procedure GetNumberOfItems(): Integer;
     var
         GPItem: Record "GP Item";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
+        if not GPCompanyAdditionalSettings.GetInventoryModuleEnabled() then
+            exit(0);
+
         exit(GPItem.Count());
     end;
 
     procedure GetNumberOfCustomers(): Integer;
     var
         GPCustomer: Record "GP Customer";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
+        if not GPCompanyAdditionalSettings.GetReceivablesModuleEnabled() then
+            exit(0);
+
         exit(GPCustomer.Count());
     end;
 
     procedure GetNumberOfVendors(): Integer;
     var
         GPVendor: Record "GP Vendor";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
+        if not GPCompanyAdditionalSettings.GetPayablesModuleEnabled() then
+            exit(0);
+
         exit(GPVendor.Count());
     end;
 

@@ -22,6 +22,7 @@ codeunit 139662 "GP Item Tests"
         GPItem: Record "GP Item";
         Item: Record "Item";
         DataMigrationEntity: Record "Data Migration Entity";
+        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Items are migrated from GP
         // [GIVEN] There are no records in Item staging table
@@ -47,6 +48,7 @@ codeunit 139662 "GP Item Tests"
 
         // [THEN] A Item is created for all staging table entries
         Assert.RecordCount(Item, GPItem.Count());
+        Assert.AreEqual(GPItem.Count(), HelperFunctions.GetNumberOfItems(), 'Wrong number of Items calculated');
 
         // [THEN] Items are created with correct settings
         GPItem.FindSet();
@@ -72,6 +74,7 @@ codeunit 139662 "GP Item Tests"
     var
         GPItem: Record "GP Item";
         Item: Record "Item";
+        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Items are migrated from GP
         // [GIVEN] There are no records in Item staging table
@@ -87,6 +90,9 @@ codeunit 139662 "GP Item Tests"
         CreateStagingTableEntries(GPItem);
 
         GPTestHelperFunctions.InitializeMigration();
+
+        // [THEN] Calculated item count to migrate will be correct
+        Assert.AreEqual(0, HelperFunctions.GetNumberOfItems(), 'Wrong number of Items calculated');
 
         // [WHEN] Migrate is called
         GPItem.FindSet();
