@@ -378,7 +378,6 @@ codeunit 4018 "GP Customer Migrator"
 
     procedure MigrateCustomerClasses()
     var
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPRM00101: Record "GP RM00101";
         GPRM00201: Record "GP RM00201";
         CustomerPostingGroup: Record "Customer Posting Group";
@@ -387,9 +386,6 @@ codeunit 4018 "GP Customer Migrator"
         ClassId: Text[20];
         AccountNumber: Code[20];
     begin
-        if not GPCompanyAdditionalSettings.GetMigrateCustomerClasses() then
-            exit;
-
         if not GPRM00101.FindSet() then
             exit;
 

@@ -459,7 +459,6 @@ codeunit 4022 "GP Vendor Migrator"
 
     procedure MigrateVendorClasses()
     var
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPPM00200: Record "GP PM00200";
         GPPM00100: Record "GP PM00100";
         VendorPostingGroup: Record "Vendor Posting Group";
@@ -467,12 +466,7 @@ codeunit 4022 "GP Vendor Migrator"
         HelperFunctions: Codeunit "Helper Functions";
         ClassId: Text[20];
         AccountNumber: Code[20];
-        MigrateVendorClasses: Boolean;
     begin
-        MigrateVendorClasses := GPCompanyAdditionalSettings.GetMigrateVendorClasses();
-        if not MigrateVendorClasses then
-            exit;
-
         if not GPPM00200.FindSet() then
             exit;
 
