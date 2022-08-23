@@ -34,12 +34,6 @@ page 4052 "GP Set All Dimensions Dialog"
                         Error(GlobalDimensionsCannotBeTheSameErr);
                 end;
             }
-
-            field("BlanksClearValue"; BlanksClearValue)
-            {
-                Caption = 'Blank selections should clear existing values?';
-                ApplicationArea = Basic, Suite;
-            }
         }
     }
 
@@ -56,6 +50,16 @@ page 4052 "GP Set All Dimensions Dialog"
 
                 trigger OnAction()
                 begin
+                    if (Dimension1 = '') and (Dimension2 = '') then begin
+                        BlanksClearValue := Confirm(BothDimensionsBlankConfirmMsg)
+                    end else begin
+                        if Dimension1 = '' then
+                            BlanksClearValue := Confirm(Dimension1BlankConfirmMsg);
+
+                        if Dimension2 = '' then
+                            BlanksClearValue := Confirm(Dimension2BlankConfirmMsg);
+                    end;
+
                     ConfirmedYes := true;
                     CurrPage.Close();
                 end;
@@ -144,4 +148,7 @@ page 4052 "GP Set All Dimensions Dialog"
         BlanksClearValue: Boolean;
         ConfirmedYes: Boolean;
         GlobalDimensionsCannotBeTheSameErr: Label 'Dimension 1 and Dimension 2 cannot be the same.', Locked = true;
+        BothDimensionsBlankConfirmMsg: Label 'Both dimensions are empty. Do you want to clear both dimensions for all companies?', Locked = true;
+        Dimension1BlankConfirmMsg: Label 'You don''t have a value for Dimension 1. Do you want to clear Dimension 1 for all companies?', Locked = true;
+        Dimension2BlankConfirmMsg: Label 'You don''t have a value for Dimension 2. Do you want to clear Dimension 2 for all companies?', Locked = true;
 }
