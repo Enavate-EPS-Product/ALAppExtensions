@@ -18,7 +18,7 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
         {
             action(ConfigureGPMigration)
             {
-                Enabled = HasRanSetupWizard;
+                Enabled = HasCompletedSetupWizard;
                 ApplicationArea = Basic, Suite;
                 Caption = 'Configure GP Migration';
                 ToolTip = 'Configure migration settings for GP.';
@@ -47,10 +47,10 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
             FactBoxesVisible := IntelligentCloudSetup."Product ID" = HybridGPWizard.ProductId();
 
         HybridCompany.SetRange(Replicate, true);
-        HasRanSetupWizard := HybridCompany.FindFirst();
+        HasCompletedSetupWizard := HybridCompany.FindFirst();
     end;
 
     var
         FactBoxesVisible: Boolean;
-        HasRanSetupWizard: Boolean;
+        HasCompletedSetupWizard: Boolean;
 }
