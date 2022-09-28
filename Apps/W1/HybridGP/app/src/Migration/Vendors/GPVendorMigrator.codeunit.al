@@ -141,7 +141,6 @@ codeunit 4022 "GP Vendor Migrator"
     local procedure MigrateVendorDetails(GPVendor: Record "GP Vendor"; VendorDataMigrationFacade: Codeunit "Vendor Data Migration Facade")
     var
         CompanyInformation: Record "Company Information";
-        GPVendorAddress: Record "GP Vendor Address";
         PaymentTermsFormula: DateFormula;
         VendorName: Text[50];
         ContactName: Text[50];
@@ -212,11 +211,10 @@ codeunit 4022 "GP Vendor Migrator"
         if GPVendorAddress.FindSet() then
             repeat
                 AddressCode := CopyStr(GPVendorAddress.ADRSCODE, 1, MaxStrLen(AddressCode));
-                if AddressCode = AddressCodeRemitToTxt then begin
+                if AddressCode = AddressCodeRemitToTxt then
                     CreateOrUpdateRemitAddress(Vendor, GPVendorAddress, AddressCode)
-                end else begin
-                    CreateOrUpdateOrderAddress(Vendor, GPVendorAddress, AddressCode)
-                end;
+                else
+                    CreateOrUpdateOrderAddress(Vendor, GPVendorAddress, AddressCode);
             until GPVendorAddress.Next() = 0;
     end;
 
