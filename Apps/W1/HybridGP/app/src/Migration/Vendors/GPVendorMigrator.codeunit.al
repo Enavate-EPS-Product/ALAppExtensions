@@ -3,6 +3,7 @@ codeunit 4022 "GP Vendor Migrator"
     TableNo = "GP Vendor";
 
     var
+        HelperFunctions: Codeunit "Helper Functions";
         DocumentNo: Text[30];
         PostingGroupCodeTxt: Label 'GP', Locked = true;
         VendorBatchNameTxt: Label 'GPVEND', Locked = true;
@@ -25,8 +26,6 @@ codeunit 4022 "GP Vendor Migrator"
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Vendor Data Migration Facade", 'OnMigrateVendorPostingGroups', '', true, true)]
     procedure OnMigrateVendorPostingGroups(var Sender: Codeunit "Vendor Data Migration Facade"; RecordIdToMigrate: RecordId; ChartOfAccountsMigrated: Boolean)
-    var
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         if not ChartOfAccountsMigrated then
             exit;
@@ -50,7 +49,6 @@ codeunit 4022 "GP Vendor Migrator"
         GPVendor: Record "GP Vendor";
         GPVendorTransactions: Record "GP Vendor Transactions";
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
-        HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
     begin
         if not ChartOfAccountsMigrated then
@@ -144,29 +142,11 @@ codeunit 4022 "GP Vendor Migrator"
     var
         CompanyInformation: Record "Company Information";
         GPVendorAddress: Record "GP Vendor Address";
-        HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
         VendorName: Text[50];
         ContactName: Text[50];
         Country: Code[10];
     begin
-        // If the Remit To address is found, make that the main address
-        GPVendorAddress.SetRange(VENDORID, GPVendor.VENDORID);
-        GPVendorAddress.SetRange(ADRSCODE, 'REMIT TO');
-        if GPVendorAddress.FindFirst() then begin
-            GPVendor.VNDCNTCT := GPVendorAddress.VNDCNTCT;
-            GPVendor.ADDRESS1 := GPVendorAddress.ADDRESS1;
-            GPVendor.ADDRESS2 := GPVendorAddress.ADDRESS2;
-            GPVendor.CITY := GPVendorAddress.CITY;
-            GPVendor.STATE := GPVendorAddress.STATE;
-            GPVendor.ZIPCODE := GPVendorAddress.ZIPCODE;
-            GPVendor.PHNUMBR1 := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.PHNUMBR1);
-            GPVendor.FAXNUMBR := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.FAXNUMBR);
-        end else begin
-            GPVendor.PHNUMBR1 := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendor.PHNUMBR1);
-            GPVendor.FAXNUMBR := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendor.FAXNUMBR);
-        end;
-
         VendorName := CopyStr(GPVendor.VENDNAME, 1, 50);
         ContactName := CopyStr(GPVendor.VNDCNTCT, 1, 50);
         if not VendorDataMigrationFacade.CreateVendorIfNeeded(CopyStr(GPVendor.VENDORID, 1, 20), VendorName) then
@@ -188,8 +168,8 @@ codeunit 4022 "GP Vendor Migrator"
             CopyStr(GPVendor.ADDRESS2, 1, 50), Country,
             CopyStr(GPVendor.ZIPCODE, 1, 20), CopyStr(GPVendor.CITY, 1, 30));
 
-        VendorDataMigrationFacade.SetPhoneNo(GPVendor.PHNUMBR1);
-        VendorDataMigrationFacade.SetFaxNo(GPVendor.FAXNUMBR);
+        VendorDataMigrationFacade.SetPhoneNo(HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendor.PHNUMBR1));
+        VendorDataMigrationFacade.SetFaxNo(HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendor.FAXNUMBR));
         VendorDataMigrationFacade.SetContact(ContactName);
         VendorDataMigrationFacade.SetVendorPostingGroup(CopyStr(PostingGroupCodeTxt, 1, 5));
         VendorDataMigrationFacade.SetGenBusPostingGroup(CopyStr(PostingGroupCodeTxt, 1, 5));
@@ -221,13 +201,67 @@ codeunit 4022 "GP Vendor Migrator"
 
     local procedure MigrateVendorAddresses(GPVendor: Record "GP Vendor")
     var
+        Vendor: Record Vendor;
         GPVendorAddress: Record "GP Vendor Address";
+        AddressCode: Code[10];
     begin
-        GPVendorAddress.SetRange(VENDORID, GPVendor.VENDORID);
+        if not Vendor.Get(GPVendor.VENDORID) then
+            exit;
+
+        GPVendorAddress.SetRange(VENDORID, Vendor."No.");
         if GPVendorAddress.FindSet() then
             repeat
-                GPVendorAddress.MoveStagingData();
+                AddressCode := CopyStr(GPVendorAddress.ADRSCODE, 1, MaxStrLen(AddressCode));
+                if AddressCode = AddressCodeRemitToTxt then begin
+                    CreateOrUpdateRemitAddress(Vendor, GPVendorAddress, AddressCode)
+                end else begin
+                    CreateOrUpdateOrderAddress(Vendor, GPVendorAddress, AddressCode)
+                end;
             until GPVendorAddress.Next() = 0;
+    end;
+
+    local procedure CreateOrUpdateOrderAddress(Vendor: Record Vendor; GPVendorAddress: Record "GP Vendor Address"; AddressCode: Code[10])
+    var
+        OrderAddress: Record "Order Address";
+    begin
+        if not OrderAddress.Get(Vendor."No.", AddressCode) then begin
+            OrderAddress."Vendor No." := Vendor."No.";
+            OrderAddress.Code := AddressCode;
+            OrderAddress.Insert();
+        end;
+
+        OrderAddress.Name := Vendor.Name;
+        OrderAddress.Address := GPVendorAddress.ADDRESS1;
+        OrderAddress."Address 2" := CopyStr(GPVendorAddress.ADDRESS2, 1, MaxStrLen(OrderAddress."Address 2"));
+        OrderAddress.City := CopyStr(GPVendorAddress.CITY, 1, MaxStrLen(OrderAddress.City));
+        OrderAddress.Contact := GPVendorAddress.VNDCNTCT;
+        OrderAddress."Phone No." := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.PHNUMBR1);
+        OrderAddress."Fax No." := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.FAXNUMBR);
+        OrderAddress."Post Code" := GPVendorAddress.ZIPCODE;
+        OrderAddress.County := GPVendorAddress.STATE;
+        OrderAddress.Modify();
+    end;
+
+    local procedure CreateOrUpdateRemitAddress(Vendor: Record Vendor; GPVendorAddress: Record "GP Vendor Address"; AddressCode: Code[10])
+    var
+        RemitAddress: Record "Remit Address";
+    begin
+        if not RemitAddress.Get(AddressCode, Vendor."No.") then begin
+            RemitAddress."Vendor No." := Vendor."No.";
+            RemitAddress.Code := AddressCode;
+            RemitAddress.Insert();
+        end;
+
+        RemitAddress.Name := Vendor.Name;
+        RemitAddress.Address := GPVendorAddress.ADDRESS1;
+        RemitAddress."Address 2" := CopyStr(GPVendorAddress.ADDRESS2, 1, MaxStrLen(RemitAddress."Address 2"));
+        RemitAddress.City := CopyStr(GPVendorAddress.CITY, 1, MaxStrLen(RemitAddress.City));
+        RemitAddress.Contact := GPVendorAddress.VNDCNTCT;
+        RemitAddress."Phone No." := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.PHNUMBR1);
+        RemitAddress."Fax No." := HelperFunctions.CleanGPPhoneOrFaxNumber(GPVendorAddress.FAXNUMBR);
+        RemitAddress."Post Code" := GPVendorAddress.ZIPCODE;
+        RemitAddress.County := GPVendorAddress.STATE;
+        RemitAddress.Modify();
     end;
 
 #if not CLEAN21
@@ -246,7 +280,6 @@ codeunit 4022 "GP Vendor Migrator"
     local procedure GetVendorsFromJson(JArray: JsonArray)
     var
         GPVendor: Record "GP Vendor";
-        HelperFunctions: Codeunit "Helper Functions";
         RecordVariant: Variant;
         ChildJToken: JsonToken;
         EntityId: Text[75];
@@ -279,7 +312,6 @@ codeunit 4022 "GP Vendor Migrator"
     local procedure UpdateVendorFromJson(var RecordVariant: Variant; JToken: JsonToken)
     var
         GPVendor: Record "GP Vendor";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendor.FieldNO(VENDORID), JToken.AsObject(), 'VENDORID');
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendor.FieldNO(VENDNAME), JToken.AsObject(), 'VENDNAME');
@@ -313,7 +345,6 @@ codeunit 4022 "GP Vendor Migrator"
     local procedure GetPMTrxFromJson(JArray: JsonArray);
     var
         GPVendorTransactions: Record "GP Vendor Transactions";
-        HelperFunctions: Codeunit "Helper Functions";
         RecordVariant: Variant;
         ChildJToken: JsonToken;
         EntityId: Text[40];
@@ -347,7 +378,6 @@ codeunit 4022 "GP Vendor Migrator"
     local procedure UpdatePMTrxFromJson(var RecordVariant: Variant; JToken: JsonToken; DocumentNo: Text[30])
     var
         GPVendorTransactions: Record "GP Vendor Transactions";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendorTransactions.FieldNo(VENDORID), JToken.AsObject(), 'VENDORID');
         HelperFunctions.UpdateFieldValue(RecordVariant, GPVendorTransactions.FieldNo(DOCNUMBR), JToken.AsObject(), 'DOCNUMBR');
@@ -458,15 +488,18 @@ codeunit 4022 "GP Vendor Migrator"
 
     procedure MigrateVendorClasses()
     var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPPM00200: Record "GP PM00200";
         GPPM00100: Record "GP PM00100";
         VendorPostingGroup: Record "Vendor Posting Group";
         Vendor: Record Vendor;
-        HelperFunctions: Codeunit "Helper Functions";
         ClassId: Text[20];
         AccountNumber: Code[20];
     begin
         if not GPPM00200.FindSet() then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetMigrateVendorClasses() then
             exit;
 
         repeat

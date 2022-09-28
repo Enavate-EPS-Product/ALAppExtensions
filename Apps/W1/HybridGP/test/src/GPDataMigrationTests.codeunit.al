@@ -28,6 +28,7 @@ codeunit 139664 "GP Data Migration Tests"
         VendorMigrator: Codeunit "GP Vendor Migrator";
         VendorFacade: Codeunit "Vendor Data Migration Facade";
         Assert: Codeunit Assert;
+        HelperFunctions: Codeunit "Helper Functions";
         GPDataMigrationTests: Codeunit "GP Data Migration Tests";
         VendorIdWithBankStr1Txt: Label 'Vendor001', Comment = 'Vendor Id with bank account information', Locked = true;
         VendorIdWithBankStr2Txt: Label 'Vendor002', Comment = 'Vendor Id with bank account information', Locked = true;
@@ -50,7 +51,6 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Customer: Record "Customer";
         GenBusPostingGroup: Record "Gen. Business Posting Group";
-        HelperFunctions: Codeunit "Helper Functions";
         CustomerCount: Integer;
     begin
         // [SCENARIO] All Customers are queried from GP
@@ -150,7 +150,6 @@ codeunit 139664 "GP Data Migration Tests"
     procedure TestReceivablesDisabled()
     var
         Customer: Record "Customer";
-        HelperFunctions: Codeunit "Helper Functions";
         CustomerCount: Integer;
     begin
         // [SCENARIO] All Customers are queried from GP, but the Receivables Module is disabled
@@ -192,7 +191,7 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor: Record Vendor;
         CompanyInformation: Record "Company Information";
         OrderAddress: Record "Order Address";
-        HelperFunctions: Codeunit "Helper Functions";
+        RemitAddress: Record "Remit Address";
         Country: Code[10];
         VendorCount: Integer;
     begin
@@ -273,33 +272,38 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('P-N-TXB-%P*6', Vendor."Tax Area Code", 'Tax Area Code of Migrated Vendor is wrong');
         Assert.AreEqual(true, Vendor."Tax Liable", 'Tax Liable of Migrated Vendor is wrong');
 
-        // [WHEN] the Remit To address differs from the originally selected main address
-        Vendor.Reset();
-        Vendor.SetRange("No.", 'ACETRAVE0001');
-        Vendor.FindFirst();
+        // [THEN] The Order addresses will be created correctly
+        OrderAddress.SetRange("Vendor No.", 'ACETRAVE0001');
+        Assert.RecordCount(OrderAddress, 1);
 
-        // [then] The Remit To address will have overridden the main address
-        Assert.AreEqual('A Travel Company', Vendor.Name, 'Name of Migrated Vendor is wrong');
-        Assert.AreEqual('Greg Powell', Vendor.Contact, 'Contact Name of Migrated Vendor is wrong');
-        Assert.AreEqual('Box 342', Vendor.Address, 'Address of Migrated Vendor is wrong');
-        Assert.AreEqual('', Vendor."Address 2", 'Address2 of Migrated Vendor is wrong');
-        Assert.AreEqual('Sydney', Vendor.City, 'City of Migrated Vendor is wrong');
-        Assert.AreEqual('29855501020000', Vendor."Phone No.", 'Phone No. of Migrated Vendor is wrong');
-        Assert.AreEqual('29455501020000', Vendor."Fax No.", 'Fax No. of Migrated Vendor is wrong');
+        OrderAddress.FindFirst();
+        Assert.AreEqual('Greg Powell', OrderAddress.Contact, 'Contact of Order Address is wrong.');
+        Assert.AreEqual('123 Riley Street', OrderAddress.Address, 'Address of Order Address is wrong.');
+        Assert.AreEqual('Sydney', OrderAddress.City, 'City of Order Address is wrong.');
+        Assert.AreEqual('NSW', OrderAddress.County, 'State/Region code of Order Address is wrong.');
+        Assert.AreEqual('2086', OrderAddress."Post Code", 'Post Code of Order Address is wrong.');
+        Assert.AreEqual('29855501010000', OrderAddress."Phone No.", 'Phone No. of Order Address is wrong.');
+        Assert.AreEqual('29455501010000', OrderAddress."Fax No.", 'Fax No. of Order Address is wrong.');
 
-        // [WHEN] the Vendor does not have a Remit To address
-        Vendor.Reset();
-        Vendor.SetRange("No.", 'V3130');
-        Vendor.FindFirst();
+        // [THEN] The Order addresses will be created correctly
+        OrderAddress.SetRange("Vendor No.", 'ACETRAVE0002');
+        Assert.RecordCount(OrderAddress, 2);
 
-        // [then] The originally selected main address stays the same
-        Assert.AreEqual('Lmd Telecom, Inc.', Vendor.Name, 'Name of Migrated Vendor is wrong');
-        Assert.AreEqual('', Vendor.Contact, 'Contact Name of Migrated Vendor is wrong');
-        Assert.AreEqual('P.O. Box10158', Vendor.Address, 'Address of Migrated Vendor is wrong');
-        Assert.AreEqual('2201a Jacsboro Highway', Vendor."Address 2", 'Address2 of Migrated Vendor is wrong');
-        Assert.AreEqual('Fort Worth', Vendor.City, 'City of Migrated Vendor is wrong');
-        Assert.AreEqual('41327348230000', Vendor."Phone No.", 'Phone No. of Migrated Vendor is wrong');
-        Assert.AreEqual('41327348300000', Vendor."Fax No.", 'Fax No. of Migrated Vendor is wrong');
+        // [THEN] The Remit addresses will be created correctly
+        RemitAddress.SetRange("Vendor No.", 'ACETRAVE0001');
+        Assert.RecordCount(RemitAddress, 1);
+
+        RemitAddress.FindFirst();
+        Assert.AreEqual('Greg Powell', RemitAddress.Contact, 'Contact of Remit Address is wrong.');
+        Assert.AreEqual('Box 342', RemitAddress.Address, 'Address of Remit Address is wrong.');
+        Assert.AreEqual('Sydney', RemitAddress.City, 'City of Remit Address is wrong.');
+        Assert.AreEqual('NSW', RemitAddress.County, 'State/Region code of Remit Address is wrong.');
+        Assert.AreEqual('2000', RemitAddress."Post Code", 'Post Code of Remit Address is wrong.');
+        Assert.AreEqual('29855501020000', RemitAddress."Phone No.", 'Phone No. of Remit Address is wrong.');
+        Assert.AreEqual('29455501020000', RemitAddress."Fax No.", 'Fax No. of Remit Address is wrong.');
+
+        RemitAddress.SetRange("Vendor No.", 'ACETRAVE0002');
+        Assert.RecordCount(RemitAddress, 0);
 
         // [WHEN] the Vendor phone and/or fax were default (00000000000000)
         Vendor.Reset();
@@ -338,7 +342,6 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor: Record Vendor;
         CompanyInformation: Record "Company Information";
         OrderAddress: Record "Order Address";
-        HelperFunctions: Codeunit "Helper Functions";
         Country: Code[10];
         VendorCount: Integer;
     begin
@@ -378,7 +381,6 @@ codeunit 139664 "GP Data Migration Tests"
     procedure TestGPPaymentTerms()
     var
         PaymentTerms: Record "Payment Terms";
-        HelperFunctions: Codeunit "Helper Functions";
         DiscountDateCalculation: DateFormula;
         DueDateCalculation: DateFormula;
         CurrentPaymentTerm: Text;
@@ -705,7 +707,6 @@ codeunit 139664 "GP Data Migration Tests"
     procedure TestGPVendorClassesConfiguredToNotImport()
     var
         VendorPostingGroup: Record "Vendor Posting Group";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Vendors and their class information are queried from GP
         // [GIVEN] GP data
@@ -739,7 +740,6 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Vendor: Record Vendor;
         VendorPostingGroup: Record "Vendor Posting Group";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Vendors and their class information are queried from GP
         // [GIVEN] GP data
@@ -799,7 +799,6 @@ codeunit 139664 "GP Data Migration Tests"
     procedure TestGPCustomerClassesConfiguredToNotImport()
     var
         CustomerPostingGroup: Record "Customer Posting Group";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Customers and their class information are queried from GP
         // [GIVEN] GP data
@@ -828,7 +827,6 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Customer: Record Customer;
         CustomerPostingGroup: Record "Customer Posting Group";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Customers and their class information are queried from GP
         // [GIVEN] GP data
@@ -890,7 +888,6 @@ codeunit 139664 "GP Data Migration Tests"
     var
         VendorPostingGroup: Record "Vendor Posting Group";
         PurchaseHeader: Record "Purchase Header";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Vendors and their PO information are queried from GP
         // [GIVEN] GP data
@@ -924,7 +921,6 @@ codeunit 139664 "GP Data Migration Tests"
     var
         VendorPostingGroup: Record "Vendor Posting Group";
         PurchaseHeader: Record "Purchase Header";
-        HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] Vendors and their PO information are queried from GP
         // [GIVEN] GP data
