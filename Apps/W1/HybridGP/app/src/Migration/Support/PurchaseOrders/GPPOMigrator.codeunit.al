@@ -165,15 +165,14 @@ codeunit 40108 "GP PO Migrator"
         UnitOfMeasure: Code[10];
     begin
         ItemNo := CopyStr(GPPOPPOLine.ITEMNMBR, 1, MaxStrLen(ItemNo));
-        UnitOfMeasure := CopyStr(GPPOPPOLine.UOFM, 1, MaxStrLen(UnitOfMeasure));
-
         NewItem.SetRange("No.", ItemNo);
         if not NewItem.IsEmpty() then
             exit;
 
+        UnitOfMeasure := UpperCase(CopyStr(GPPOPPOLine.UOFM, 1, MaxStrLen(UnitOfMeasure)));
         if not UnitOfMeasureRec.Get(UnitOfMeasure) then begin
             UnitOfMeasureRec.Validate(Code, UnitOfMeasure);
-            UnitOfMeasureRec.Validate(Description, UnitOfMeasure);
+            UnitOfMeasureRec.Validate(Description, GPPOPPOLine.UOFM);
             UnitOfMeasureRec.Insert(true);
         end;
 
