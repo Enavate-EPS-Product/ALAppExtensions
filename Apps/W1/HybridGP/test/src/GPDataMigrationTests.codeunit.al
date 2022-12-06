@@ -19,8 +19,8 @@ codeunit 139664 "GP Data Migration Tests"
         GPPM00200: Record "GP PM00200";
         GPRM00101: Record "GP RM00101";
         GPRM00201: Record "GP RM00201";
-        GPPOPPOHeader: Record "GP POPPOHeader";
-        GPPOPPOLine: Record "GP POPPOLine";
+        GPPOP10100: Record "GP POP10100";
+        GPPOP10110: Record "GP POP10110";
         GPTestHelperFunctions: Codeunit "GP Test Helper Functions";
         CustomerFacade: Codeunit "Customer Data Migration Facade";
         CustomerMigrator: Codeunit "GP Customer Migrator";
@@ -1158,8 +1158,8 @@ codeunit 139664 "GP Data Migration Tests"
         GPPM00200.DeleteAll();
         GPRM00101.DeleteAll();
         GPRM00201.DeleteAll();
-        GPPOPPOLine.DeleteAll();
-        GPPOPPOHeader.DeleteAll();
+        GPPOP10110.DeleteAll();
+        GPPOP10100.DeleteAll();
 
         if not GenBusPostingGroup.Get(PostingGroupCodeTxt) then begin
             GenBusPostingGroup.Validate("Code", PostingGroupCodeTxt);
@@ -3356,13 +3356,14 @@ codeunit 139664 "GP Data Migration Tests"
 
     local procedure CreateOpenPOData()
     begin
-        Clear(GPPOPPOHeader);
-        GPPOPPOHeader.PONUMBER := CopyStr(PONumberTxt, 1, MaxStrLen(GPPOPPOLine.PONUMBER));
-        GPPOPPOHeader.VENDORID := 'DUFFY';
-        GPPOPPOHeader.DOCDATE := Today();
-        GPPOPPOHeader.PRMDATE := Today();
-        GPPOPPOHeader.PYMTRMID := '2% EOM/Net 15th';
-        GPPOPPOHeader.SHIPMTHD := 'Space Ship';
-        GPPOPPOHeader.Insert();
+        Clear(GPPOP10100);
+        GPPOP10100.PONUMBER := CopyStr(PONumberTxt, 1, MaxStrLen(GPPOP10110.PONUMBER));
+        GPPOP10100.VENDORID := 'DUFFY';
+        GPPOP10100.DOCDATE := System.CurrentDateTime();
+        GPPOP10100.PRMDATE := System.CurrentDateTime();
+        GPPOP10100.TIME1 := System.CurrentDateTime();
+        GPPOP10100.PYMTRMID := '2% EOM/Net 15th';
+        GPPOP10100.SHIPMTHD := 'Space Ship';
+        GPPOP10100.Insert();
     end;
 }

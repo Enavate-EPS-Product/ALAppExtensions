@@ -1,10 +1,7 @@
-table 40102 "GP POPPOHeader"
+table 40137 "GP POP10100"
 {
     DataClassification = CustomerContent;
     Extensible = false;
-    ObsoleteState = Pending;
-    ObsoleteReason = 'When the Date fields contain a time in the source database, it causes the migration to fail.';
-    ObsoleteTag = '22.0';
 
     fields
     {
@@ -40,37 +37,37 @@ table 40102 "GP POPPOHeader"
             Caption = 'CONFIRM1';
             DataClassification = CustomerContent;
         }
-        field(7; DOCDATE; Date)
+        field(7; DOCDATE; DateTime)
         {
             Caption = 'DOCDATE';
             DataClassification = CustomerContent;
         }
-        field(8; LSTEDTDT; Date)
+        field(8; LSTEDTDT; DateTime)
         {
             Caption = 'LSTEDTDT';
             DataClassification = CustomerContent;
         }
-        field(9; LSTPRTDT; Date)
+        field(9; LSTPRTDT; DateTime)
         {
             Caption = 'LSTPRTDT';
             DataClassification = CustomerContent;
         }
-        field(10; PRMDATE; Date)
+        field(10; PRMDATE; DateTime)
         {
             Caption = 'PRMDATE';
             DataClassification = CustomerContent;
         }
-        field(11; PRMSHPDTE; Date)
+        field(11; PRMSHPDTE; DateTime)
         {
             Caption = 'PRMSHPDTE';
             DataClassification = CustomerContent;
         }
-        field(12; REQDATE; Date)
+        field(12; REQDATE; DateTime)
         {
             Caption = 'REQDATE';
             DataClassification = CustomerContent;
         }
-        field(13; REQTNDT; Date)
+        field(13; REQTNDT; DateTime)
         {
             Caption = 'REQTNDT';
             DataClassification = CustomerContent;
@@ -240,17 +237,17 @@ table 40102 "GP POPPOHeader"
             Caption = 'DISAMTAV';
             DataClassification = CustomerContent;
         }
-        field(47; DISCDATE; Date)
+        field(47; DISCDATE; DateTime)
         {
             Caption = 'DISCDATE';
             DataClassification = CustomerContent;
         }
-        field(48; DUEDATE; Date)
+        field(48; DUEDATE; DateTime)
         {
             Caption = 'DUEDATE';
             DataClassification = CustomerContent;
         }
-        field(49; TRDPCTPR; Text[25])
+        field(49; TRDPCTPR; Integer)
         {
             Caption = 'TRDPCTPR';
             DataClassification = CustomerContent;
@@ -265,12 +262,12 @@ table 40102 "GP POPPOHeader"
             Caption = 'TIMESPRT';
             DataClassification = CustomerContent;
         }
-        field(52; CREATDDT; Date)
+        field(52; CREATDDT; DateTime)
         {
             Caption = 'CREATDDT';
             DataClassification = CustomerContent;
         }
-        field(53; MODIFDT; Date)
+        field(53; MODIFDT; DateTime)
         {
             Caption = 'MODIFDT';
             DataClassification = CustomerContent;
@@ -385,12 +382,12 @@ table 40102 "GP POPPOHeader"
             Caption = 'XCHGRATE';
             DataClassification = CustomerContent;
         }
-        field(76; EXCHDATE; Date)
+        field(76; EXCHDATE; DateTime)
         {
             Caption = 'EXCHDATE';
             DataClassification = CustomerContent;
         }
-        field(77; TIME1; Date)
+        field(77; TIME1; DateTime)
         {
             Caption = 'TIME1';
             DataClassification = CustomerContent;
@@ -475,7 +472,7 @@ table 40102 "GP POPPOHeader"
             Caption = 'HOLD';
             DataClassification = CustomerContent;
         }
-        field(94; ONHOLDDATE; Date)
+        field(94; ONHOLDDATE; DateTime)
         {
             Caption = 'ONHOLDDATE';
             DataClassification = CustomerContent;
@@ -485,7 +482,7 @@ table 40102 "GP POPPOHeader"
             Caption = 'ONHOLDBY';
             DataClassification = CustomerContent;
         }
-        field(96; HOLDREMOVEDATE; Date)
+        field(96; HOLDREMOVEDATE; DateTime)
         {
             Caption = 'HOLDREMOVEDATE';
             DataClassification = CustomerContent;
@@ -643,7 +640,7 @@ table 40102 "GP POPPOHeader"
             Caption = 'POPCONTNUM';
             DataClassification = CustomerContent;
         }
-        field(127; CONTENDDTE; Date)
+        field(127; CONTENDDTE; DateTime)
         {
             Caption = 'CONTENDDTE';
             DataClassification = CustomerContent;
@@ -785,77 +782,4 @@ table 40102 "GP POPPOHeader"
             Clustered = true;
         }
     }
-
-    var
-        PostingDescriptionTxt: Label 'Migrated from GP';
-        PostingGroupTxt: Label 'GP', Locked = true;
-
-    procedure MoveStagingData()
-    var
-        PurchasesPayablesSetup: Record "Purchases & Payables Setup";
-        CompanyInformation: Record "Company Information";
-        PurchaseHeader: Record "Purchase Header";
-        GPPOPPOLine: Record "GP POPPOLine";
-        PurchaseDocumentType: Enum "Purchase Document Type";
-        PurchaseDocumentStatus: Enum "Purchase Document Status";
-        CountryCode: Code[10];
-    begin
-        if FindSet() then begin
-            CountryCode := CompanyInformation."Country/Region Code";
-            repeat
-                if not PurchaseHeader.Get(PurchaseHeader."Document Type"::Order, PONUMBER) then begin
-                    PurchaseHeader.Init();
-                    PurchaseHeader."Document Type" := PurchaseDocumentType::Order;
-                    PurchaseHeader."No." := PONUMBER;
-                    PurchaseHeader.Status := PurchaseDocumentStatus::Open;
-                    PurchaseHeader.Insert(true);
-
-                    PurchaseHeader.Validate("Buy-from Vendor No.", VENDORID);
-                    PurchaseHeader.Validate("Pay-to Vendor No.", VENDORID);
-                    PurchaseHeader.Validate("Order Date", DOCDATE);
-                    PurchaseHeader.Validate("Posting Date", DOCDATE);
-                    PurchaseHeader.Validate("Document Date", DOCDATE);
-                    PurchaseHeader.Validate("Expected Receipt Date", PRMDATE);
-                    PurchaseHeader."Posting Description" := PostingDescriptionTxt;
-                    PurchaseHeader.Validate("Payment Terms Code", CopyStr(PYMTRMID, 1, 10));
-                    PurchaseHeader."Shipment Method Code" := CopyStr(SHIPMTHD, 1, 10);
-                    PurchaseHeader."Vendor Posting Group" := PostingGroupTxt;
-                    PurchaseHeader.Validate("Prices Including VAT", false);
-                    PurchaseHeader.Validate("Vendor Invoice No.", PONUMBER);
-                    PurchaseHeader.Validate("Gen. Bus. Posting Group", PostingGroupTxt);
-                    UpdateShipToAddress(CountryCode, PurchaseHeader);
-
-                    if PurchasesPayablesSetup.FindFirst() then begin
-                        PurchaseHeader.Validate("Posting No. Series", PurchasesPayablesSetup."Posted Invoice Nos.");
-                        PurchaseHeader.Validate("Receiving No. Series", PurchasesPayablesSetup."Posted Receipt Nos.");
-                    end;
-
-                    PurchaseHeader.Modify(true);
-                    GPPOPPOLine.MoveStagingData(PONUMBER);
-                end;
-            until Next() = 0;
-        end;
-    end;
-
-    local procedure UpdateShipToAddress(CountryCode: Code[10]; var PurchaseHeader: Record "Purchase Header")
-    begin
-        if PRSTADCD.Trim() <> '' then begin
-            PurchaseHeader."Ship-to Code" := CopyStr(DelChr(PRSTADCD, '>', ' '), 1, 10);
-            PurchaseHeader."Ship-to Country/Region Code" := CountryCode;
-        end;
-        if CMPNYNAM.Trim() <> '' then
-            PurchaseHeader."Ship-to Name" := CMPNYNAM;
-        if ADDRESS1.Trim() <> '' then
-            PurchaseHeader."Ship-to Address" := ADDRESS1;
-        if ADDRESS2.Trim() <> '' then
-            PurchaseHeader."Ship-to Address 2" := CopyStr(DelChr(ADDRESS2, '>', ' '), 1, 50);
-        if CITY.Trim() <> '' then
-            PurchaseHeader."Ship-to City" := CopyStr(DelChr(CITY, '>', ' '), 1, 30);
-        if CONTACT.Trim() <> '' then
-            PurchaseHeader."Ship-to Contact" := CONTACT;
-        if ZIPCODE.Trim() <> '' then
-            PurchaseHeader."Ship-to Post Code" := ZIPCODE;
-        if STATE.Trim() <> '' then
-            PurchaseHeader."Ship-to County" := STATE;
-    end;
 }
