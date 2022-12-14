@@ -23,61 +23,10 @@ page 41002 "Hist. Sales Trx. Headers"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the No. field.';
                 }
-                field("Sales Trx. Type"; Rec."Sales Trx. Type")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Sales Type field.';
-                }
                 field("Sales Trx. Status"; Rec."Sales Trx. Status")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Sales Trx. Status field.';
-                }
-                field("Currency Code"; Rec."Currency Code")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Currency Code field.';
-                }
-                field("Sub Total"; Rec."Sub Total")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Sub Total field.';
-                }
-                field("Tax Amount"; Rec."Tax Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Tax Amount field.';
-                }
-
-                field(Total; Rec.Total)
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Total field.';
-                }
-                field("Disc. Taken Amount"; Rec."Disc. Taken Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Discount Taken Amount field.';
-                }
-                field("Freight Amount"; Rec."Freight Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Freight Amount field.';
-                }
-                field("Misc. Amount"; Rec."Misc. Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Miscellaneous Amount field.';
-                }
-                field("Payment Recv. Amount"; Rec."Payment Recv. Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Payment Received Amount field.';
-                }
-                field("Trade Disc. Amount"; Rec."Trade Disc. Amount")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Trade Discount Amount field.';
                 }
                 field("Document Date"; Rec."Document Date")
                 {
@@ -94,6 +43,51 @@ page 41002 "Hist. Sales Trx. Headers"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Actual Ship Date field.';
                 }
+                field("Currency Code"; Rec."Currency Code")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Currency Code field.';
+                }
+                field("Sub Total"; Rec."Sub Total")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Sub Total field.';
+                }
+                field("Tax Amount"; Rec."Tax Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Ext. Price field.';
+                }
+                field("Trade Disc. Amount"; Rec."Trade Disc. Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Trade Discount Amount field.';
+                }
+                field("Freight Amount"; Rec."Freight Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Freight Amount field.';
+                }
+                field("Misc. Amount"; Rec."Misc. Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Miscellaneous Amount field.';
+                }
+                field("Payment Recv. Amount"; Rec."Payment Recv. Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Payment Received Amount field.';
+                }
+                field("Disc. Taken Amount"; Rec."Disc. Taken Amount")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Discount Taken Amount field.';
+                }
+                field(Total; Rec.Total)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Total field.';
+                }
                 field("Customer No."; Rec."Customer No.")
                 {
                     ApplicationArea = All;
@@ -104,25 +98,10 @@ page 41002 "Hist. Sales Trx. Headers"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Customer Name field.';
                 }
-                field("Audit Code"; Rec."Audit Code")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Audit Code field.';
-                }
                 field("Contact Person Name"; Rec."Contact Person Name")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Contact Person Name field.';
-                }
-                field("Customer Purchase No."; Rec."Customer Purchase No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Customer Purchase No. field.';
-                }
-                field("Original No."; Rec."Original No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Original No. field.';
                 }
                 field("Sales Territory"; Rec."Sales Territory")
                 {
@@ -139,6 +118,16 @@ page 41002 "Hist. Sales Trx. Headers"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Ship Method field.';
                 }
+                field("Ship-to Code"; Rec."Ship-to Code")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Ship-to Code field.';
+                }
+                field("Ship-to Name"; Rec."Ship-to Name")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Ship-to Name field.';
+                }
                 field("Ship-to Address"; Rec."Ship-to Address")
                 {
                     ApplicationArea = All;
@@ -154,21 +143,6 @@ page 41002 "Hist. Sales Trx. Headers"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Ship-to City field.';
                 }
-                field("Ship-to Code"; Rec."Ship-to Code")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Ship-to Code field.';
-                }
-                field("Ship-to Country"; Rec."Ship-to Country")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Ship-to Country field.';
-                }
-                field("Ship-to Name"; Rec."Ship-to Name")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Ship-to Name field.';
-                }
                 field("Ship-to State"; Rec."Ship-to State")
                 {
                     ApplicationArea = All;
@@ -178,6 +152,31 @@ page 41002 "Hist. Sales Trx. Headers"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Ship-to Zipcode field.';
+                }
+                field("Ship-to Country"; Rec."Ship-to Country")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Ship-to Country field.';
+                }
+                field("Original No."; Rec."Original No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Original No. field.';
+                }
+                field("Customer Purchase No."; Rec."Customer Purchase No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Customer Purchase No. field.';
+                }
+                field("Audit Code"; Rec."Audit Code")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Audit Code field.';
+                }
+                field("Sales Trx. Type"; Rec."Sales Trx. Type")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Sales Type field.';
                 }
             }
         }

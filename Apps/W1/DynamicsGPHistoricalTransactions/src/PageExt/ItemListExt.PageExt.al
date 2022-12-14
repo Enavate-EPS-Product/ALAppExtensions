@@ -37,7 +37,8 @@ pageextension 41020 "Item List Ext." extends "Item List"
     var
         HistInventoryTrxHeader: Record "Hist. Inventory Trx. Header";
     begin
-        GPGLDetailDataExists := not HistInventoryTrxHeader.IsEmpty();
+        if HistInventoryTrxHeader.ReadPermission() then
+            GPGLDetailDataExists := not HistInventoryTrxHeader.IsEmpty();
     end;
 
     var

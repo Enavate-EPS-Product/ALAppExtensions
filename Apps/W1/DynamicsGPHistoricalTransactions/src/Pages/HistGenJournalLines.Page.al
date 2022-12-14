@@ -27,6 +27,10 @@ page 41001 "Hist. Gen. Journal Lines"
                 {
                     ToolTip = 'Specifies the value of the Year field.';
                 }
+                field(Closed; Rec.Closed)
+                {
+                    ToolTip = 'Specifies the value of the Closed field.';
+                }
                 field("Account No."; Rec."Account No.")
                 {
                     ToolTip = 'Specifies the value of the Account No. field.';
@@ -35,22 +39,21 @@ page 41001 "Hist. Gen. Journal Lines"
                 {
                     ToolTip = 'Specifies the value of the Journal Entry No. field.';
                 }
-                field("Sequence No."; Rec."Sequence No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Sequence No. field.';
-                }
-                field(Closed; Rec.Closed)
-                {
-                    ToolTip = 'Specifies the value of the Closed field.';
-                }
-                field("Audit Code"; Rec."Audit Code")
-                {
-                    ToolTip = 'Specifies the value of the Audit Code field.';
-                }
                 field("Date"; Rec."Date")
                 {
                     ToolTip = 'Specifies the value of the Date field.';
+                }
+                field("Debit Amount"; Rec."Debit Amount")
+                {
+                    ToolTip = 'Specifies the value of the Debit Amount field.';
+                }
+                field("Credit Amount"; Rec."Credit Amount")
+                {
+                    ToolTip = 'Specifies the value of the Credit Amount field.';
+                }
+                field("Orig. Document No."; Rec."Orig. Document No.")
+                {
+                    ToolTip = 'Specifies the value of the Originating Document No. field.';
                 }
                 field("Source No."; Rec."Source No.")
                 {
@@ -60,38 +63,6 @@ page 41001 "Hist. Gen. Journal Lines"
                 {
                     ToolTip = 'Specifies the value of the Source Name field.';
                 }
-                field("Orig. Document No."; Rec."Orig. Document No.")
-                {
-                    ToolTip = 'Specifies the value of the Originating Document No. field.';
-                }
-                field("Orig. Trx. Source No."; Rec."Orig. Trx. Source No.")
-                {
-                    ToolTip = 'Specifies the value of the Orig. Trx. Source No. field.';
-                }
-                field("Currency Code"; Rec."Currency Code")
-                {
-                    ToolTip = 'Specifies the value of the Currency Code field.';
-                }
-                field("Debit Amount"; Rec."Debit Amount")
-                {
-                    ToolTip = 'Specifies the value of the Debit Amount field.';
-                }
-                field("Orig. Debit Amount"; Rec."Orig. Debit Amount")
-                {
-                    ToolTip = 'Specifies the value of the Originating Debit Amount field.';
-                }
-                field("Credit Amount"; Rec."Credit Amount")
-                {
-                    ToolTip = 'Specifies the value of the Credit Amount field.';
-                }
-                field("Orig. Credit Amount"; Rec."Orig. Credit Amount")
-                {
-                    ToolTip = 'Specifies the value of the Originating Credit Amount field.';
-                }
-                field("Document Type"; Rec."Document Type")
-                {
-                    ToolTip = 'Specifies the value of the Document Type field.';
-                }
                 field("Reference Desc."; Rec."Reference Desc.")
                 {
                     ToolTip = 'Specifies the value of the Refererence Desc. field.';
@@ -100,9 +71,34 @@ page 41001 "Hist. Gen. Journal Lines"
                 {
                     ToolTip = 'Specifies the value of the Description field.';
                 }
-                field(User; Rec.User)
+                field("Document Type"; Rec."Document Type")
                 {
-                    ToolTip = 'Specifies the value of the User field.';
+                    ToolTip = 'Specifies the value of the Document Type field.';
+                }
+                field("Currency Code"; Rec."Currency Code")
+                {
+                    ToolTip = 'Specifies the value of the Currency Code field.';
+                }
+                field("Orig. Debit Amount"; Rec."Orig. Debit Amount")
+                {
+                    ToolTip = 'Specifies the value of the Originating Debit Amount field.';
+                }
+                field("Orig. Credit Amount"; Rec."Orig. Credit Amount")
+                {
+                    ToolTip = 'Specifies the value of the Originating Credit Amount field.';
+                }
+                field("Orig. Trx. Source No."; Rec."Orig. Trx. Source No.")
+                {
+                    ToolTip = 'Specifies the value of the Orig. Trx. Source No. field.';
+                }
+                field("Audit Code"; Rec."Audit Code")
+                {
+                    ToolTip = 'Specifies the value of the Audit Code field.';
+                }
+                field("Sequence No."; Rec."Sequence No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Sequence No. field.';
                 }
                 field(Custom1; Rec.Custom1)
                 {
@@ -111,6 +107,10 @@ page 41001 "Hist. Gen. Journal Lines"
                 field(Custom2; Rec.Custom2)
                 {
                     ToolTip = 'Specifies the value of the Custom 2 field.';
+                }
+                field(User; Rec.User)
+                {
+                    ToolTip = 'Specifies the value of the User field.';
                 }
             }
         }

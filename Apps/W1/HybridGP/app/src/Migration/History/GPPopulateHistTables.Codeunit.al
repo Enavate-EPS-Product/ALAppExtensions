@@ -1,6 +1,8 @@
 codeunit 40900 "GP Populate Hist. Tables"
 {
     var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        HistMigrationStatusMgmt: Codeunit "Hist. Migration Status Mgmt.";
         PayrollSeriesId: Integer;
 
     trigger OnRun()
@@ -10,32 +12,34 @@ codeunit 40900 "GP Populate Hist. Tables"
     end;
 
     internal procedure PopulateHistoricalTables()
-    var
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
-        if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then
-            PopulateGLDetail();
-
-        if GPCompanyAdditionalSettings.GetMigrateHistARTrx() then begin
-            PopulateSalesTransactions();
-            PopulateRecvDocuments();
-        end;
-
-        if GPCompanyAdditionalSettings.GetMigrateHistAPTrx() then
-            PopulatePayablesDocuments();
-
-        if GPCompanyAdditionalSettings.GetMigrateHistInvTrx() then
-            PopulateInventoryTransactions();
-
-        if GPCompanyAdditionalSettings.GetMigrateHistPurchTrx() then
-            PopulatePurchaseRecvTransactions();
+        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP GL Accounts", 'RefCode', 'ErrorCode123', 'This is a test error message');
+        PopulateGLDetail();
+        PopulateReceivables();
+        PopulatePayablesDocuments();
+        PopulateInventoryTransactions();
+        PopulatePurchaseRecvTransactions();
     end;
 
     local procedure PopulateGLDetail()
     begin
-        PopulateHistGLAccounts();
-        PopulateOpenYearPostedTransactions();
-        PopulateHistoricalYearPostedTransactions();
+        // GP G/L Accounts
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Accounts") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", false);
+            if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then
+                PopulateHistGLAccounts();
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", true);
+        end;
+
+        // GP G/L Journal Trx.
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Journal Trx.") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", false);
+            if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then begin
+                PopulateOpenYearPostedTransactions();
+                PopulateHistoricalYearPostedTransactions();
+            end;
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", true);
+        end;
     end;
 
     local procedure PopulateHistGLAccounts()
@@ -50,7 +54,10 @@ codeunit 40900 "GP Populate Hist. Tables"
                 if GPGL00100.Get(GPGL00105.ACTINDX) then begin
                     HistGLAccount."No." := CopyStr(Format(GPGL00105.ACTNUMST), 1, MaxStrLen(HistGLAccount."No."));
                     HistGLAccount.Name := GPGL00100.ACTDESCR;
-                    HistGLAccount.Insert();
+
+                    if not HistGLAccount.Insert() then
+                        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP GL Accounts", GPGL00105.ACTNUMST,
+                            GetLastErrorCode(), GetLastErrorText());
                 end;
             until GPGL00105.Next() = 0;
     end;
@@ -60,15 +67,12 @@ codeunit 40900 "GP Populate Hist. Tables"
         GPGL20000: Record "GP GL20000";
         GPGL00105: Record "GP GL00105";
         HistGenJournalLine: Record "Hist. Gen. Journal Line";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         OutlookSynchTypeConv: Codeunit "Outlook Synch. Type Conv";
         InitialHistYear: Integer;
     begin
         InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
         if InitialHistYear > 0 then
             GPGL20000.SetFilter(OPENYEAR, '>=%1', InitialHistYear);
-
-        GPGL20000.SetFilter(SERIES, '<>%1', PayrollSeriesId);
 
         if GPGL20000.FindSet() then
             repeat
@@ -78,7 +82,6 @@ codeunit 40900 "GP Populate Hist. Tables"
 
 #pragma warning disable AA0139
                     HistGenJournalLine."Source Type" := ConvertSeriesToSourceType(GPGL20000.SERIES, GPGL20000.SOURCDOC.TrimEnd());
-                    HistGenJournalLine."Orig. Document No." := GPGL20000.ORDOCNUM.TrimEnd();
 #pragma warning restore AA0139
 
                     HistGenJournalLine."Journal Entry No." := Format(GPGL20000.JRNENTRY);
@@ -96,14 +99,22 @@ codeunit 40900 "GP Populate Hist. Tables"
                     HistGenJournalLine."Document Type" := GPGL20000.SOURCDOC;
                     HistGenJournalLine."Reference Desc." := GPGL20000.REFRENCE;
                     HistGenJournalLine."Description" := GPGL20000.DSCRIPTN;
-                    HistGenJournalLine."User" := GPGL20000.USWHPSTD;
-                    HistGenJournalLine."Source No." := GPGL20000.ORMSTRID;
-                    HistGenJournalLine."Source Name" := CopyStr(GPGL20000.ORMSTRNM, 1, MaxStrLen(HistGenJournalLine."Source Name"));
                     HistGenJournalLine."Orig. Trx. Source No." := GPGL20000.ORTRXSRC;
+                    HistGenJournalLine."User" := GPGL20000.USWHPSTD;
                     HistGenJournalLine."Custom1" := GPGL20000.User_Defined_Text01;
                     HistGenJournalLine."Custom2" := GPGL20000.User_Defined_Text02;
 
-                    HistGenJournalLine.Insert();
+                    if GPGL20000.SERIES <> PayrollSeriesId then begin
+#pragma warning disable AA0139
+                        HistGenJournalLine."Orig. Document No." := GPGL20000.ORDOCNUM.TrimEnd();
+#pragma warning restore AA0139
+                        HistGenJournalLine."Source No." := GPGL20000.ORMSTRID;
+                        HistGenJournalLine."Source Name" := CopyStr(GPGL20000.ORMSTRNM, 1, MaxStrLen(HistGenJournalLine."Source Name"));
+                    end;
+
+                    if not HistGenJournalLine.Insert() then
+                        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP GL Journal Trx.", GPGL20000.TRXSORCE,
+                            GetLastErrorCode(), GetLastErrorText());
                 end;
             until GPGL20000.Next() = 0;
     end;
@@ -113,7 +124,6 @@ codeunit 40900 "GP Populate Hist. Tables"
         GPGL30000: Record "GP GL30000";
         GPGL00105: Record "GP GL00105";
         HistGenJournalLine: Record "Hist. Gen. Journal Line";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         OutlookSynchTypeConv: Codeunit "Outlook Synch. Type Conv";
         InitialHistYear: Integer;
     begin
@@ -121,7 +131,6 @@ codeunit 40900 "GP Populate Hist. Tables"
         if InitialHistYear > 0 then
             GPGL30000.SetFilter(HSTYEAR, '>=%1', InitialHistYear);
 
-        GPGL30000.SetFilter(SERIES, '<>%1', PayrollSeriesId);
         if GPGL30000.FindSet() then
             repeat
                 Clear(HistGenJournalLine);
@@ -130,7 +139,6 @@ codeunit 40900 "GP Populate Hist. Tables"
 
 #pragma warning disable AA0139
                     HistGenJournalLine."Source Type" := ConvertSeriesToSourceType(GPGL30000.SERIES, GPGL30000.SOURCDOC.TrimEnd());
-                    HistGenJournalLine."Orig. Document No." := GPGL30000.ORDOCNUM.TrimEnd();
 #pragma warning restore AA0139
 
                     HistGenJournalLine."Journal Entry No." := Format(GPGL30000.JRNENTRY);
@@ -148,23 +156,42 @@ codeunit 40900 "GP Populate Hist. Tables"
                     HistGenJournalLine."Document Type" := GPGL30000.SOURCDOC;
                     HistGenJournalLine."Reference Desc." := GPGL30000.REFRENCE;
                     HistGenJournalLine."Description" := GPGL30000.DSCRIPTN;
-                    HistGenJournalLine."User" := GPGL30000.USWHPSTD;
-                    HistGenJournalLine."Source No." := GPGL30000.ORMSTRID;
-                    HistGenJournalLine."Source Name" := CopyStr(GPGL30000.ORMSTRNM, 1, MaxStrLen(HistGenJournalLine."Source Name"));
                     HistGenJournalLine."Orig. Trx. Source No." := GPGL30000.ORTRXSRC;
+                    HistGenJournalLine."User" := GPGL30000.USWHPSTD;
                     HistGenJournalLine."Custom1" := GPGL30000.User_Defined_Text01;
                     HistGenJournalLine."Custom2" := GPGL30000.User_Defined_Text02;
 
-                    HistGenJournalLine.Insert();
+                    if GPGL30000.SERIES <> PayrollSeriesId then begin
+#pragma warning disable AA0139
+                        HistGenJournalLine."Orig. Document No." := GPGL30000.ORDOCNUM.TrimEnd();
+#pragma warning restore AA0139
+                        HistGenJournalLine."Source No." := GPGL30000.ORMSTRID;
+                        HistGenJournalLine."Source Name" := CopyStr(GPGL30000.ORMSTRNM, 1, MaxStrLen(HistGenJournalLine."Source Name"));
+                    end;
+
+                    if not HistGenJournalLine.Insert() then
+                        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP GL Journal Trx.", GPGL30000.TRXSORCE,
+                            GetLastErrorCode(), GetLastErrorText());
                 end;
             until GPGL30000.Next() = 0;
+    end;
+
+    local procedure PopulateReceivables()
+    begin
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Receivables Trx.") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", false);
+            if GPCompanyAdditionalSettings.GetMigrateHistARTrx() then begin
+                PopulateSalesTransactions();
+                PopulateRecvDocuments();
+            end;
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", true);
+        end;
     end;
 
     local procedure PopulateSalesTransactions()
     var
         GPSOPTrxHist: Record GPSOPTrxHist;
         HistSalesTrxHeader: Record "Hist. Sales Trx. Header";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         InitialHistYear: Integer;
         DocumentNo: Code[35];
     begin
@@ -214,9 +241,12 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistSalesTrxHeader."Customer Purchase No." := GPSOPTrxHist.CSTPONBR;
             HistSalesTrxHeader."Original No." := GPSOPTrxHist.ORIGNUMB;
             HistSalesTrxHeader."Audit Code" := GPSOPTrxHist.TRXSORCE;
-            HistSalesTrxHeader.Insert();
 
-            PopulateSalesTransactionLines(GPSOPTrxHist, DocumentNo);
+            if HistSalesTrxHeader.Insert() then
+                PopulateSalesTransactionLines(GPSOPTrxHist, DocumentNo)
+            else
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Receivables Trx.", GPSOPTrxHist.SOPNUMBE,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPSOPTrxHist.Next() = 0;
     end;
 
@@ -247,7 +277,10 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistSalesTrxLine."Tax Amount" := GPSOPTrxAmountsHist.TAXAMNT;
             HistSalesTrxLine."Location Code" := GPSOPTrxAmountsHist.LOCNCODE;
             HistSalesTrxLine."Ship-to Name" := CopyStr(GPSOPTrxAmountsHist.ShipToName, 1, MaxStrLen(HistSalesTrxLine."Ship-to Name"));
-            HistSalesTrxLine.Insert();
+
+            if not HistSalesTrxLine.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Receivables Trx.", GPSOPTrxHist.SOPNUMBE,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPSOPTrxAmountsHist.Next() = 0;
     end;
 
@@ -261,7 +294,6 @@ codeunit 40900 "GP Populate Hist. Tables"
     var
         GPRM20101: Record "GP RM20101";
         HistReceivablesDocument: Record "Hist. Receivables Document";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPRM00101: Record "GP RM00101";
         CustomerName: Text[100];
         InitialHistYear: Integer;
@@ -312,7 +344,10 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistReceivablesDocument."Invoice Paid Off Date" := GPRM20101.DINVPDOF;
             HistReceivablesDocument."Payment Terms ID" := GPRM20101.PYMTRMID;
             HistReceivablesDocument."Write Off Amount" := GPRM20101.WROFAMNT;
-            HistReceivablesDocument.Insert();
+
+            if not HistReceivablesDocument.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Receivables Trx.", GPRM20101.DOCNUMBR,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPRM20101.Next() = 0;
     end;
 
@@ -320,7 +355,6 @@ codeunit 40900 "GP Populate Hist. Tables"
     var
         GPRMHist: Record GPRMHist;
         HistReceivablesDocument: Record "Hist. Receivables Document";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         GPRM00101: Record "GP RM00101";
         CustomerName: Text[100];
         InitialHistYear: Integer;
@@ -371,21 +405,29 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistReceivablesDocument."Invoice Paid Off Date" := GPRMHist.DINVPDOF;
             HistReceivablesDocument."Payment Terms ID" := GPRMHist.PYMTRMID;
             HistReceivablesDocument."Write Off Amount" := GPRMHist.WROFAMNT;
-            HistReceivablesDocument.Insert();
+
+            if not HistReceivablesDocument.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Receivables Trx.", GPRMHist.DOCNUMBR,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPRMHist.Next() = 0;
     end;
 
     local procedure PopulatePayablesDocuments()
     begin
-        PopulatePayablesOpenDocuments();
-        PopulatePayablesHistoricalDocuments();
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Payables Trx.") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", false);
+            if GPCompanyAdditionalSettings.GetMigrateHistAPTrx() then begin
+                PopulatePayablesOpenDocuments();
+                PopulatePayablesHistoricalDocuments();
+            end;
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", true);
+        end;
     end;
 
     local procedure PopulatePayablesOpenDocuments()
     var
         GPPM20000: Record "GP PM20000";
         HistPayablesDocument: Record "Hist. Payables Document";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         InitialHistYear: Integer;
     begin
         InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
@@ -432,7 +474,10 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistPayablesDocument."1099 Type" := Get1099TypeText(GPPM20000.TEN99TYPE);
             HistPayablesDocument."1099 Box Number" := Format(GPPM20000.TEN99BOXNUMBER);
             HistPayablesDocument."PO Number" := GPPM20000.PONUMBER;
-            HistPayablesDocument.Insert();
+
+            if not HistPayablesDocument.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Payables Trx.", GPPM20000.DOCNUMBR,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPPM20000.Next() = 0;
     end;
 
@@ -440,7 +485,6 @@ codeunit 40900 "GP Populate Hist. Tables"
     var
         GPPMHist: Record GPPMHist;
         HistPayablesDocument: Record "Hist. Payables Document";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         InitialHistYear: Integer;
     begin
         InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
@@ -487,7 +531,10 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistPayablesDocument."1099 Type" := Get1099TypeText(GPPMHist.TEN99TYPE);
             HistPayablesDocument."1099 Box Number" := Format(GPPMHist.TEN99BOXNUMBER);
             HistPayablesDocument."PO Number" := GPPMHist.PONUMBER;
-            HistPayablesDocument.Insert();
+
+            if not HistPayablesDocument.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Payables Trx.", GPPMHist.DOCNUMBR,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPPMHist.Next() = 0;
     end;
 
@@ -495,37 +542,47 @@ codeunit 40900 "GP Populate Hist. Tables"
     var
         GPIVTrxHist: Record GPIVTrxHist;
         HistInventoryTrxHeader: Record "Hist. Inventory Trx. Header";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         InitialHistYear: Integer;
         DocumentNo: Code[35];
     begin
-        InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
-        if InitialHistYear > 0 then
-            GPIVTrxHist.SetFilter(DOCDATE, '>=%1', System.DMY2Date(1, 1, InitialHistYear));
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Inventory Trx.") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", false);
 
-        if not GPIVTrxHist.FindSet() then
-            exit;
+            if GPCompanyAdditionalSettings.GetMigrateHistInvTrx() then begin
+                InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
+                if InitialHistYear > 0 then
+                    GPIVTrxHist.SetFilter(DOCDATE, '>=%1', System.DMY2Date(1, 1, InitialHistYear));
 
-        repeat
-            Clear(HistInventoryTrxHeader);
+                if not GPIVTrxHist.FindSet() then
+                    exit;
+
+                repeat
+                    Clear(HistInventoryTrxHeader);
 
 #pragma warning disable AA0139
-            DocumentNo := GPIVTrxHist.DOCNUMBR.TrimEnd();
+                    DocumentNo := GPIVTrxHist.DOCNUMBR.TrimEnd();
 #pragma warning restore AA0139
 
-            HistInventoryTrxHeader."Audit Code" := GPIVTrxHist.TRXSORCE;
-            HistInventoryTrxHeader."Document Type" := ConvertGPDocTypeToHistInventoryDocType(GPIVTrxHist.IVDOCTYP);
-            HistInventoryTrxHeader."Document No." := DocumentNo;
-            HistInventoryTrxHeader."Document Date" := GPIVTrxHist.DOCDATE;
-            HistInventoryTrxHeader."Batch No." := GPIVTrxHist.BACHNUMB;
-            HistInventoryTrxHeader."Batch Source" := GPIVTrxHist.BCHSOURC;
-            HistInventoryTrxHeader."Post Date" := GPIVTrxHist.GLPOSTDT;
-            HistInventoryTrxHeader."Source Reference No." := GPIVTrxHist.SRCRFRNCNMBR;
-            HistInventoryTrxHeader."Source Indicator" := GetInventoryTrxSourceIndicatorText(GPIVTrxHist.SOURCEINDICATOR);
-            HistInventoryTrxHeader.Insert();
+                    HistInventoryTrxHeader."Audit Code" := GPIVTrxHist.TRXSORCE;
+                    HistInventoryTrxHeader."Document Type" := ConvertGPDocTypeToHistInventoryDocType(GPIVTrxHist.IVDOCTYP);
+                    HistInventoryTrxHeader."Document No." := DocumentNo;
+                    HistInventoryTrxHeader."Document Date" := GPIVTrxHist.DOCDATE;
+                    HistInventoryTrxHeader."Batch No." := GPIVTrxHist.BACHNUMB;
+                    HistInventoryTrxHeader."Batch Source" := GPIVTrxHist.BCHSOURC;
+                    HistInventoryTrxHeader."Post Date" := GPIVTrxHist.GLPOSTDT;
+                    HistInventoryTrxHeader."Source Reference No." := GPIVTrxHist.SRCRFRNCNMBR;
+                    HistInventoryTrxHeader."Source Indicator" := GetInventoryTrxSourceIndicatorText(GPIVTrxHist.SOURCEINDICATOR);
 
-            PopulateInventoryTrxLines(GPIVTrxHist, DocumentNo);
-        until GPIVTrxHist.Next() = 0;
+                    if HistInventoryTrxHeader.Insert() then
+                        PopulateInventoryTrxLines(GPIVTrxHist, DocumentNo)
+                    else
+                        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Inventory Trx.", GPIVTrxHist.DOCNUMBR,
+                            GetLastErrorCode(), GetLastErrorText());
+                until GPIVTrxHist.Next() = 0;
+            end;
+
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", true);
+        end;
     end;
 
     local procedure PopulateInventoryTrxLines(GPIVTrxHist: Record GPIVTrxHist; DocumentNo: Code[35])
@@ -560,7 +617,10 @@ codeunit 40900 "GP Populate Hist. Tables"
             HistInventoryTrxLine."Location Code" := GPIVTrxAmountsHist.TRXLOCTN;
             HistInventoryTrxLine."Transfer To Location Code" := GPIVTrxAmountsHist.TRNSTLOC;
             HistInventoryTrxLine."Reason Code" := GPIVTrxAmountsHist.Reason_Code;
-            HistInventoryTrxLine.Insert();
+
+            if not HistInventoryTrxLine.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Inventory Trx.", DocumentNo,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPIVTrxAmountsHist.Next() = 0;
     end;
 
@@ -568,57 +628,67 @@ codeunit 40900 "GP Populate Hist. Tables"
     var
         GPPOPReceiptHist: Record GPPOPReceiptHist;
         HistPurchaseRecvHeader: Record "Hist. Purchase Recv. Header";
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         InitialHistYear: Integer;
         ReceiptNo: Code[35];
     begin
-        InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
-        if InitialHistYear > 0 then
-            GPPOPReceiptHist.SetFilter("receiptdate", '>=%1', System.DMY2Date(1, 1, InitialHistYear));
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Purchase Receivables Trx.") then begin
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", false);
 
-        if not GPPOPReceiptHist.FindSet() then
-            exit;
+            if GPCompanyAdditionalSettings.GetMigrateHistPurchTrx() then begin
+                InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
+                if InitialHistYear > 0 then
+                    GPPOPReceiptHist.SetFilter("receiptdate", '>=%1', System.DMY2Date(1, 1, InitialHistYear));
 
-        repeat
-            Clear(HistPurchaseRecvHeader);
+                if not GPPOPReceiptHist.FindSet() then
+                    exit;
+
+                repeat
+                    Clear(HistPurchaseRecvHeader);
 
 #pragma warning disable AA0139
-            ReceiptNo := GPPOPReceiptHist.POPRCTNM.TrimEnd();
-            HistPurchaseRecvHeader."Vendor No." := GPPOPReceiptHist.VENDORID.TrimEnd();
+                    ReceiptNo := GPPOPReceiptHist.POPRCTNM.TrimEnd();
+                    HistPurchaseRecvHeader."Vendor No." := GPPOPReceiptHist.VENDORID.TrimEnd();
 #pragma warning restore AA0139
 
-            HistPurchaseRecvHeader."Receipt No." := ReceiptNo;
-            HistPurchaseRecvHeader."Document Type" := ConvertGPDocTypeToHistPurchaseRecvDocType(GPPOPReceiptHist.POPTYPE);
-            HistPurchaseRecvHeader."Vendor Document No." := GPPOPReceiptHist.VNDDOCNM;
-            HistPurchaseRecvHeader."Receipt Date" := GPPOPReceiptHist.receiptdate;
-            HistPurchaseRecvHeader."Post Date" := GPPOPReceiptHist.GLPOSTDT;
-            HistPurchaseRecvHeader."Actual Ship Date" := GPPOPReceiptHist.ACTLSHIP;
-            HistPurchaseRecvHeader."Batch No." := GPPOPReceiptHist.BACHNUMB;
-            HistPurchaseRecvHeader."Vendor Name" := GPPOPReceiptHist.VENDNAME;
-            HistPurchaseRecvHeader."Subtotal" := GPPOPReceiptHist.SUBTOTAL;
-            HistPurchaseRecvHeader."Trade Discount Amount" := GPPOPReceiptHist.TRDISAMT;
-            HistPurchaseRecvHeader."Freight Amount" := GPPOPReceiptHist.FRTAMNT;
-            HistPurchaseRecvHeader."Misc. Amount" := GPPOPReceiptHist.MISCAMNT;
-            HistPurchaseRecvHeader."Tax Amount" := GPPOPReceiptHist.TAXAMNT;
-            HistPurchaseRecvHeader."1099 Amount" := GPPOPReceiptHist.TEN99AMNT;
-            HistPurchaseRecvHeader."Payment Terms ID" := GPPOPReceiptHist.PYMTRMID;
-            HistPurchaseRecvHeader."Discount Percent Amount" := GPPOPReceiptHist.DSCPCTAM;
-            HistPurchaseRecvHeader."Discount Dollar Amount" := GPPOPReceiptHist.DSCDLRAM;
-            HistPurchaseRecvHeader."Discount Available Amount" := GPPOPReceiptHist.DISAVAMT;
-            HistPurchaseRecvHeader."Discount Date" := GPPOPReceiptHist.DISCDATE;
-            HistPurchaseRecvHeader."Due Date" := GPPOPReceiptHist.DUEDATE;
-            HistPurchaseRecvHeader."Reference" := GPPOPReceiptHist.REFRENCE;
-            HistPurchaseRecvHeader."Void" := ConvertGPVoidOptionToBoolean(GPPOPReceiptHist.VOIDSTTS);
-            HistPurchaseRecvHeader."User" := GPPOPReceiptHist.PTDUSRID;
-            HistPurchaseRecvHeader."Audit Code" := GPPOPReceiptHist.TRXSORCE;
-            HistPurchaseRecvHeader."Voucher No." := GPPOPReceiptHist.VCHRNMBR;
-            HistPurchaseRecvHeader."Currency Code" := GPPOPReceiptHist.CURNCYID;
-            HistPurchaseRecvHeader."Invoice Receipt Date" := GPPOPReceiptHist.InvoiceReceiptDate;
-            HistPurchaseRecvHeader."Prepayment Amount" := GPPOPReceiptHist.PrepaymentAmount;
-            HistPurchaseRecvHeader.Insert();
+                    HistPurchaseRecvHeader."Receipt No." := ReceiptNo;
+                    HistPurchaseRecvHeader."Document Type" := ConvertGPDocTypeToHistPurchaseRecvDocType(GPPOPReceiptHist.POPTYPE);
+                    HistPurchaseRecvHeader."Vendor Document No." := GPPOPReceiptHist.VNDDOCNM;
+                    HistPurchaseRecvHeader."Receipt Date" := GPPOPReceiptHist.receiptdate;
+                    HistPurchaseRecvHeader."Post Date" := GPPOPReceiptHist.GLPOSTDT;
+                    HistPurchaseRecvHeader."Actual Ship Date" := GPPOPReceiptHist.ACTLSHIP;
+                    HistPurchaseRecvHeader."Batch No." := GPPOPReceiptHist.BACHNUMB;
+                    HistPurchaseRecvHeader."Vendor Name" := GPPOPReceiptHist.VENDNAME;
+                    HistPurchaseRecvHeader."Subtotal" := GPPOPReceiptHist.SUBTOTAL;
+                    HistPurchaseRecvHeader."Trade Discount Amount" := GPPOPReceiptHist.TRDISAMT;
+                    HistPurchaseRecvHeader."Freight Amount" := GPPOPReceiptHist.FRTAMNT;
+                    HistPurchaseRecvHeader."Misc. Amount" := GPPOPReceiptHist.MISCAMNT;
+                    HistPurchaseRecvHeader."Tax Amount" := GPPOPReceiptHist.TAXAMNT;
+                    HistPurchaseRecvHeader."1099 Amount" := GPPOPReceiptHist.TEN99AMNT;
+                    HistPurchaseRecvHeader."Payment Terms ID" := GPPOPReceiptHist.PYMTRMID;
+                    HistPurchaseRecvHeader."Discount Percent Amount" := GPPOPReceiptHist.DSCPCTAM;
+                    HistPurchaseRecvHeader."Discount Dollar Amount" := GPPOPReceiptHist.DSCDLRAM;
+                    HistPurchaseRecvHeader."Discount Available Amount" := GPPOPReceiptHist.DISAVAMT;
+                    HistPurchaseRecvHeader."Discount Date" := GPPOPReceiptHist.DISCDATE;
+                    HistPurchaseRecvHeader."Due Date" := GPPOPReceiptHist.DUEDATE;
+                    HistPurchaseRecvHeader."Reference" := GPPOPReceiptHist.REFRENCE;
+                    HistPurchaseRecvHeader."Void" := ConvertGPVoidOptionToBoolean(GPPOPReceiptHist.VOIDSTTS);
+                    HistPurchaseRecvHeader."User" := GPPOPReceiptHist.PTDUSRID;
+                    HistPurchaseRecvHeader."Audit Code" := GPPOPReceiptHist.TRXSORCE;
+                    HistPurchaseRecvHeader."Voucher No." := GPPOPReceiptHist.VCHRNMBR;
+                    HistPurchaseRecvHeader."Currency Code" := GPPOPReceiptHist.CURNCYID;
+                    HistPurchaseRecvHeader."Invoice Receipt Date" := GPPOPReceiptHist.InvoiceReceiptDate;
+                    HistPurchaseRecvHeader."Prepayment Amount" := GPPOPReceiptHist.PrepaymentAmount;
 
-            PopulatePurchaseRecvLines(GPPOPReceiptHist, ReceiptNo);
-        until GPPOPReceiptHist.Next() = 0;
+                    if HistPurchaseRecvHeader.Insert() then
+                        PopulatePurchaseRecvLines(GPPOPReceiptHist, ReceiptNo)
+                    else
+                        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", GPPOPReceiptHist.POPRCTNM,
+                            GetLastErrorCode(), GetLastErrorText());
+                until GPPOPReceiptHist.Next() = 0;
+            end;
+
+            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", true);
+        end;
     end;
 
     local procedure PopulatePurchaseRecvLines(GPPOPReceiptHist: Record GPPOPReceiptHist; ReceiptNo: Code[35])
@@ -668,7 +738,9 @@ codeunit 40900 "GP Populate Hist. Tables"
                 HistPurchaseRecvLine."Quantity Invoiced" := GPPOPReceiptApply.QTYINVCD;
             end;
 
-            HistPurchaseRecvLine.Insert();
+            if not HistPurchaseRecvLine.Insert() then
+                HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", ReceiptNo,
+                    GetLastErrorCode(), GetLastErrorText());
         until GPPOPReceiptLineHist.Next() = 0;
     end;
 

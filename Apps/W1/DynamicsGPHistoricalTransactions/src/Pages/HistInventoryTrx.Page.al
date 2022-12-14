@@ -14,25 +14,25 @@ page 41010 "Hist. Inventory Trx."
         {
             group(Main)
             {
-                field("Audit Code"; Rec."Audit Code")
+                field("Document No."; Rec."Document No.")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Audit Code field.';
+                    ToolTip = 'Specifies the value of the Document No. field.';
                 }
                 field("Document Type"; Rec."Document Type")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Document Type field.';
                 }
-                field("Document No."; Rec."Document No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Document No. field.';
-                }
                 field("Document Date"; Rec."Document Date")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Document Date field.';
+                }
+                field("Post Date"; Rec."Post Date")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Post Date field.';
                 }
                 field("Batch No."; Rec."Batch No.")
                 {
@@ -44,11 +44,6 @@ page 41010 "Hist. Inventory Trx."
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Batch Source field.';
                 }
-                field("Post Date"; Rec."Post Date")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Post Date field.';
-                }
                 field("Source Reference No."; Rec."Source Reference No.")
                 {
                     ApplicationArea = All;
@@ -58,6 +53,11 @@ page 41010 "Hist. Inventory Trx."
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Source Indicator field.';
+                }
+                field("Audit Code"; Rec."Audit Code")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Audit Code field.';
                 }
             }
 

@@ -9,6 +9,11 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
                 ApplicationArea = Basic, Suite;
                 Visible = FactBoxesVisible;
             }
+            part("Show Detail Snapshot Errors"; "Hist. Migration Status Factbox")
+            {
+                ApplicationArea = Basic, Suite;
+                Visible = FactBoxesVisible;
+            }
         }
     }
 
@@ -36,6 +41,31 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
                     GPMigrationConfiguration.Run();
                 end;
             }
+
+            action(RunHistoricalMigration)
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Run GP Detail Snapshot';
+                ToolTip = 'Start the migration of GP historical transactions based on your company settings.';
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                PromotedCategory = Process;
+                Image = Process;
+
+                trigger OnAction()
+                var
+                    HybridCloudManagement: Codeunit "Hybrid Cloud Management";
+                    HistMigrationStatusMgmt: Codeunit "Hist. Migration Status Mgmt.";
+                begin
+                    if not (HistMigrationStatusMgmt.GetCurrentStatus() = "Hist. Migration Step Type"::"Not Started") then
+                        if Confirm(RerunAllQst) then
+                            HistMigrationStatusMgmt.ResetAll();
+
+                    HybridCloudManagement.CreateAndScheduleBackgroundJob(Codeunit::"GP Populate Hist. Tables", 'Migrate GP Historical Snapshot');
+                    Message('The GP detail snapshot job is running.');
+                end;
+            }
         }
     }
 
@@ -55,4 +85,5 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
     var
         FactBoxesVisible: Boolean;
         HasCompletedSetupWizard: Boolean;
+        RerunAllQst: Label 'Do you want to rerun the snapshot for all transaction types? This will clear out any previous run attempts.';
 }

@@ -4,14 +4,22 @@ permissionset 4700 "GP Hist. Trx. - Read"
     Access = Public;
     Caption = 'GP Historical Transactions - Read';
 
-    Permissions = tabledata "Hist. Gen. Journal Line" = R,
-                  tabledata "Hist. G/L Account" = R,
-                  tabledata "Hist. Sales Trx. Header" = R,
-                  tabledata "Hist. Sales Trx. Line" = R,
-                  tabledata "Hist. Receivables Document" = R,
-                  tabledata "Hist. Payables Document" = R,
-                  tabledata "Hist. Inventory Trx. Header" = R,
-                  tabledata "Hist. Inventory Trx. Line" = R,
-                  tabledata "Hist. Purchase Recv. Header" = R,
-                  tabledata "Hist. Purchase Recv. Line" = R;
+    Permissions = page "Hist. Gen. Journal Lines" = X,
+                  page "Hist. G/L Account List" = X,
+                  page "Hist. Inventory Trx." = X,
+                  page "Hist. Inventory Trx. Headers" = X,
+                  page "Hist. Inventory Trx. Lines" = X,
+                  page "Hist. Payables Document" = X,
+                  page "Hist. Payables Documents" = X,
+                  page "Hist. Purchase Recv." = X,
+                  page "Hist. Purchase Recv. Headers" = X,
+                  page "Hist. Purchase Recv. Lines" = X,
+                  page "Hist. Receivables Document" = X,
+                  page "Hist. Receivables Documents" = X,
+                  page "Hist. Sales Trx." = X,
+                  page "Hist. Sales Trx. Headers" = X,
+                  page "Hist. Sales Trx. Lines" = X,
+                  page "Hist. Migration Status Factbox" = X,
+                  page "Hist. Migration Step Errors" = X,
+                  page "Hist. Migration Step Status" = X;
 }

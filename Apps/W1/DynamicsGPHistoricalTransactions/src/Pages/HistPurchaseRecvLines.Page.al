@@ -17,20 +17,15 @@ page 41015 "Hist. Purchase Recv. Lines"
         {
             repeater(ListData)
             {
-                field("Receipt No."; Rec."Receipt No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Receipt No. field.';
-                }
-                field("Line No."; Rec."Line No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Line No. field.';
-                }
                 field("PO Number"; Rec."PO Number")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the PO Number field.';
+                }
+                field("Actual Ship Date"; Rec."Actual Ship Date")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Actual Ship Date field.';
                 }
                 field("Item No."; Rec."Item No.")
                 {
@@ -52,20 +47,25 @@ page 41015 "Hist. Purchase Recv. Lines"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Vendor Item Desc. field.';
                 }
+                field("Unit of Measure"; Rec."Unit of Measure")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Unit of Measure field.';
+                }
                 field("Base UofM Qty."; Rec."Base UofM Qty.")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Base UofM Qty. field.';
                 }
-                field("Actual Ship Date"; Rec."Actual Ship Date")
+                field("Quantity Shipped"; Rec."Quantity Shipped")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Actual Ship Date field.';
+                    ToolTip = 'Specifies the value of the Quantity Shipped field.';
                 }
-                field("Unit of Measure"; Rec."Unit of Measure")
+                field("Quantity Invoiced"; Rec."Quantity Invoiced")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Unit of Measure field.';
+                    ToolTip = 'Specifies the value of the Quantity Invoiced field.';
                 }
                 field("Unit Cost"; Rec."Unit Cost")
                 {
@@ -86,11 +86,6 @@ page 41015 "Hist. Purchase Recv. Lines"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Location Code field.';
-                }
-                field("Audit Code"; Rec."Audit Code")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Audit Code field.';
                 }
                 field("Ship Method"; Rec."Ship Method")
                 {
@@ -127,15 +122,10 @@ page 41015 "Hist. Purchase Recv. Lines"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Orig. Misc. Amount field.';
                 }
-                field("Quantity Shipped"; Rec."Quantity Shipped")
+                field("Audit Code"; Rec."Audit Code")
                 {
                     ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Quantity Shipped field.';
-                }
-                field("Quantity Invoiced"; Rec."Quantity Invoiced")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Quantity Invoiced field.';
+                    ToolTip = 'Specifies the value of the Audit Code field.';
                 }
             }
         }

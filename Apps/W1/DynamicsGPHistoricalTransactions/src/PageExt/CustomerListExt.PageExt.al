@@ -49,8 +49,9 @@ pageextension 41018 "Customer List Ext." extends "Customer List"
         HistSalesTrxHeader: Record "Hist. Sales Trx. Header";
         HistReceivablesDocument: Record "Hist. Receivables Document";
     begin
-        GPGLDetailDataExists := (not HistSalesTrxHeader.IsEmpty() or
-                                 not HistReceivablesDocument.IsEmpty());
+        if HistSalesTrxHeader.ReadPermission() and HistReceivablesDocument.ReadPermission() then
+            GPGLDetailDataExists := (not HistSalesTrxHeader.IsEmpty() or
+                                    not HistReceivablesDocument.IsEmpty());
     end;
 
     var

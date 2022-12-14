@@ -32,6 +32,11 @@ page 41003 "Hist. Sales Trx. Lines"
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Unit of Measure field.';
                 }
+                field(Quantity; Rec.Quantity)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Quantity field.';
+                }
                 field("Unit Cost"; Rec."Unit Cost")
                 {
                     ApplicationArea = All;
@@ -41,11 +46,6 @@ page 41003 "Hist. Sales Trx. Lines"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Unit Price field.';
-                }
-                field(Quantity; Rec.Quantity)
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Quantity field.';
                 }
                 field("Ext. Cost"; Rec."Ext. Cost")
                 {

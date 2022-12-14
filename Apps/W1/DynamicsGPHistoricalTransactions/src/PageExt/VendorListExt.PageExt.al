@@ -49,8 +49,9 @@ pageextension 41019 "Vendor List Ext." extends "Vendor List"
         HistPurchaseRecvHeader: Record "Hist. Purchase Recv. Header";
         HistPayablesDocument: Record "Hist. Payables Document";
     begin
-        GPGLDetailDataExists := (not HistPurchaseRecvHeader.IsEmpty() or
-                                 not HistPayablesDocument.IsEmpty());
+        if HistPurchaseRecvHeader.ReadPermission() and HistPayablesDocument.ReadPermission() then
+            GPGLDetailDataExists := (not HistPurchaseRecvHeader.IsEmpty() or
+                                    not HistPayablesDocument.IsEmpty());
     end;
 
     var

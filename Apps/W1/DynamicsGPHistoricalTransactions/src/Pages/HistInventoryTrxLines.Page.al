@@ -17,36 +17,6 @@ page 41011 "Hist. Inventory Trx. Lines"
         {
             repeater(ListData)
             {
-                field("Audit Code"; Rec."Audit Code")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Audit Code field.';
-                }
-                field("Document Type"; Rec."Document Type")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Document Type field.';
-                }
-                field("Document No."; Rec."Document No.")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Document No. field.';
-                }
-                field("Line Item Sequence"; Rec."Line Item Sequence")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Line Item Sequence field.';
-                }
-                field("Date"; Rec."Date")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Date field.';
-                }
-                field("Source Description"; Rec."Source Description")
-                {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the value of the Source Description field.';
-                }
                 field("Customer No."; Rec."Customer No.")
                 {
                     ApplicationArea = All;
@@ -91,6 +61,11 @@ page 41011 "Hist. Inventory Trx. Lines"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Reason Code field.';
+                }
+                field("Source Description"; Rec."Source Description")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Source Description field.';
                 }
             }
         }

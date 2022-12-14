@@ -48,7 +48,8 @@ pageextension 41004 "Chart of Accounts Ext." extends "Chart of Accounts"
     var
         HistGenJournalLine: Record "Hist. Gen. Journal Line";
     begin
-        GPGLDetailDataExists := not HistGenJournalLine.IsEmpty();
+        if HistGenJournalLine.ReadPermission() then
+            GPGLDetailDataExists := not HistGenJournalLine.IsEmpty();
     end;
 
     var
