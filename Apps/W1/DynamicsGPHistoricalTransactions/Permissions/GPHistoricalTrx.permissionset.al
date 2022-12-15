@@ -1,8 +1,8 @@
-permissionset 4700 "GP Hist. Trx. - Read"
+permissionset 4700 "GP Historical Trx."
 {
     Assignable = true;
     Access = Public;
-    Caption = 'GP Historical Transactions - Read';
+    Caption = 'GP Historical Transactions';
 
     Permissions = page "Hist. Gen. Journal Lines" = X,
                   page "Hist. G/L Account List" = X,
