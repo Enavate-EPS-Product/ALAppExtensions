@@ -502,4 +502,26 @@ table 40105 "GP Company Additional Settings"
         GetSingleInstance();
         exit(Rec."Migrate Hist. Purch. Trx.");
     end;
+
+    procedure GetMigrateHistory(): Boolean
+    begin
+        GetSingleInstance();
+
+        if Rec."Migrate Hist. GL Trx." then
+            exit(true);
+
+        if Rec."Migrate Hist. AR Trx." then
+            exit(true);
+
+        if Rec."Migrate Hist. AP Trx." then
+            exit(true);
+
+        if Rec."Migrate Hist. Inv. Trx." then
+            exit(true);
+
+        if Rec."Migrate Hist. Purch. Trx." then
+            exit(true);
+
+        exit(false);
+    end;
 }

@@ -13,32 +13,34 @@ codeunit 40900 "GP Populate Hist. Tables"
 
     internal procedure PopulateHistoricalTables()
     begin
-        PopulateGLDetail();
-        PopulateReceivables();
-        PopulatePayablesDocuments();
-        PopulateInventoryTransactions();
-        PopulatePurchaseRecvTransactions();
+        if GPCompanyAdditionalSettings.GetMigrateHistory() then begin
+            PopulateGLDetail();
+            PopulateReceivables();
+            PopulatePayablesDocuments();
+            PopulateInventoryTransactions();
+            PopulatePurchaseRecvTransactions();
+            HistMigrationStatusMgmt.SetStatusFinished();
+        end;
     end;
 
     local procedure PopulateGLDetail()
     begin
         // GP G/L Accounts
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Accounts") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", false);
-            if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Accounts") then
+            if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", false);
                 PopulateHistGLAccounts();
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", true);
-        end;
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Accounts", true);
+            end;
 
         // GP G/L Journal Trx.
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Journal Trx.") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", false);
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP GL Journal Trx.") then
             if GPCompanyAdditionalSettings.GetMigrateHistGLTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", false);
                 PopulateOpenYearPostedTransactions();
                 PopulateHistoricalYearPostedTransactions();
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", true);
             end;
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP GL Journal Trx.", true);
-        end;
     end;
 
     local procedure PopulateHistGLAccounts()
@@ -177,14 +179,13 @@ codeunit 40900 "GP Populate Hist. Tables"
 
     local procedure PopulateReceivables()
     begin
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Receivables Trx.") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", false);
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Receivables Trx.") then
             if GPCompanyAdditionalSettings.GetMigrateHistARTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", false);
                 PopulateSalesTransactions();
                 PopulateRecvDocuments();
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", true);
             end;
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Receivables Trx.", true);
-        end;
     end;
 
     local procedure PopulateSalesTransactions()
@@ -413,14 +414,13 @@ codeunit 40900 "GP Populate Hist. Tables"
 
     local procedure PopulatePayablesDocuments()
     begin
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Payables Trx.") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", false);
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Payables Trx.") then
             if GPCompanyAdditionalSettings.GetMigrateHistAPTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", false);
                 PopulatePayablesOpenDocuments();
                 PopulatePayablesHistoricalDocuments();
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", true);
             end;
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Payables Trx.", true);
-        end;
     end;
 
     local procedure PopulatePayablesOpenDocuments()
@@ -544,10 +544,9 @@ codeunit 40900 "GP Populate Hist. Tables"
         InitialHistYear: Integer;
         DocumentNo: Code[35];
     begin
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Inventory Trx.") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", false);
-
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Inventory Trx.") then
             if GPCompanyAdditionalSettings.GetMigrateHistInvTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", false);
                 InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
                 if InitialHistYear > 0 then
                     GPIVTrxHist.SetFilter(DOCDATE, '>=%1', System.DMY2Date(1, 1, InitialHistYear));
@@ -578,10 +577,8 @@ codeunit 40900 "GP Populate Hist. Tables"
                         HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Inventory Trx.", GPIVTrxHist.DOCNUMBR,
                             GetLastErrorCode(), GetLastErrorText());
                 until GPIVTrxHist.Next() = 0;
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", true);
             end;
-
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Inventory Trx.", true);
-        end;
     end;
 
     local procedure PopulateInventoryTrxLines(GPIVTrxHist: Record GPIVTrxHist; DocumentNo: Code[35])
@@ -630,10 +627,9 @@ codeunit 40900 "GP Populate Hist. Tables"
         InitialHistYear: Integer;
         ReceiptNo: Code[35];
     begin
-        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Purchase Receivables Trx.") then begin
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", false);
-
+        if HistMigrationStatusMgmt.HasNotRanStep("Hist. Migration Step Type"::"GP Purchase Receivables Trx.") then
             if GPCompanyAdditionalSettings.GetMigrateHistPurchTrx() then begin
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", false);
                 InitialHistYear := GPCompanyAdditionalSettings.GetHistInitialYear();
                 if InitialHistYear > 0 then
                     GPPOPReceiptHist.SetFilter("receiptdate", '>=%1', System.DMY2Date(1, 1, InitialHistYear));
@@ -684,10 +680,8 @@ codeunit 40900 "GP Populate Hist. Tables"
                         HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", GPPOPReceiptHist.POPRCTNM,
                             GetLastErrorCode(), GetLastErrorText());
                 until GPPOPReceiptHist.Next() = 0;
+                HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", true);
             end;
-
-            HistMigrationStatusMgmt.UpdateStepStatus("Hist. Migration Step Type"::"GP Purchase Receivables Trx.", true);
-        end;
     end;
 
     local procedure PopulatePurchaseRecvLines(GPPOPReceiptHist: Record GPPOPReceiptHist; ReceiptNo: Code[35])

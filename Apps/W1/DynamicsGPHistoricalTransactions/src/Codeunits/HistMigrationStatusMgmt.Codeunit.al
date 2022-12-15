@@ -27,11 +27,13 @@ codeunit 40902 "Hist. Migration Status Mgmt."
             HistMigrationCurrentStatus.Insert();
         end;
 
-        if Completed and (Step = "Hist. Migration Step Type"::"GP Purchase Receivables Trx.") then
-            SetStatusFinished();
+        if HistMigrationCurrentStatus."Current Step" <> Step then begin
+            HistMigrationCurrentStatus."Current Step" := Step;
+            HistMigrationCurrentStatus.Modify();
+        end;
     end;
 
-    local procedure SetStatusFinished()
+    procedure SetStatusFinished()
     var
         HistMigrationStepStatus: Record "Hist. Migration Step Status";
         HistMigrationCurrentStatus: Record "Hist. Migration Current Status";

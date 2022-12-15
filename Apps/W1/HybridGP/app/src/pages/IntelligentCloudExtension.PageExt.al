@@ -42,28 +42,31 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
                 end;
             }
 
-            action(RunHistoricalMigration)
+            action(ReRunHistoricalMigration)
             {
                 ApplicationArea = Basic, Suite;
-                Caption = 'Run GP Detail Snapshot';
-                ToolTip = 'Start the migration of GP historical transactions based on your company settings.';
-                Promoted = true;
-                PromotedIsBig = true;
-                PromotedOnly = true;
-                PromotedCategory = Process;
+                Caption = 'Rerun GP Detail Snapshot';
+                ToolTip = 'Rerun the migration of GP historical transactions based on your company settings.';
                 Image = Process;
 
                 trigger OnAction()
                 var
                     HybridCloudManagement: Codeunit "Hybrid Cloud Management";
                     HistMigrationStatusMgmt: Codeunit "Hist. Migration Status Mgmt.";
+                    GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
                 begin
-                    if not (HistMigrationStatusMgmt.GetCurrentStatus() = "Hist. Migration Step Type"::"Not Started") then
-                        if Confirm(RerunAllQst) then
-                            HistMigrationStatusMgmt.ResetAll();
+                    if not GPCompanyAdditionalSettings.GetMigrateHistory() then begin
+                        Message(DetailSnapshotNotConfigured);
+                        exit;
+                    end;
+                    if Confirm(ConfirmRerunQst) then begin
+                        if not (HistMigrationStatusMgmt.GetCurrentStatus() = "Hist. Migration Step Type"::"Not Started") then
+                            if Confirm(RerunAllQst) then
+                                HistMigrationStatusMgmt.ResetAll();
 
-                    HybridCloudManagement.CreateAndScheduleBackgroundJob(Codeunit::"GP Populate Hist. Tables", 'Migrate GP Historical Snapshot');
-                    Message('The GP detail snapshot job is running.');
+                        HybridCloudManagement.CreateAndScheduleBackgroundJob(Codeunit::"GP Populate Hist. Tables", 'Migrate GP Historical Snapshot');
+                        Message('The GP detail snapshot job is running.');
+                    end;
                 end;
             }
         }
@@ -85,5 +88,7 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
     var
         FactBoxesVisible: Boolean;
         HasCompletedSetupWizard: Boolean;
-        RerunAllQst: Label 'Do you want to rerun the snapshot for all transaction types? This will clear out any previous run attempts.';
+        DetailSnapshotNotConfigured: Label 'GP Detail Snapshot is not configured to migrate.';
+        ConfirmRerunQst: Label 'Are you sure you want to rerun the GP detail snapshot migration?';
+        RerunAllQst: Label 'Do you want to rerun the GP detail snapshot for all transaction types? This will clear out any previous run attempts.';
 }
