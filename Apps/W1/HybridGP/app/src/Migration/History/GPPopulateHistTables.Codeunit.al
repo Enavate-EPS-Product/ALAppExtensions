@@ -13,7 +13,6 @@ codeunit 40900 "GP Populate Hist. Tables"
 
     internal procedure PopulateHistoricalTables()
     begin
-        HistMigrationStatusMgmt.ReportError("Hist. Migration Step Type"::"GP GL Accounts", 'RefCode', 'ErrorCode123', 'This is a test error message');
         PopulateGLDetail();
         PopulateReceivables();
         PopulatePayablesDocuments();

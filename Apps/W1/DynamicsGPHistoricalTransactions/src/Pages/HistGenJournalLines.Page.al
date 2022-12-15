@@ -23,6 +23,10 @@ page 41001 "Hist. Gen. Journal Lines"
                 Editable = false;
                 ShowCaption = false;
 
+                field("Journal Entry No."; Rec."Journal Entry No.")
+                {
+                    ToolTip = 'Specifies the value of the Journal Entry No. field.';
+                }
                 field(Year; Rec.Year)
                 {
                     ToolTip = 'Specifies the value of the Year field.';
@@ -34,10 +38,6 @@ page 41001 "Hist. Gen. Journal Lines"
                 field("Account No."; Rec."Account No.")
                 {
                     ToolTip = 'Specifies the value of the Account No. field.';
-                }
-                field("Journal Entry No."; Rec."Journal Entry No.")
-                {
-                    ToolTip = 'Specifies the value of the Journal Entry No. field.';
                 }
                 field("Date"; Rec."Date")
                 {
