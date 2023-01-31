@@ -9,7 +9,12 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
 
     [EventSubscriber(ObjectType::Codeunit, CodeUnit::"Data Migration Mgt.", 'OnAfterMigrationFinished', '', true, true)]
     local procedure OnAfterMigrationFinishedSubscriber(var DataMigrationStatus: Record "Data Migration Status"; WasAborted: Boolean; StartTime: DateTime; Retry: Boolean)
+    var
+        HelperFunctions: Codeunit "Helper Functions";
     begin
+        if not (DataMigrationStatus."Migration Type" = HelperFunctions.GetMigrationTypeTxt()) then
+            exit;
+
         UpdateAllVendorTaxInfo();
     end;
 
@@ -25,6 +30,29 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
         IsHandled := true;
     end;
 
+    procedure UpdateAllVendorTaxInfo()
+    begin
+        Initialize();
+        UpdateVendorTaxInfo();
+    end;
+
+    procedure GetVendorLatest1099Period(VendorNo: Code[20]; var TaxYear: Integer; var Period: Integer)
+    var
+        GPPM00204: Record "GP PM00204";
+    begin
+        GPPM00204.SetRange(VENDORID, VendorNo);
+        GPPM00204.SetFilter(TEN99AMNT, '>0');
+        GPPM00204.SetCurrentKey(YEAR1, PERIODID);
+        GPPM00204.SetAscending(YEAR1, false);
+        GPPM00204.SetAscending(PERIODID, false);
+        GPPM00204.SetLoadFields(YEAR1, PERIODID);
+
+        if GPPM00204.FindFirst() then begin
+            TaxYear := GPPM00204.YEAR1;
+            Period := GPPM00204.PERIODID;
+        end;
+    end;
+
     local procedure Initialize()
     var
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
@@ -34,12 +62,6 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
         PayablesAccountCode := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
         DataMigrationFacadeHelper.CreateGeneralJournalBatchIfNeeded(VendorTaxBatchNameTxt, '', '');
         DataMigrationFacadeHelper.CreateSourceCodeIfNeeded(SourceCodeTxt);
-    end;
-
-    procedure UpdateAllVendorTaxInfo()
-    begin
-        Initialize();
-        UpdateVendorTaxInfo();
     end;
 
     local procedure UpdateVendorTaxInfo()
@@ -66,18 +88,18 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
 
                     if (IRS1099Code <> '') or (GPPM00200.TXIDNMBR <> '') then begin
                         Vendor.Validate("Tax Identification Type", Vendor."Tax Identification Type"::"Legal Entity");
-                        if not Vendor.Modify() then
+                        if Vendor.Modify() then
+                            AddVendor1099Values(Vendor."No.")
+                        else
                             LogLastError(Vendor."No.");
                     end else
                         LogVendorSkipped(Vendor."No.");
                 end else
                     LogVendorSkipped(Vendor."No.");
-
-            AddVendor1099Values(Vendor);
         until GPPM00200.Next() = 0;
     end;
 
-    local procedure AddVendor1099Values(Vendor: Record Vendor)
+    local procedure AddVendor1099Values(VendorNo: Code[20])
     var
         GPPM00204: Record "GP PM00204";
         InvoiceGenJournalLine: Record "Gen. Journal Line";
@@ -92,10 +114,10 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
         InvoiceCreated: Boolean;
         PaymentCreated: Boolean;
     begin
-        GetVendorLatest1099Period(Vendor."No.", LastReportedYear, LastReportedPeriodOfYear);
+        GetVendorLatest1099Period(VendorNo, LastReportedYear, LastReportedPeriodOfYear);
         if LastReportedYear > 0 then
             if LastReportedPeriodOfYear > 0 then begin
-                GPPM00204.SetRange(VENDORID, Vendor."No.");
+                GPPM00204.SetRange(VENDORID, VendorNo);
                 GPPM00204.SetFilter(TEN99AMNT, '>0');
                 GPPM00204.SetRange(YEAR1, LastReportedYear);
                 GPPM00204.SetRange(PERIODID, LastReportedPeriodOfYear);
@@ -108,55 +130,38 @@ codeunit 42003 "GP Populate Vendor 1099 Data"
                             // Invoice
                             InvoiceDocumentNo := NoSeriesManagement.GetNextNo(VendorTaxNoSeriesTxt, 0D, true);
                             InvoiceCreated := CreateGeneralJournalLine(InvoiceGenJournalLine,
-                                                Vendor."No.",
+                                                VendorNo,
                                                 "Gen. Journal Document Type"::Invoice,
                                                 InvoiceDocumentNo,
                                                 IRS1099Code,
-                                                Vendor."No.",
+                                                VendorNo,
                                                 -GPPM00204.TEN99AMNT,
                                                 PayablesAccountCode,
                                                 IRS1099Code,
-                                                Vendor."No." + '-' + IRS1099Code + '-INV');
+                                                VendorNo + '-' + IRS1099Code + '-INV');
 
                             // Payment
                             PaymentDocumentNo := NoSeriesManagement.GetNextNo(VendorTaxNoSeriesTxt, 0D, true);
                             PaymentCreated := CreateGeneralJournalLine(PaymentGenJournalLine,
-                                                Vendor."No.",
+                                                VendorNo,
                                                 "Gen. Journal Document Type"::Payment,
                                                 PaymentDocumentNo,
                                                 IRS1099Code,
-                                                Vendor."No.",
+                                                VendorNo,
                                                 GPPM00204.TEN99AMNT,
                                                 PayablesAccountCode,
                                                 IRS1099Code,
-                                                Vendor."No." + '-' + IRS1099Code + '-PMT');
+                                                VendorNo + '-' + IRS1099Code + '-PMT');
 
                             if InvoiceCreated and PaymentCreated then begin
                                 InvoiceGenJournalLine.SendToPosting(Codeunit::"Gen. Jnl.-Post");
                                 PaymentGenJournalLine.SendToPosting(Codeunit::"Gen. Jnl.-Post");
-                                ApplyEntries(Vendor."No.", InvoiceDocumentNo, PaymentDocumentNo, Vendor."No." + '-' + IRS1099Code + '-INV');
+                                ApplyEntries(VendorNo, InvoiceDocumentNo, PaymentDocumentNo, VendorNo + '-' + IRS1099Code + '-INV');
                             end;
                         end else
-                            LogVendor1099DetailSkipped(Vendor."No.", GPPM00204.TEN99TYPE, GPPM00204.TEN99BOXNUMBER, IRS1099Code);
+                            LogVendor1099DetailSkipped(VendorNo, GPPM00204.TEN99TYPE, GPPM00204.TEN99BOXNUMBER, IRS1099Code);
                     until GPPM00204.Next() = 0;
             end;
-    end;
-
-    procedure GetVendorLatest1099Period(VendorNo: Code[20]; var TaxYear: Integer; var Period: Integer)
-    var
-        GPPM00204: Record "GP PM00204";
-    begin
-        GPPM00204.SetRange(VENDORID, VendorNo);
-        GPPM00204.SetFilter(TEN99AMNT, '>0');
-        GPPM00204.SetCurrentKey(YEAR1, PERIODID);
-        GPPM00204.SetAscending(YEAR1, false);
-        GPPM00204.SetAscending(PERIODID, false);
-        GPPM00204.SetLoadFields(YEAR1, PERIODID);
-
-        if GPPM00204.FindFirst() then begin
-            TaxYear := GPPM00204.YEAR1;
-            Period := GPPM00204.PERIODID;
-        end;
     end;
 
     local procedure CreateGeneralJournalLine(var GenJournalLine: Record "Gen. Journal Line";
