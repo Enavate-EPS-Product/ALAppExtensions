@@ -50,8 +50,8 @@ codeunit 4018 "GP Customer Migrator"
         MigrationGPCustTrans: Record "GP Customer Transactions";
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
-        HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
+        ReceivablesAccountNo: Code[20];
     begin
         if not ChartOfAccountsMigrated then
             exit;
@@ -63,6 +63,8 @@ codeunit 4018 "GP Customer Migrator"
             exit;
 
         MigrationGPCustomer.Get(RecordIdToMigrate);
+        GetCustomerReceivablesAccount(MigrationGPCustomer, GPCompanyAdditionalSettings, ReceivablesAccountNo);
+
         Sender.CreateGeneralJournalBatchIfNeeded(CopyStr(CustomerBatchNameTxt, 1, 7), '', '');
         MigrationGPCustTrans.SetRange(CUSTNMBR, MigrationGPCustomer.CUSTNMBR);
         MigrationGPCustTrans.SetRange(TransType, MigrationGPCustTrans.TransType::Invoice);
@@ -77,7 +79,7 @@ codeunit 4018 "GP Customer Migrator"
                     MigrationGPCustTrans.CURTRXAM,
                     MigrationGPCustTrans.CURTRXAM,
                     '',
-                    HelperFunctions.GetPostingAccountNumber('ReceivablesAccount')
+                    ReceivablesAccountNo
                 );
                 Sender.SetGeneralJournalLineDocumentType(MigrationGPCustTrans.TransType);
                 DataMigrationFacadeHelper.CreateSourceCodeIfNeeded(CopyStr(SourceCodeTxt, 1, 10));
@@ -107,7 +109,7 @@ codeunit 4018 "GP Customer Migrator"
                     -MigrationGPCustTrans.CURTRXAM,
                     -MigrationGPCustTrans.CURTRXAM,
                     '',
-                    HelperFunctions.GetPostingAccountNumber('ReceivablesAccount')
+                    ReceivablesAccountNo
                 );
                 Sender.SetGeneralJournalLineDocumentType(MigrationGPCustTrans.TransType);
                 Sender.SetGeneralJournalLineSourceCode(CopyStr(SourceCodeTxt, 1, 10));
@@ -134,7 +136,7 @@ codeunit 4018 "GP Customer Migrator"
                     -MigrationGPCustTrans.CURTRXAM,
                     -MigrationGPCustTrans.CURTRXAM,
                     '',
-                    HelperFunctions.GetPostingAccountNumber('ReceivablesAccount')
+                    ReceivablesAccountNo
                 );
                 Sender.SetGeneralJournalLineDocumentType(MigrationGPCustTrans.TransType);
                 Sender.SetGeneralJournalLineSourceCode(CopyStr(SourceCodeTxt, 1, 10));
@@ -398,6 +400,38 @@ codeunit 4018 "GP Customer Migrator"
         HelperFunctions.UpdateFieldValue(RecordVariant, MigrationGPCustTrans.FieldNo(SLPRSNID), JToken.AsObject(), 'SLPRSNID');
         HelperFunctions.UpdateFieldValue(RecordVariant, MigrationGPCustTrans.FieldNo(PYMTRMID), JToken.AsObject(), 'PYMTRMID');
         HelperFunctions.UpdateFieldWithValue(RecordVariant, MigrationGPCustTrans.FieldNo(GLDocNo), DocumentNo);
+    end;
+
+    local procedure GetCustomerReceivablesAccount(var GPCustomer: Record "GP Customer"; var GPCompanyAdditionalSettings: Record "GP Company Additional Settings"; var ReceivablesAccountNo: Code[20])
+    var
+        GPRM00101: Record "GP RM00101";
+        GPRM00201: Record "GP RM00201";
+        HelperFunctions: Codeunit "Helper Functions";
+        CustomerClassId: Text[20];
+        DefaultReceivablesAccount: Code[20];
+    begin
+        DefaultReceivablesAccount := HelperFunctions.GetPostingAccountNumber('ReceivablesAccount');
+        ReceivablesAccountNo := DefaultReceivablesAccount;
+
+        if not GPCompanyAdditionalSettings.GetMigrateCustomerClasses() then
+            exit;
+
+        if not GPRM00101.Get(GPCustomer.CUSTNMBR) then
+            exit;
+
+#pragma warning disable AA0139
+        CustomerClassId := GPRM00101.CUSTCLAS.Trim();
+#pragma warning restore AA0139
+
+        if CustomerClassId = '' then
+            exit;
+
+        if not GPRM00201.Get(CustomerClassId) then
+            exit;
+
+        ReceivablesAccountNo := HelperFunctions.GetGPAccountNumberByIndex(GPRM00201.RMARACC);
+        if ReceivablesAccountNo = '' then
+            ReceivablesAccountNo := DefaultReceivablesAccount;
     end;
 
     procedure MigrateCustomerClasses()
