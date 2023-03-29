@@ -156,15 +156,6 @@ codeunit 139664 "GP Data Migration Tests"
         // [THEN] Transactions will be created
         Assert.RecordCount(GenJournalLine, 2 + InitialGenJournalLineCount);
 
-
-
-
-
-
-
-
-
-
         // [WHEN] Customer classes are migrated
         Assert.AreEqual('100', HelperFunctions.GetPostingAccountNumber('ReceivablesAccount'), 'Default Receivables account is incorrect.');
 
@@ -211,6 +202,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported
         CreateCustomerData();
+        CreateCustomerClassData();
         CreateCustomerTrx();
 
         GPTestHelperFunctions.InitializeMigration();
@@ -554,6 +546,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported
         CreateVendorData();
+        CreateVendorClassData();
         GPTestHelperFunctions.InitializeMigration();
 
         // [Then] The fields for the Vendor are correctly imported to temporary table
@@ -634,6 +627,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported
         CreateVendorData();
+        CreateVendorClassData();
         CreateVendorTrx();
 
         GPTestHelperFunctions.InitializeMigration();
@@ -955,6 +949,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported
         CreateGPVendorBankInformation();
+        CreateVendorClassData();
 
         GPTestHelperFunctions.InitializeMigration();
 
@@ -1216,13 +1211,14 @@ codeunit 139664 "GP Data Migration Tests"
         Initialize();
 
         // [WHEN] Data is imported, and data is migrated
-        CreateCustomerData();
-        CreateCustomerTrx();
-        CreateCustomerClassData();
         GPTestHelperFunctions.CreateConfigurationSettings();
         GPCompanyAdditionalSettings.GetSingleInstance();
         GPCompanyAdditionalSettings.Validate("Migrate Customer Classes", true);
         GPCompanyAdditionalSettings.Modify();
+
+        CreateCustomerData();
+        CreateCustomerClassData();
+        CreateCustomerTrx();
 
         GPTestHelperFunctions.InitializeMigration();
 
@@ -1278,6 +1274,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported and migrated, but configured to NOT import open POs
         CreateVendorData();
+        CreateVendorClassData();
         CreateOpenPOData();
         GPTestHelperFunctions.CreateConfigurationSettings();
 
@@ -1313,6 +1310,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is imported and migrated
         CreateVendorData();
+        CreateVendorClassData();
         CreateOpenPOData();
         GPTestHelperFunctions.CreateConfigurationSettings();
 
@@ -1397,28 +1395,30 @@ codeunit 139664 "GP Data Migration Tests"
             exit;
     end;
 
-    local procedure MigrateCustomers(Customers: Record "GP Customer")
+    local procedure MigrateCustomers(var GPCustomers: Record "GP Customer")
     begin
         if not GPTestHelperFunctions.MigrationConfiguredForTable(Database::Customer) then
             exit;
 
-        if Customers.FindSet() then
+        if GPCustomers.FindSet() then
             repeat
-                CustomerMigrator.OnMigrateCustomer(CustomerFacade, Customers.RecordId());
-                CustomerMigrator.OnMigrateCustomerTransactions(CustomerFacade, Customers.RecordId(), true);
-            until Customers.Next() = 0;
+                CustomerMigrator.OnMigrateCustomer(CustomerFacade, GPCustomers.RecordId());
+                CustomerMigrator.OnMigrateCustomerPostingGroups(CustomerFacade, GPCustomers.RecordId(), true);
+                CustomerMigrator.OnMigrateCustomerTransactions(CustomerFacade, GPCustomers.RecordId(), true);
+            until GPCustomers.Next() = 0;
     end;
 
-    local procedure MigrateVendors(Vendors: Record "GP Vendor")
+    local procedure MigrateVendors(var GPVendors: Record "GP Vendor")
     begin
         if not GPTestHelperFunctions.MigrationConfiguredForTable(Database::Vendor) then
             exit;
 
-        if Vendors.FindSet() then
+        if GPVendors.FindSet() then
             repeat
-                VendorMigrator.OnMigrateVendor(VendorFacade, Vendors.RecordId());
-                VendorMigrator.OnMigrateVendorTransactions(VendorFacade, Vendors.RecordId(), true);
-            until Vendors.Next() = 0;
+                VendorMigrator.OnMigrateVendor(VendorFacade, GPVendors.RecordId());
+                VendorMigrator.OnMigrateVendorPostingGroups(VendorFacade, GPVendors.RecordId(), true);
+                VendorMigrator.OnMigrateVendorTransactions(VendorFacade, GPVendors.RecordId(), true);
+            until GPVendors.Next() = 0;
     end;
 
     local procedure RunPostMigration()
@@ -1553,8 +1553,9 @@ codeunit 139664 "GP Data Migration Tests"
             GPAccount.Name := 'Test account 1';
             GPAccount.Active := true;
             GPAccount.Insert();
+        end;
 
-            GLAccount.Init();
+        if not GLAccount.Get(GPAccount.AcctNum) then begin
             GLAccount.Validate("No.", GPAccount.AcctNum);
             GLAccount.Validate(Name, GPAccount.Name);
             GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
@@ -1567,8 +1568,9 @@ codeunit 139664 "GP Data Migration Tests"
             GPAccount.Name := 'Test account 2';
             GPAccount.Active := true;
             GPAccount.Insert();
+        end;
 
-            GLAccount.Init();
+        if not GLAccount.Get(GPAccount.AcctNum) then begin
             GLAccount.Validate("No.", GPAccount.AcctNum);
             GLAccount.Validate(Name, GPAccount.Name);
             GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
@@ -1581,8 +1583,9 @@ codeunit 139664 "GP Data Migration Tests"
             GPAccount.Name := 'Test account 100';
             GPAccount.Active := true;
             GPAccount.Insert();
+        end;
 
-            GLAccount.Init();
+        if not GLAccount.Get(GPAccount.AcctNum) then begin
             GLAccount.Validate("No.", GPAccount.AcctNum);
             GLAccount.Validate(Name, GPAccount.Name);
             GLAccount.Validate("Account Type", "G/L Account Type"::Posting);
@@ -3631,9 +3634,10 @@ codeunit 139664 "GP Data Migration Tests"
         GPPM00100.PURPVIDX := 0;
         GPPM00100.Insert();
 
-        GPPM00200.Get('ACME');
-        GPPM00200.VNDCLSID := 'USA-US-C';
-        GPPM00200.Modify();
+        if GPPM00200.Get('ACME') then begin
+            GPPM00200.VNDCLSID := 'USA-US-C';
+            GPPM00200.Modify();
+        end;
 
         GPPM00200.Init();
         GPPM00200.VENDORID := 'ADEMCO';

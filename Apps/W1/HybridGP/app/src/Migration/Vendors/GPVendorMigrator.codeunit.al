@@ -41,6 +41,8 @@ codeunit 4022 "GP Vendor Migrator"
 
         Sender.SetVendorPostingGroup(CopyStr(PostingGroupCodeTxt, 1, 5));
         Sender.ModifyVendor(true);
+
+        CreateVendorPostingGroupIfNeeded(Sender, RecordIdToMigrate);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Vendor Data Migration Facade", 'OnMigrateVendorTransactions', '', true, true)]
@@ -145,6 +147,85 @@ codeunit 4022 "GP Vendor Migrator"
             until GPVendorTransactions.Next() = 0;
     end;
 #pragma warning restore AA0207
+
+    local procedure CreateVendorPostingGroupIfNeeded(var Sender: Codeunit "Vendor Data Migration Facade"; RecordIdToMigrate: RecordId)
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPPM00200: Record "GP PM00200";
+        GPPM00100: Record "GP PM00100";
+        GPVendor: Record "GP Vendor";
+        VendorPostingGroup: Record "Vendor Posting Group";
+        HelperFunctions: Codeunit "Helper Functions";
+        ClassId: Text[20];
+        AccountNumber: Code[20];
+    begin
+        if not GPCompanyAdditionalSettings.GetMigrateVendorClasses() then
+            exit;
+
+        if not GPVendor.Get(RecordIdToMigrate) then
+            exit;
+
+        if not GPPM00200.Get(GPVendor.VENDORID) then
+            exit;
+
+#pragma warning disable AA0139
+        ClassId := GPPM00200.VNDCLSID.Trim();
+#pragma warning restore AA0139
+
+        if ClassId = '' then
+            exit;
+
+        if VendorPostingGroup.Get(ClassId) then
+            exit;
+
+        if not GPPM00100.Get(ClassId) then
+            exit;
+
+        VendorPostingGroup.Validate("Code", ClassId);
+        VendorPostingGroup.Validate("Description", GPPM00100.VNDCLDSC);
+
+        // Payables Account
+        AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMAPINDX);
+        if AccountNumber <> '' then begin
+            HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+            VendorPostingGroup.Validate("Payables Account", AccountNumber);
+        end;
+
+        // Service Charge Acc.
+        AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMFINIDX);
+        if AccountNumber <> '' then begin
+            HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+            VendorPostingGroup.Validate("Service Charge Acc.", AccountNumber);
+        end;
+
+        // Payment Disc. Debit Acc.
+        AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDTKIDX);
+        if AccountNumber <> '' then begin
+            HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+            VendorPostingGroup.Validate("Payment Disc. Debit Acc.", AccountNumber);
+        end;
+
+        // Payment Disc. Credit Acc.
+        AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDAVIDX);
+        if AccountNumber <> '' then begin
+            HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+            VendorPostingGroup.Validate("Payment Disc. Credit Acc.", AccountNumber);
+        end;
+
+        // Payment Tolerance Debit Acc.
+        // Payment Tolerance Credit Acc.
+        AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMWRTIDX);
+        if AccountNumber <> '' then begin
+            HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
+            VendorPostingGroup.Validate("Payment Tolerance Debit Acc.", AccountNumber);
+            VendorPostingGroup.Validate("Payment Tolerance Credit Acc.", AccountNumber);
+        end;
+
+        VendorPostingGroup.Insert();
+
+        Sender.SetVendorPostingGroup(ClassId);
+        Sender.ModifyVendor(true);
+    end;
 
     local procedure MigrateVendorDetails(GPVendor: Record "GP Vendor"; VendorDataMigrationFacade: Codeunit "Vendor Data Migration Facade")
     var
@@ -585,80 +666,10 @@ codeunit 4022 "GP Vendor Migrator"
             PayablesAccountNo := DefaultPayablesAccount;
     end;
 
+#if not CLEAN22
+    [Obsolete('Updated to use the OnMigrateVendorPostingGroups event subscriber.', '22.0')]
     procedure MigrateVendorClasses()
-    var
-        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
-        GPPM00200: Record "GP PM00200";
-        GPPM00100: Record "GP PM00100";
-        VendorPostingGroup: Record "Vendor Posting Group";
-        Vendor: Record Vendor;
-        HelperFunctions: Codeunit "Helper Functions";
-        ClassId: Text[20];
-        AccountNumber: Code[20];
     begin
-        if not GPPM00200.FindSet() then
-            exit;
-
-        if not GPCompanyAdditionalSettings.GetMigrateVendorClasses() then
-            exit;
-
-        repeat
-            Clear(GPPM00100);
-            Clear(VendorPostingGroup);
-
-#pragma warning disable AA0139
-            ClassId := GPPM00200.VNDCLSID.Trim();
-#pragma warning restore AA0139            
-            if ClassId <> '' then
-                if Vendor.Get(GPPM00200.VENDORID) then begin
-                    if not VendorPostingGroup.Get(ClassId) then
-                        if GPPM00100.Get(ClassId) then begin
-                            VendorPostingGroup.Validate("Code", ClassId);
-                            VendorPostingGroup.Validate("Description", GPPM00100.VNDCLDSC);
-
-                            // Payables Account
-                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMAPINDX);
-                            if AccountNumber <> '' then begin
-                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
-                                VendorPostingGroup.Validate("Payables Account", AccountNumber);
-                            end;
-
-                            // Service Charge Acc.
-                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMFINIDX);
-                            if AccountNumber <> '' then begin
-                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
-                                VendorPostingGroup.Validate("Service Charge Acc.", AccountNumber);
-                            end;
-
-                            // Payment Disc. Debit Acc.
-                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDTKIDX);
-                            if AccountNumber <> '' then begin
-                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
-                                VendorPostingGroup.Validate("Payment Disc. Debit Acc.", AccountNumber);
-                            end;
-
-                            // Payment Disc. Credit Acc.
-                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMDAVIDX);
-                            if AccountNumber <> '' then begin
-                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
-                                VendorPostingGroup.Validate("Payment Disc. Credit Acc.", AccountNumber);
-                            end;
-
-                            // Payment Tolerance Debit Acc.
-                            // Payment Tolerance Credit Acc.
-                            AccountNumber := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMWRTIDX);
-                            if AccountNumber <> '' then begin
-                                HelperFunctions.EnsureAccountHasGenProdPostingAccount(AccountNumber);
-                                VendorPostingGroup.Validate("Payment Tolerance Debit Acc.", AccountNumber);
-                                VendorPostingGroup.Validate("Payment Tolerance Credit Acc.", AccountNumber);
-                            end;
-
-                            VendorPostingGroup.Insert();
-                        end;
-
-                    Vendor.Validate("Vendor Posting Group", ClassId);
-                    Vendor.Modify(true);
-                end;
-        until GPPM00200.Next() = 0;
     end;
+#endif
 }
