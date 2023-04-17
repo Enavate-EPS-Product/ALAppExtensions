@@ -49,6 +49,18 @@ codeunit 4016 "Hybrid GP Management"
         CloseWizard := true;
     end;
 
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Line", 'OnValidateQuantityOnBeforeCheckWithQuantityReceived', '', false, false)]
+    local procedure OnValidateQuantityOnBeforeCheckWithQuantityReceived(var PurchaseLine: Record "Purchase Line"; var IsHandled: Boolean)
+    begin
+        IsHandled := true;
+    end;
+
+    [EventSubscriber(ObjectType::Table, Database::"Purchase Line", 'OnValidateQtyToReceiveOnAfterInitQty', '', false, false)]
+    local procedure OnValidateQtyToReceiveOnAfterInitQty(var PurchaseLine: Record "Purchase Line"; var xPurchaseLine: Record "Purchase Line"; CallingFieldNo: Integer; var IsHandled: Boolean)
+    begin
+        IsHandled := true;
+    end;
+
     local procedure UpdateStatusOnHybridReplicationCompleted(RunId: Text[50]; NotificationText: Text)
     var
         HybridReplicationDetail: Record "Hybrid Replication Detail";
