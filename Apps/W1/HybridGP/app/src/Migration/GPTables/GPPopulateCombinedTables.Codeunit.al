@@ -685,11 +685,26 @@ codeunit 40125 "GP Populate Combined Tables"
         until GPIV00101Inventory.Next() = 0;
     end;
 
+    local procedure GetItemOverallExcludeCount(ItemNo: Text[31]): Decimal
+    var
+        GPIV00102: Record "GP IV00102";
+    begin
+        GPIV00102.SetRange(ITEMNMBR, ItemNo);
+        GPIV00102.SetRange(LOCNCODE, '');
+        GPIV00102.SetRange(RCRDTYPE, 1);
+        if GPIV00102.FindFirst() then
+            exit(GPIV00102.QTYINUSE + GPIV00102.QTYINSVC + GPIV00102.QTYRTRND + GPIV00102.QTYDMGED);
+
+        exit(0);
+    end;
+
     internal procedure PopulateGPItemTransactions()
     var
         GPItemTransactions: Record "GP Item Transactions";
         GPPopulateItemTransactions: Query "GP Populate Item Transactions";
+        LastItemNo: Code[75];
     begin
+        LastItemNo := '';
         GPPopulateItemTransactions.SetRange(RCPTSOLD, false);
         GPPopulateItemTransactions.Open();
         while GPPopulateItemTransactions.Read() do begin
@@ -705,8 +720,15 @@ codeunit 40125 "GP Populate Combined Tables"
                     GPItemTransactions.Quantity := 1;
                 3:
                     GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVDGPIV00300 - GPPopulateItemTransactions.QTYSOLDGPIV00300;
-                else
-                    GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVD - GPPopulateItemTransactions.QTYSOLD;
+                else begin
+                    // Only calculate the overall excluded quantities once per item
+                    if (GPItemTransactions.No <> LastItemNo) then
+                        GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVD - GPPopulateItemTransactions.QTYSOLD - GetItemOverallExcludeCount(GPPopulateItemTransactions.ITEMNMBR)
+                    else
+                        GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVD - GPPopulateItemTransactions.QTYSOLD;
+
+                    LastItemNo := GPItemTransactions.No;
+                end;
             end;
 
             GPItemTransactions.CurrentCost := GPPopulateItemTransactions.CURRCOST;
