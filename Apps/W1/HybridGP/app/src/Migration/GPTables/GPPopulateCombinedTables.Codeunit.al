@@ -685,7 +685,7 @@ codeunit 40125 "GP Populate Combined Tables"
         until GPIV00101Inventory.Next() = 0;
     end;
 
-    local procedure GetItemOverallExcludeCount(ItemNo: Text[31]): Decimal
+    local procedure GetItemOverallExcludeCount(ItemNo: Code[75]): Decimal
     var
         GPIV00102: Record "GP IV00102";
     begin
@@ -696,6 +696,15 @@ codeunit 40125 "GP Populate Combined Tables"
             exit(GPIV00102.QTYINUSE + GPIV00102.QTYINSVC + GPIV00102.QTYRTRND + GPIV00102.QTYDMGED);
 
         exit(0);
+    end;
+
+    local procedure CalculateItemQuantity(QtyRecv: Decimal; QtySold: Decimal; LastItemNo: Code[75]; CurrentItemNo: Code[75]): Decimal
+    begin
+        // Only calculate the overall excluded quantities once per item
+        if (CurrentItemNo <> LastItemNo) then
+            exit(QtyRecv - QtySold - GetItemOverallExcludeCount(CurrentItemNo))
+        else
+            exit(QtyRecv - QtySold);
     end;
 
     internal procedure PopulateGPItemTransactions()
@@ -719,17 +728,12 @@ codeunit 40125 "GP Populate Combined Tables"
                 2:
                     GPItemTransactions.Quantity := 1;
                 3:
-                    GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVDGPIV00300 - GPPopulateItemTransactions.QTYSOLDGPIV00300;
-                else begin
-                    // Only calculate the overall excluded quantities once per item
-                    if (GPItemTransactions.No <> LastItemNo) then
-                        GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVD - GPPopulateItemTransactions.QTYSOLD - GetItemOverallExcludeCount(GPPopulateItemTransactions.ITEMNMBR)
-                    else
-                        GPItemTransactions.Quantity := GPPopulateItemTransactions.QTYRECVD - GPPopulateItemTransactions.QTYSOLD;
-
-                    LastItemNo := GPItemTransactions.No;
-                end;
+                    GPItemTransactions.Quantity := CalculateItemQuantity(GPPopulateItemTransactions.QTYRECVDGPIV00300, GPPopulateItemTransactions.QTYSOLDGPIV00300, LastItemNo, GPItemTransactions.No);
+                else
+                    GPItemTransactions.Quantity := CalculateItemQuantity(GPPopulateItemTransactions.QTYRECVD, GPPopulateItemTransactions.QTYSOLD, LastItemNo, GPItemTransactions.No);
             end;
+
+            LastItemNo := GPItemTransactions.No;
 
             GPItemTransactions.CurrentCost := GPPopulateItemTransactions.CURRCOST;
             GPItemTransactions.StandardCost := GPPopulateItemTransactions.STNDCOST;
