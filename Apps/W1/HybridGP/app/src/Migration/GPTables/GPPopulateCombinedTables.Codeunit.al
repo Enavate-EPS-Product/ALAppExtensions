@@ -685,24 +685,21 @@ codeunit 40125 "GP Populate Combined Tables"
         until GPIV00101Inventory.Next() = 0;
     end;
 
-    local procedure GetItemOverallExcludeCount(ItemNo: Code[75]): Decimal
+    local procedure CalculateItemQuantity(QtyRecv: Decimal; QtySold: Decimal; LastItemNo: Code[75]; CurrentItemNo: Code[75]): Decimal
     var
         GPIV00102: Record "GP IV00102";
-    begin
-        GPIV00102.SetRange(ITEMNMBR, ItemNo);
-        GPIV00102.SetRange(LOCNCODE, '');
-        GPIV00102.SetRange(RCRDTYPE, 1);
-        if GPIV00102.FindFirst() then
-            exit(GPIV00102.QTYINUSE + GPIV00102.QTYINSVC + GPIV00102.QTYRTRND + GPIV00102.QTYDMGED);
-
-        exit(0);
-    end;
-
-    local procedure CalculateItemQuantity(QtyRecv: Decimal; QtySold: Decimal; LastItemNo: Code[75]; CurrentItemNo: Code[75]): Decimal
+        ItemOverallExcludeCount: Decimal;
     begin
         // Only calculate the overall excluded quantities once per item
-        if (CurrentItemNo <> LastItemNo) then
-            exit(QtyRecv - QtySold - GetItemOverallExcludeCount(CurrentItemNo))
+        if (CurrentItemNo <> LastItemNo) then begin
+            GPIV00102.SetRange(ITEMNMBR, CurrentItemNo);
+            GPIV00102.SetRange(LOCNCODE, '');
+            GPIV00102.SetRange(RCRDTYPE, 1);
+            if GPIV00102.FindFirst() then
+                ItemOverallExcludeCount := GPIV00102.QTYINUSE + GPIV00102.QTYINSVC + GPIV00102.QTYRTRND + GPIV00102.QTYDMGED;
+
+            exit(QtyRecv - QtySold - ItemOverallExcludeCount)
+        end
         else
             exit(QtyRecv - QtySold);
     end;
