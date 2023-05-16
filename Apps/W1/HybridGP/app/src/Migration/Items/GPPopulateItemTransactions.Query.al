@@ -43,6 +43,9 @@ query 40100 "GP Populate Item Transactions"
             column(QTYSOLD; QTYSOLD)
             {
             }
+            column(QTYTYPE; QTYTYPE)
+            {
+            }
 
             dataitem(GPIV00101; "GP IV00101")
             {
