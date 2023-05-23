@@ -13,6 +13,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer: Record "GP Customer";
         GPVendor: Record "GP Vendor";
         GPVendorAddress: Record "GP Vendor Address";
+        GPCustomerAddress: Record "GP Customer Address";
         GPSY06000: Record "GP SY06000";
         GPMC40200: Record "GP MC40200";
         GPPM00100: Record "GP PM00100";
@@ -21,6 +22,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPRM00201: Record "GP RM00201";
         GPPOP10100: Record "GP POP10100";
         GPPOP10110: Record "GP POP10110";
+        GPSY01200: Record "GP SY01200";
         GPTestHelperFunctions: Codeunit "GP Test Helper Functions";
         CustomerFacade: Codeunit "Customer Data Migration Facade";
         CustomerMigrator: Codeunit "GP Customer Migrator";
@@ -55,6 +57,7 @@ codeunit 139664 "GP Data Migration Tests"
     var
         Customer: Record "Customer";
         GenJournalLine: Record "Gen. Journal Line";
+        ShipToAddress: Record "Ship-to Address";
         InitialGenJournalLineCount: Integer;
         CustomerCount: Integer;
     begin
@@ -172,6 +175,21 @@ codeunit 139664 "GP Data Migration Tests"
         GenJournalLine.SetRange("Account No.", '#1');
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
         Assert.AreEqual('', GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
+
+
+        // [WHEN] Customer addresses are migrated
+        // [THEN] Email addresses are included with the addresses when they are valid
+        Assert.IsTrue(ShipToAddress.Get('#1', 'PRIMARY'), 'Customer primary address does not exist.');
+        Assert.AreEqual('GoodEmailAddress@testing.tst', ShipToAddress."E-Mail", 'Customer primary address email was not set correctly.');
+
+        Assert.IsTrue(ShipToAddress.Get('#1', 'BILLING'), 'Customer billing address does not exist.');
+        Assert.AreEqual('GoodEmailAddress2@testing.tst', ShipToAddress."E-Mail", 'Customer billing address email was not set correctly.');
+
+        Assert.IsTrue(ShipToAddress.Get('#1', 'WAREHOUSE'), 'Customer warehouse address does not exist.');
+        Assert.AreEqual('', ShipToAddress."E-Mail", 'Customer warehouse address email should be empty.');
+
+        Assert.IsTrue(ShipToAddress.Get('#1', 'OTHER'), 'Customer other address does not exist.');
+        Assert.AreEqual('', ShipToAddress."E-Mail", 'Customer other address email should be empty.');
     end;
 
     [Test]
@@ -524,6 +542,20 @@ codeunit 139664 "GP Data Migration Tests"
         GenJournalLine.SetRange("Account No.", 'V3130');
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
         Assert.AreEqual('1', GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
+
+        // [WHEN] Vendor addresses are migrated
+        // [THEN] Email addresses are included with the addresses when they are valid
+        Assert.IsTrue(OrderAddress.Get('ACME', 'PRIMARY'), 'Vendor primary address does not exist.');
+        Assert.AreEqual('GoodEmailAddress@testing.tst', OrderAddress."E-Mail", 'Vendor primary address email was not set correctly.');
+
+        Assert.IsTrue(RemitAddress.Get('REMIT TO', 'ACME'), 'Vendor remit address does not exist.');
+        Assert.AreEqual('GoodEmailAddress2@testing.tst', RemitAddress."E-Mail", 'Vendor remit address email was not set correctly.');
+
+        Assert.IsTrue(OrderAddress.Get('ACETRAVE0001', 'PRIMARY'), 'Vendor primary address does not exist.');
+        Assert.AreEqual('', OrderAddress."E-Mail", 'Vendor primary address email should be empty.');
+
+        Assert.IsTrue(RemitAddress.Get('REMIT TO', 'ACETRAVE0001'), 'Vendor remit address does not exist.');
+        Assert.AreEqual('', RemitAddress."E-Mail", 'Vendor remit address email should be empty.');
     end;
 
     [Test]
@@ -1366,6 +1398,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPConfiguration.DeleteAll();
         GPTestHelperFunctions.DeleteAllSettings();
         GPCustomer.DeleteAll();
+        GPCustomerAddress.DeleteAll();
         GPVendorAddress.DeleteAll();
         GPVendor.DeleteAll();
         GPPM00100.DeleteAll();
@@ -1374,6 +1407,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPRM00201.DeleteAll();
         GPPOP10100.DeleteAll();
         GPPOP10110.DeleteAll();
+        GPSY01200.DeleteAll();
 
         if not GenBusPostingGroup.Get(PostingGroupCodeTxt) then begin
             GenBusPostingGroup.Validate("Code", PostingGroupCodeTxt);
@@ -1428,9 +1462,7 @@ codeunit 139664 "GP Data Migration Tests"
 
     local procedure CreateCustomerData()
     begin
-        GPCustomer.DeleteAll();
-
-        GPCustomer.Init();
+        Clear(GPCustomer);
         GPCustomer.CUSTNMBR := '!WOW!';
         GPCustomer.CUSTNAME := 'Oh! What a feeling!';
         GPCustomer.STMTNAME := 'Oh! What a feeling!';
@@ -1457,7 +1489,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer.TAXEXMT1 := '';
         GPCustomer.Insert();
 
-        GPCustomer.Init();
+        Clear(GPCustomer);
         GPCustomer.CUSTNMBR := '"AMERICAN"';
         GPCustomer.CUSTNAME := '"American Clothing"';
         GPCustomer.STMTNAME := '"American Clothing"';
@@ -1484,7 +1516,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer.TAXEXMT1 := '';
         GPCustomer.Insert();
 
-        GPCustomer.Init();
+        Clear(GPCustomer);
         GPCustomer.CUSTNMBR := '#1';
         GPCustomer.CUSTNAME := '#1 Company';
         GPCustomer.STMTNAME := '#1 Company';
@@ -1510,6 +1542,82 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer.UPSZONE := 'P3';
         GPCustomer.TAXEXMT1 := '';
         GPCustomer.Insert();
+
+        Clear(GPCustomerAddress);
+        GPCustomerAddress.CUSTNMBR := CopyStr(GPCustomer.CUSTNMBR, 1, MaxStrLen(GPCustomerAddress.CUSTNMBR));
+        GPCustomerAddress.ADRSCODE := 'PRIMARY';
+        GPCustomerAddress.ADDRESS1 := GPCustomer.ADDRESS1;
+        GPCustomerAddress.CITY := GPCustomer.CITY;
+        GPCustomerAddress.CNTCPRSN := 'Test user';
+        GPCustomerAddress.SHIPMTHD := 'GROUND';
+        GPCustomerAddress.STATE := GPCustomer.STATE;
+        GPCustomerAddress.ZIP := GPCustomer.ZIPCODE;
+        GPCustomerAddress.TAXSCHID := GPCustomer.TAXSCHID;
+        GPCustomerAddress.Insert();
+
+        Clear(GPSY01200);
+        GPSY01200.Master_Type := 'CUS';
+        GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
+        GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
+        GPSY01200.INET1 := 'GoodEmailAddress@testing.tst';
+        GPSY01200.Insert();
+
+        Clear(GPCustomerAddress);
+        GPCustomerAddress.CUSTNMBR := CopyStr(GPCustomer.CUSTNMBR, 1, MaxStrLen(GPCustomerAddress.CUSTNMBR));
+        GPCustomerAddress.ADRSCODE := 'BILLING';
+        GPCustomerAddress.ADDRESS1 := GPCustomer.ADDRESS1;
+        GPCustomerAddress.CITY := GPCustomer.CITY;
+        GPCustomerAddress.CNTCPRSN := 'Test user';
+        GPCustomerAddress.SHIPMTHD := 'GROUND';
+        GPCustomerAddress.STATE := GPCustomer.STATE;
+        GPCustomerAddress.ZIP := GPCustomer.ZIPCODE;
+        GPCustomerAddress.TAXSCHID := GPCustomer.TAXSCHID;
+        GPCustomerAddress.Insert();
+
+        Clear(GPSY01200);
+        GPSY01200.Master_Type := 'CUS';
+        GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
+        GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
+        GPSY01200.INET1 := 'GoodEmailAddress2@testing.tst';
+        GPSY01200.Insert();
+
+        Clear(GPCustomerAddress);
+        GPCustomerAddress.CUSTNMBR := CopyStr(GPCustomer.CUSTNMBR, 1, MaxStrLen(GPCustomerAddress.CUSTNMBR));
+        GPCustomerAddress.ADRSCODE := 'WAREHOUSE';
+        GPCustomerAddress.ADDRESS1 := GPCustomer.ADDRESS1;
+        GPCustomerAddress.CITY := GPCustomer.CITY;
+        GPCustomerAddress.CNTCPRSN := 'Test user';
+        GPCustomerAddress.SHIPMTHD := 'GROUND';
+        GPCustomerAddress.STATE := GPCustomer.STATE;
+        GPCustomerAddress.ZIP := GPCustomer.ZIPCODE;
+        GPCustomerAddress.TAXSCHID := GPCustomer.TAXSCHID;
+        GPCustomerAddress.Insert();
+
+        Clear(GPSY01200);
+        GPSY01200.Master_Type := 'CUS';
+        GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
+        GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
+        GPSY01200.INET1 := 'bad email address@testing.tst';
+        GPSY01200.Insert();
+
+        Clear(GPCustomerAddress);
+        GPCustomerAddress.CUSTNMBR := CopyStr(GPCustomer.CUSTNMBR, 1, MaxStrLen(GPCustomerAddress.CUSTNMBR));
+        GPCustomerAddress.ADRSCODE := 'OTHER';
+        GPCustomerAddress.ADDRESS1 := GPCustomer.ADDRESS1;
+        GPCustomerAddress.CITY := GPCustomer.CITY;
+        GPCustomerAddress.CNTCPRSN := 'Test user';
+        GPCustomerAddress.SHIPMTHD := 'GROUND';
+        GPCustomerAddress.STATE := GPCustomer.STATE;
+        GPCustomerAddress.ZIP := GPCustomer.ZIPCODE;
+        GPCustomerAddress.TAXSCHID := GPCustomer.TAXSCHID;
+        GPCustomerAddress.Insert();
+
+        Clear(GPSY01200);
+        GPSY01200.Master_Type := 'CUS';
+        GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
+        GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
+        GPSY01200.INET1 := '';
+        GPSY01200.Insert();
     end;
 
     local procedure CreateCustomerTrx()
@@ -2417,6 +2525,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.FAXNUMBR := '29455501010000';
         GPVendorAddress.Insert();
 
+        GPSY01200.Init();
+        GPSY01200.Master_Type := 'VEN';
+        GPSY01200.Master_ID := GPVendorAddress.VENDORID;
+        GPSY01200.ADRSCODE := GPVendorAddress.ADRSCODE;
+        GPSY01200.INET1 := 'bad email address@testing.tst';
+        GPSY01200.Insert();
+
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
         GPVendorAddress.ADRSCODE := AddressCodeRemitToTxt;
@@ -2429,6 +2544,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.PHNUMBR1 := '29855501020000';
         GPVendorAddress.FAXNUMBR := '29455501020000';
         GPVendorAddress.Insert();
+
+        GPSY01200.Init();
+        GPSY01200.Master_Type := 'VEN';
+        GPSY01200.Master_ID := GPVendorAddress.VENDORID;
+        GPSY01200.ADRSCODE := GPVendorAddress.ADRSCODE;
+        GPSY01200.INET1 := '                          ';
+        GPSY01200.Insert();
 
         GPPM00200.Init();
         GPPM00200.VENDORID := GPVendor.VENDORID;
@@ -2531,6 +2653,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.FAXNUMBR := '30543212900000';
         GPVendorAddress.Insert();
 
+        GPSY01200.Init();
+        GPSY01200.Master_Type := 'VEN';
+        GPSY01200.Master_ID := GPVendorAddress.VENDORID;
+        GPSY01200.ADRSCODE := GPVendorAddress.ADRSCODE;
+        GPSY01200.INET1 := 'GoodEmailAddress@testing.tst';
+        GPSY01200.Insert();
+
         GPVendorAddress.Init();
         GPVendorAddress.VENDORID := GPVendor.VENDORID;
         GPVendorAddress.ADRSCODE := AddressCodeRemitToTxt;
@@ -2543,6 +2672,13 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendorAddress.PHNUMBR1 := '30543212880000';
         GPVendorAddress.FAXNUMBR := '30543212900000';
         GPVendorAddress.Insert();
+
+        GPSY01200.Init();
+        GPSY01200.Master_Type := 'VEN';
+        GPSY01200.Master_ID := GPVendorAddress.VENDORID;
+        GPSY01200.ADRSCODE := GPVendorAddress.ADRSCODE;
+        GPSY01200.INET1 := 'GoodEmailAddress2@testing.tst';
+        GPSY01200.Insert();
 
         GPPM00200.Init();
         GPPM00200.VENDORID := GPVendor.VENDORID;
