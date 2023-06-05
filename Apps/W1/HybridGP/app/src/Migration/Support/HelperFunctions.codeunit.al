@@ -63,6 +63,7 @@ Codeunit 4037 "Helper Functions"
         CustomerBatchNameTxt: Label 'GPCUST', Locked = true;
         VendorBatchNameTxt: Label 'GPVEND', Locked = true;
         BankBatchNameTxt: Label 'GPBANK', Locked = true;
+        PurchBatchNameTxt: Label 'GPPURCH', Locked = true;
         GlDocNoTxt: Label 'G00001', Locked = true;
         MigrationTypeTxt: Label 'Great Plains';
         CloudMigrationTok: Label 'CloudMigration', Locked = true;
@@ -1274,6 +1275,10 @@ Codeunit 4037 "Helper Functions"
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10));
         end;
 
+        OnSkipPostingPurchaseOrderBatches(SkipPosting);
+        if not SkipPosting then
+            PostPurchBatch();
+
         // Remove posted batches
         RemoveBatches();
         DurationAsInt := CurrentDateTime() - StartTime;
@@ -1306,10 +1311,21 @@ Codeunit 4037 "Helper Functions"
                 codeunit.Run(codeunit::"Gen. Jnl.-Post Batch", GenJournalLine);
     end;
 
+    local procedure PostPurchBatch()
+    var
+        ItemJournalLine: Record "Item Journal Line";
+    begin
+        ItemJournalLine.SetRange("Journal Batch Name", PurchBatchNameTxt);
+        if ItemJournalLine.FindFirst() then
+            Codeunit.Run(Codeunit::"Item Jnl.-Post Batch", ItemJournalLine);
+    end;
+
     procedure RemoveBatches();
     var
         GenJournalLine: Record "Gen. Journal Line";
         GenJournalBatch: Record "Gen. Journal Batch";
+        ItemJournalBatch: Record "Item Journal Batch";
+        ItemJournalLine: Record "Item Journal Line";
         JournalBatchName: Text;
     begin
         // GL Batches
@@ -1368,6 +1384,15 @@ Codeunit 4037 "Helper Functions"
             GenJournalLine.DeleteAll();
             if GenJournalBatch.Get(GeneralTemplateNameTxt, JournalBatchName) then
                 GenJournalBatch.Delete();
+        end;
+
+        // Purchase Order Batch
+        ItemJournalLine.SetRange("Journal Batch Name", PurchBatchNameTxt);
+        if ItemJournalLine.Count() = 1 then begin
+            ItemJournalLine.DeleteAll();
+
+            if ItemJournalBatch.Get(PurchBatchNameTxt, PurchBatchNameTxt) then
+                ItemJournalBatch.Delete();
         end;
     end;
 
@@ -1951,6 +1976,11 @@ Codeunit 4037 "Helper Functions"
 
     [IntegrationEvent(false, false)]
     local procedure OnSkipPostingBankBatches(var SkipPosting: Boolean)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnSkipPostingPurchaseOrderBatches(var SkipPosting: Boolean)
     begin
     end;
 
