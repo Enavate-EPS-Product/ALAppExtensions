@@ -488,6 +488,54 @@ codeunit 139681 "GP Settings Tests"
         Assert.IsTrue(GPConfiguration.IsAllPostMigrationDataCreated(), 'Should return true because all of the entries should be created.');
     end;
 
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestSkipPostingAutoSettings()
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+    begin
+        // [SCENARIO] Settings are initiated for each company to be migrated from GP
+
+        // [GIVEN] Some records are created in the settings table
+        CreateSettingsTableEntries();
+
+        // [WHEN] The Receivables module setting is disabled
+        Clear(GPCompanyAdditionalSettings);
+        GPCompanyAdditionalSettings.Get('Company 2');
+        GPCompanyAdditionalSettings.Validate("Migrate Inventory Module", false);
+        GPCompanyAdditionalSettings.Modify();
+
+        // [THEN] The record will have the correct values
+        Assert.AreEqual('Company 2', GPCompanyAdditionalSettings.Name, 'Incorrect company settings found');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Skip All Posting", 'Skip All Posting - Incorrect value 1');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Skip Posting Account Batches", 'Skip Posting Account Batches - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Skip Posting Bank Batches", 'Skip Posting Bank Batches - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Skip Posting Customer Batches", 'Skip Posting Customer Batches - Incorrect value');
+        Assert.AreEqual(true, GPCompanyAdditionalSettings."Skip Posting Vendor Batches", 'Skip Posting Vendor Batches - Incorrect value');
+
+        // [WHEN] Any of the Skip Posting values become false, Skipp All Posting will become false
+        GPCompanyAdditionalSettings.Validate("Skip Posting Account Batches", false);
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Skip All Posting", 'Skip All Posting - Incorrect value 1');
+
+        // Skip Posting Bank Batches
+        GPCompanyAdditionalSettings.Validate("Skip All Posting", true);
+        GPCompanyAdditionalSettings.Validate("Skip Posting Bank Batches", false);
+
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Skip All Posting", 'Skip All Posting - Incorrect value 1');
+
+        // Skip Posting Customer Batches
+        GPCompanyAdditionalSettings.Validate("Skip All Posting", true);
+        GPCompanyAdditionalSettings.Validate("Skip Posting Customer Batches", false);
+
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Skip All Posting", 'Skip All Posting - Incorrect value 1');
+
+        // Skip Posting Vendor Batches
+        GPCompanyAdditionalSettings.Validate("Skip All Posting", true);
+        GPCompanyAdditionalSettings.Validate("Skip Posting Vendor Batches", false);
+
+        Assert.AreEqual(false, GPCompanyAdditionalSettings."Skip All Posting", 'Skip All Posting - Incorrect value 1');
+    end;
+
     local procedure CreateSettingsTableEntries()
     var
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";
@@ -540,6 +588,7 @@ codeunit 139681 "GP Settings Tests"
         GPCompanyAdditionalSettings.Validate("Migrate Only Inventory Master", true);
         GPCompanyAdditionalSettings.Validate("Migrate Only Payables Master", true);
         GPCompanyAdditionalSettings.Validate("Migrate Only Rec. Master", true);
+        GPCompanyAdditionalSettings.Validate("Skip All Posting", true);
         GPCompanyAdditionalSettings.Modify();
     end;
 }

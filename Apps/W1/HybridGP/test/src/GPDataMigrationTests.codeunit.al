@@ -283,6 +283,53 @@ codeunit 139664 "GP Data Migration Tests"
 
     [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestReceivablesSkipPosting()
+    var
+        Customer: Record "Customer";
+        GenJournalLine: Record "Gen. Journal Line";
+        CustomerCount: Integer;
+    begin
+        // [SCENARIO] All Customers are queried from GP
+
+        // [GIVEN] GP data
+        Initialize();
+        GPTestHelperFunctions.CreateConfigurationSettings();
+
+        // Enable Receivables Module setting
+        GPCompanyAdditionalSettings.GetSingleInstance();
+        GPCompanyAdditionalSettings.Validate("Migrate Receivables Module", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Rec. Master", false);
+        GPCompanyAdditionalSettings.Validate("Skip Posting Customer Batches", true);
+        GPCompanyAdditionalSettings.Modify();
+
+        // When adding Customers, update the expected count here
+        CustomerCount := 3;
+
+        // [WHEN] Data is imported
+        CreateCustomerData();
+        CreateCustomerClassData();
+        CreateCustomerTrx();
+
+        GPTestHelperFunctions.InitializeMigration();
+
+        Assert.AreEqual(CustomerCount, GPCustomer.Count(), 'Wrong number of Customers read');
+
+        // [WHEN] Data is migrated
+        Customer.DeleteAll();
+        GPCustomer.Reset();
+        MigrateCustomers(GPCustomer);
+
+        // [then] Then the correct number of Customers are applied
+        Assert.AreEqual(CustomerCount, Customer.Count(), 'Wrong number of Migrated Customers read');
+
+        // [THEN] The GL Batch is created but not posted
+        Clear(GenJournalLine);
+        GenJournalLine.SetRange("Journal Batch Name", 'GPCUST');
+        Assert.AreEqual(false, GenJournalLine.IsEmpty(), 'Could not locate the account batch.');
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
     procedure TestReceivablesDisabled()
     var
         Customer: Record "Customer";
@@ -650,6 +697,55 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [THEN] Vendor transactions will NOT be created
         Assert.RecordCount(GenJournalLine, InitialGenJournalLineCount);
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestPayablesSkipPosting()
+    var
+        Vendor: Record Vendor;
+        GenJournalLine: Record "Gen. Journal Line";
+        VendorCount: Integer;
+    begin
+        // [SCENARIO] All Vendor are queried from GP
+        // [GIVEN] GP data
+        Initialize();
+        GPTestHelperFunctions.CreateConfigurationSettings();
+
+        // Enable Payables Module setting
+        GPCompanyAdditionalSettings.GetSingleInstance();
+        GPCompanyAdditionalSettings.Validate("Migrate Payables Module", true);
+        GPCompanyAdditionalSettings.Validate("Migrate Only Payables Master", false);
+        GPCompanyAdditionalSettings.Validate("Skip Posting Vendor Batches", true);
+        GPCompanyAdditionalSettings.Modify();
+
+        // [WHEN] Data is imported
+        CreateVendorData();
+        CreateVendorClassData();
+        CreateVendorTrx();
+
+        GPTestHelperFunctions.InitializeMigration();
+
+        // [WHEN] adding Vendors, update the expected count here
+        VendorCount := 54;
+
+        Clear(GPVendor);
+        Clear(Vendor);
+
+        // [THEN] Then the correct number of Vendors are imported
+        Assert.AreEqual(VendorCount, GPVendor.Count(), 'Wrong number of Vendor read');
+
+        // [WHEN] data is migrated
+        Vendor.DeleteAll();
+        MigrateVendors(GPVendor);
+
+        // [THEN] Then the correct number of Vendors are applied
+        Assert.AreEqual(VendorCount, Vendor.Count(), 'Wrong number of Migrated Vendors read');
+
+        // [THEN] The GL Batch is created but not posted
+        Clear(GenJournalLine);
+        GenJournalLine.SetRange("Journal Batch Name", 'GPVEND');
+        Assert.AreEqual(false, GenJournalLine.IsEmpty(), 'Could not locate the account batch.');
     end;
 
     [Test]

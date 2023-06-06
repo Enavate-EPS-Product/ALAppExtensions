@@ -320,6 +320,77 @@ table 40105 "GP Company Additional Settings"
             DataClassification = SystemMetadata;
             InitValue = true;
         }
+        field(35; "Skip All Posting"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if Rec."Skip All Posting" then begin
+                    Rec.Validate("Skip Posting Account Batches", true);
+                    Rec.Validate("Skip Posting Customer Batches", true);
+                    Rec.Validate("Skip Posting Vendor Batches", true);
+                    Rec.Validate("Skip Posting Bank Batches", true);
+                    Rec.Validate("Skip Posting PO Batches", true);
+                end;
+            end;
+        }
+        field(36; "Skip Posting Account Batches"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Skip Posting Account Batches" then
+                    Rec.Validate("Skip All Posting", false);
+            end;
+        }
+        field(37; "Skip Posting Customer Batches"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Skip Posting Customer Batches" then
+                    Rec.Validate("Skip All Posting", false);
+            end;
+        }
+        field(38; "Skip Posting Vendor Batches"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Skip Posting Vendor Batches" then
+                    Rec.Validate("Skip All Posting", false);
+            end;
+        }
+        field(39; "Skip Posting Bank Batches"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Skip Posting Bank Batches" then
+                    Rec.Validate("Skip All Posting", false);
+            end;
+        }
+        field(40; "Skip Posting PO Batches"; Boolean)
+        {
+            InitValue = false;
+            DataClassification = SystemMetadata;
+
+            trigger OnValidate()
+            begin
+                if not Rec."Skip Posting PO Batches" then
+                    Rec.Validate("Skip All Posting", false);
+            end;
+        }
     }
 
     keys
@@ -451,6 +522,43 @@ table 40105 "GP Company Additional Settings"
     begin
         GetSingleInstance();
         exit(Rec."Migrate Only Inventory Master");
+    end;
+
+    // Posting
+    procedure GetSkipAllPosting(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip All Posting");
+    end;
+
+    procedure GetSkipPostingAccountBatches(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip Posting Account Batches");
+    end;
+
+    procedure GetSkipPostingCustomerBatches(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip Posting Customer Batches");
+    end;
+
+    procedure GetSkipPostingVendorBatches(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip Posting Vendor Batches");
+    end;
+
+    procedure GetSkipPostingBankBatches(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip Posting Bank Batches");
+    end;
+
+    procedure GetSkipPostingPOBatches(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Skip Posting PO Batches");
     end;
 
     // Other

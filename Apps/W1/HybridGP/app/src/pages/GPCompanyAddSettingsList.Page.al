@@ -187,6 +187,36 @@ page 4051 "GP Company Add. Settings List"
                     ToolTip = 'Specify whether to migrate historical Purchase receivable transactions.';
                     ApplicationArea = All;
                 }
+                field("Skip All Posting"; Rec."Skip All Posting")
+                {
+                    Caption = 'Skip All Posting';
+                    ToolTip = 'Specify whether to disable all auto posting.';
+                    ApplicationArea = All;
+                }
+                field("Skip Posting Account Batches"; Rec."Skip Posting Account Batches")
+                {
+                    Caption = 'Skip Posting Account Trx.';
+                    ToolTip = 'Specify whether to disable auto posting Account batches.';
+                    ApplicationArea = All;
+                }
+                field("Skip Posting Customer Batches"; Rec."Skip Posting Customer Batches")
+                {
+                    Caption = 'Skip Posting Customer Trx.';
+                    ToolTip = 'Specify whether to disable auto posting Customer batches.';
+                    ApplicationArea = All;
+                }
+                field("Skip Posting Vendor Batches"; Rec."Skip Posting Vendor Batches")
+                {
+                    Caption = 'Skip Posting Vendor Trx.';
+                    ToolTip = 'Specify whether to disable auto posting Vendor batches.';
+                    ApplicationArea = All;
+                }
+                field("Skip Posting Bank Batches"; Rec."Skip Posting Bank Batches")
+                {
+                    Caption = 'Skip Posting Bank Trx.';
+                    ToolTip = 'Specify whether to disable auto posting Bank batches.';
+                    ApplicationArea = All;
+                }
             }
         }
     }

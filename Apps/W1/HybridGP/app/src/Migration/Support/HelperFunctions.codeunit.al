@@ -1211,6 +1211,7 @@ Codeunit 4037 "Helper Functions"
     var
         GenJournalLine: Record "Gen. Journal Line";
         GenJournalBatch: Record "Gen. Journal Batch";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         JournalBatchName: Text;
         DurationAsInt: BigInteger;
         StartTime: DateTime;
@@ -1220,10 +1221,12 @@ Codeunit 4037 "Helper Functions"
         StartTime := CurrentDateTime();
         Session.LogMessage('00007GJ', 'Posting GL transactions started.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
 
+        SkipPosting := GPCompanyAdditionalSettings.GetSkipAllPosting();
         OnSkipPostingGLAccounts(SkipPosting);
         if SkipPosting then
             exit;
 
+        SkipPosting := GPCompanyAdditionalSettings.GetSkipPostingAccountBatches();
         OnSkipPostingAccountBatches(SkipPosting);
         if not SkipPosting then begin
             // Post the Account batches
@@ -1241,6 +1244,7 @@ Codeunit 4037 "Helper Functions"
                 until GenJournalBatch.Next() = 0;
         end;
 
+        SkipPosting := GPCompanyAdditionalSettings.GetSkipPostingCustomerBatches();
         OnSkipPostingCustomerBatches(SkipPosting);
         if not SkipPosting then begin
             // Post the Customer Batch, if created...
@@ -1252,6 +1256,7 @@ Codeunit 4037 "Helper Functions"
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10));
         end;
 
+        SkipPosting := GPCompanyAdditionalSettings.GetSkipPostingVendorBatches();
         OnSkipPostingVendorBatches(SkipPosting);
         if not SkipPosting then begin
             // Post the Vendor Batch, if created...
@@ -1263,6 +1268,7 @@ Codeunit 4037 "Helper Functions"
                 PostGLBatch(CopyStr(JournalBatchName, 1, 10));
         end;
 
+        SkipPosting := GPCompanyAdditionalSettings.GetSkipPostingBankBatches();
         OnSkipPostingBankBatches(SkipPosting);
         if not SkipPosting then begin
             // Post the Bank Batch, if created...

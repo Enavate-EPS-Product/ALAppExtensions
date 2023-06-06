@@ -209,6 +209,88 @@ page 4050 "GP Migration Configuration"
                 }
             }
 
+            group(SkipPosting)
+            {
+                Caption = 'Disable Auto Posting';
+                InstructionalText = 'Indicate if you want to disable auto posting transactions.';
+
+                field("Skip All Posting"; Rec."Skip All Posting")
+                {
+                    Caption = 'All posting';
+                    ToolTip = 'Specify whether to disable all auto posting.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Skip All Posting", Rec."Skip All Posting");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
+                field("Skip Posting Account Batches"; Rec."Skip Posting Account Batches")
+                {
+                    Caption = 'Account Batches';
+                    ToolTip = 'Specify whether to disable auto posting Account batches.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Skip Posting Account Batches", Rec."Skip Posting Account Batches");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
+                field("Skip Posting Customer Batches"; Rec."Skip Posting Customer Batches")
+                {
+                    Caption = 'Customer Batches';
+                    ToolTip = 'Specify whether to disable auto posting Customer batches.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Skip Posting Customer Batches", Rec."Skip Posting Customer Batches");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
+                field("Skip Posting Vendor Batches"; Rec."Skip Posting Vendor Batches")
+                {
+                    Caption = 'Vendor Batches';
+                    ToolTip = 'Specify whether to disable auto posting Vendor batches.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Skip Posting Vendor Batches", Rec."Skip Posting Vendor Batches");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
+                field("Skip Posting Bank Batches"; Rec."Skip Posting Bank Batches")
+                {
+                    Caption = 'Bank Batches';
+                    ToolTip = 'Specify whether to disable auto posting Bank batches.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Skip Posting Bank Batches", Rec."Skip Posting Bank Batches");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
+            }
+
             group(Inactives)
             {
                 Caption = 'Inactive Records';
