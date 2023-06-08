@@ -668,10 +668,10 @@ codeunit 4022 "GP Vendor Migrator"
         GPPM00100: Record "GP PM00100";
         HelperFunctions: Codeunit "Helper Functions";
         VendorClassId: Text[20];
-        DefaultPayablesAccount: Code[20];
+        DefaultPayablesAccountNo: Code[20];
     begin
-        DefaultPayablesAccount := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
-        PayablesAccountNo := DefaultPayablesAccount;
+        DefaultPayablesAccountNo := HelperFunctions.GetPostingAccountNumber('PayablesAccount');
+        PayablesAccountNo := DefaultPayablesAccountNo;
 
         if not GPCompanyAdditionalSettings.GetMigrateVendorClasses() then
             exit;
@@ -690,6 +690,9 @@ codeunit 4022 "GP Vendor Migrator"
             exit;
 
         PayablesAccountNo := HelperFunctions.GetGPAccountNumberByIndex(GPPM00100.PMAPINDX);
+
+        if PayablesAccountNo = '' then
+            PayablesAccountNo := DefaultPayablesAccountNo;
     end;
 
     procedure MigrateVendorClasses()

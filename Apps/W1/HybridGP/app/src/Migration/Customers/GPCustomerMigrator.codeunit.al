@@ -513,10 +513,10 @@ codeunit 4018 "GP Customer Migrator"
         GPRM00201: Record "GP RM00201";
         HelperFunctions: Codeunit "Helper Functions";
         CustomerClassId: Text[20];
-        DefaultReceivablesAccount: Code[20];
+        DefaultReceivablesAccountNo: Code[20];
     begin
-        DefaultReceivablesAccount := HelperFunctions.GetPostingAccountNumber('ReceivablesAccount');
-        ReceivablesAccountNo := DefaultReceivablesAccount;
+        DefaultReceivablesAccountNo := HelperFunctions.GetPostingAccountNumber('ReceivablesAccount');
+        ReceivablesAccountNo := DefaultReceivablesAccountNo;
 
         if not GPCompanyAdditionalSettings.GetMigrateCustomerClasses() then
             exit;
@@ -535,6 +535,9 @@ codeunit 4018 "GP Customer Migrator"
             exit;
 
         ReceivablesAccountNo := HelperFunctions.GetGPAccountNumberByIndex(GPRM00201.RMARACC);
+
+        if ReceivablesAccountNo = '' then
+            ReceivablesAccountNo := DefaultReceivablesAccountNo;
     end;
 
     procedure MigrateCustomerClasses()

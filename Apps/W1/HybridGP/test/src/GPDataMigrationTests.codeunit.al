@@ -159,19 +159,19 @@ codeunit 139664 "GP Data Migration Tests"
         // [WHEN] Customer classes are migrated
         Assert.AreEqual('100', HelperFunctions.GetPostingAccountNumber('ReceivablesAccount'), 'Default Receivables account is incorrect.');
 
-        // [THEN] The class Receivables account will be used for transactions when an account is configured for the class
+        // [THEN] The class Receivables account will be used for transactions when an account is configured for the class with an account number
         Clear(GenJournalLine);
         GenJournalLine.SetRange("Account Type", "Gen. Journal Account Type"::Customer);
         GenJournalLine.SetRange("Account No.", '!WOW!');
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
         Assert.AreEqual('TEST987', GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
 
-        // [THEN] No account will be set for the Bal. Account No. where class has no account configured
+        // [THEN] The default account will be set for the Bal. Account No. where class has no account configured
         Clear(GenJournalLine);
         GenJournalLine.SetRange("Account Type", "Gen. Journal Account Type"::Customer);
         GenJournalLine.SetRange("Account No.", '#1');
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
-        Assert.AreEqual('', GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
+        Assert.AreEqual(HelperFunctions.GetPostingAccountNumber('ReceivablesAccount'), GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
     end;
 
     [Test]
@@ -523,7 +523,7 @@ codeunit 139664 "GP Data Migration Tests"
         GenJournalLine.SetRange("Account Type", "Gen. Journal Account Type"::Vendor);
         GenJournalLine.SetRange("Account No.", 'V3130');
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
-        Assert.AreEqual('1', GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
+        Assert.AreEqual(HelperFunctions.GetPostingAccountNumber('PayablesAccount'), GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
     end;
 
     [Test]
