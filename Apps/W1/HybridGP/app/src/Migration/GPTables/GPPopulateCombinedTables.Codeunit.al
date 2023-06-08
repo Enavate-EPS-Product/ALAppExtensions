@@ -1,16 +1,37 @@
 codeunit 40125 "GP Populate Combined Tables"
 {
     internal procedure PopulateAllMappedTables()
+    var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
         PopulateGPAccount();
         PouplateGPFiscalPeriods();
-        PopulateGPGLTransactions();
-        PopulateGPCustomer();
-        PopulateGPCustomerTransactions();
-        PopulateGPVendors();
-        PopulateGPVendorTransactions();
-        PopulateGPItem();
-        PopulateGPItemTransactions();
+
+        if not GPCompanyAdditionalSettings.GetMigrateOnlyGLMaster() then
+            PopulateGPGLTransactions();
+
+        if GPCompanyAdditionalSettings.GetReceivablesModuleEnabled() then begin
+            PopulateGPCustomer();
+
+            if not GPCompanyAdditionalSettings.GetMigrateOnlyReceivablesMaster() then
+                PopulateGPCustomerTransactions();
+        end;
+
+        if GPCompanyAdditionalSettings.GetPayablesModuleEnabled() then begin
+            PopulateGPVendors();
+
+            if not GPCompanyAdditionalSettings.GetMigrateOnlyPayablesMaster() then
+                PopulateGPVendorTransactions();
+        end;
+
+
+        if GPCompanyAdditionalSettings.GetInventoryModuleEnabled() then begin
+            PopulateGPItem();
+
+            if not GPCompanyAdditionalSettings.GetMigrateOnlyInventoryMaster() then
+                PopulateGPItemTransactions();
+        end;
+
         PopulateCodes();
         PopulateGPSegments();
         PopulateGPPostingAccountsTable();
