@@ -553,6 +553,7 @@ codeunit 4022 "GP Vendor Migrator"
         IBANCode: Code[50];
         LastVendorNo: Code[20];
         VendorBankAccountCounter: Integer;
+        BankCode: Code[20];
     begin
         GPSY06000.SetCurrentKey(CustomerVendor_ID);
         GPSY06000.SetRange("INACTIVE", false);
@@ -577,9 +578,10 @@ codeunit 4022 "GP Vendor Migrator"
                 if not IsValidIBANCode(IBANCode) then
                     IBANCode := '';
 
-                VendorBankAccountExists := VendorBankAccount.Get(Vendor."No.", GPSY06000.EFTBankCode);
+                BankCode := GetBankAccountCode(Vendor."No.", GPSY06000, VendorBankAccountCounter);
+                VendorBankAccountExists := VendorBankAccount.Get(Vendor."No.", BankCode);
                 VendorBankAccount.Validate("Vendor No.", Vendor."No.");
-                VendorBankAccount.Validate("Code", GetBankAccountCode(Vendor."No.", GPSY06000, VendorBankAccountCounter));
+                VendorBankAccount.Validate("Code", BankCode);
                 VendorBankAccount.Validate("Name", GPSY06000.BANKNAME);
                 VendorBankAccount.Validate("Bank Branch No.", GPSY06000.EFTBankBranchCode);
                 VendorBankAccount.Validate("Bank Account No.", CopyStr(GPSY06000.EFTBankAcct, 1, MaxStrLen(VendorBankAccount."Bank Account No.")));
