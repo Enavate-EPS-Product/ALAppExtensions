@@ -33,6 +33,7 @@ codeunit 139664 "GP Data Migration Tests"
         VendorIdWithBankStr2Txt: Label 'VENDOR002', Comment = 'Vendor Id with bank account information', Locked = true;
         VendorIdWithBankStr3Txt: Label 'VENDOR003', Comment = 'Vendor Id with bank account information', Locked = true;
         VendorIdWithBankStr4Txt: Label 'VENDOR004', Comment = 'Vendor Id with bank account information', Locked = true;
+        VendorIdWithBankStr5Txt: Label 'VENDOR005', Comment = 'Vendor Id with bank account information', Locked = true;
         ValidSwiftCodeStrTxt: Label 'BOFAUS3N', Comment = 'Valid SWIFT Code', Locked = true;
 #pragma warning disable AA0240
         ValidIBANStrTxt: Label 'GB33BUKB20201555555555', Comment = 'Valid IBAN code', Locked = true;
@@ -932,9 +933,10 @@ codeunit 139664 "GP Data Migration Tests"
         Currency: Record Currency;
         VendorBankAccountCount: Integer;
         ActiveVendorBankAccountCount: Integer;
+        BankAccountCounter: Integer;
     begin
-        VendorBankAccountCount := 10;
-        ActiveVendorBankAccountCount := 9;
+        VendorBankAccountCount := 13;
+        ActiveVendorBankAccountCount := 12;
 
         // [SCENARIO] Vendors and their bank account information are queried from GP
         // [GIVEN] GP data
@@ -974,7 +976,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [WHEN] Data is migrated
         Clear(GPVendor);
-        GPVendor.SetFilter(VENDORID, '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        GPVendor.SetFilter(VENDORID, '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         MigrateVendors(GPVendor);
         RunPostMigration();
 
@@ -985,7 +987,7 @@ codeunit 139664 "GP Data Migration Tests"
 
         // [THEN] The correct number of Vendor Bank Accounts are imported
         Clear(VendorBankAccount);
-        VendorBankAccount.SetFilter("Vendor No.", '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        VendorBankAccount.SetFilter("Vendor No.", '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         Assert.AreEqual(ActiveVendorBankAccountCount, VendorBankAccount.Count(), 'Wrong number of migrated Vendor Bank Accounts read');
 
         // [THEN] The fields for Vendors 1 are correctly applied
@@ -1078,6 +1080,18 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual(VendorIdWithBankStr3Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
         Assert.AreEqual('V03_OTHER', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
         Assert.AreEqual(ValidIBANStrTxt, VendorBankAccount.IBAN, 'IBAN of VendorBankAccount is wrong. V03_OTHER');
+
+        // Vendor 5
+        Clear(VendorBankAccount);
+        Clear(BankAccountCounter);
+        VendorBankAccount.SetCurrentKey("Vendor No.", Code);
+        VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr5Txt);
+        Assert.IsTrue(VendorBankAccount.FindSet(), 'Vendor 5 bank accounts were not created.');
+
+        repeat
+            BankAccountCounter := BankAccountCounter + 1;
+            Assert.AreEqual(VendorIdWithBankStr5Txt + '-' + Format(BankAccountCounter), VendorBankAccount.Code, 'Bank account code is not correct.');
+        until VendorBankAccount.Next() = 0;
     end;
 
     [Test]
@@ -3153,19 +3167,19 @@ codeunit 139664 "GP Data Migration Tests"
         SwiftCode: Record "SWIFT Code";
     begin
         GPVendorAddress.Reset();
-        GPVendorAddress.SetFilter(VENDORID, '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        GPVendorAddress.SetFilter(VENDORID, '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         GPVendorAddress.DeleteAll();
 
         GPVendor.Reset();
-        GPVendor.SetFilter(VENDORID, '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        GPVendor.SetFilter(VENDORID, '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         GPVendor.DeleteAll();
 
         VendorBankAccount.Reset();
-        VendorBankAccount.SetFilter("Vendor No.", '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        VendorBankAccount.SetFilter("Vendor No.", '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         VendorBankAccount.DeleteAll();
 
         Vendor.Reset();
-        Vendor.SetFilter("No.", '%1|%2|%3|%4', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt);
+        Vendor.SetFilter("No.", '%1|%2|%3|%4|%5', VendorIdWithBankStr1Txt, VendorIdWithBankStr2Txt, VendorIdWithBankStr3Txt, VendorIdWithBankStr4Txt, VendorIdWithBankStr5Txt);
         Vendor.DeleteAll();
 
         SwiftCode.Reset();
@@ -3504,6 +3518,65 @@ codeunit 139664 "GP Data Migration Tests"
         GPPM00200.VADDCDPR := AddressCodePrimaryTxt;
         GPPM00200.VADCDTRO := AddressCodeRemitToTxt;
         GPPM00200.Insert();
+
+        // Vendor 5
+        Clear(GPVendor);
+        GPVendor.VENDORID := VendorIdWithBankStr5Txt;
+        GPVendor.VENDNAME := 'Vendor with bank account 5';
+        GPVendor.SEARCHNAME := GPVendor.VENDNAME;
+        GPVendor.VNDCHKNM := GPVendor.VENDNAME;
+        GPVendor.ADDRESS1 := '127 Main Street';
+        GPVendor.ADDRESS2 := '';
+        GPVendor.CITY := 'Orlando';
+        GPVendor.VNDCNTCT := 'Tester Testerson II';
+        GPVendor.PHNUMBR1 := '00000000000000';
+        GPVendor.PYMTRMID := 'Net 30';
+        GPVendor.SHIPMTHD := 'OVERNIGHT';
+        GPVendor.COUNTRY := 'USA';
+        GPVendor.PYMNTPRI := '1';
+        GPVendor.AMOUNT := 0;
+        GPVendor.FAXNUMBR := '00000000000000';
+        GPVendor.ZIPCODE := '32830';
+        GPVendor.STATE := 'FL';
+        GPVendor.INET1 := '';
+        GPVendor.INET2 := ' ';
+        GPVendor.TAXSCHID := 'P-T-TXB-%PT%P*2';
+        GPVendor.UPSZONE := '';
+        GPVendor.TXIDNMBR := '';
+        GPVendor.Insert();
+
+        Clear(GPSY06000);
+        GPSY06000.CustomerVendor_ID := GPVendor.VENDORID;
+        GPSY06000.ADRSCODE := AddressCodePrimaryTxt;
+        GPSY06000.EFTBankCode := '';
+        GPSY06000.BANKNAME := 'Bank Name 1';
+        GPSY06000.EFTBankBranchCode := '01234';
+        GPSY06000.EFTBankAcct := '56789078';
+        GPSY06000.EFTTransitRoutingNo := '123456789';
+        GPSY06000.CURNCYID := CurrencyCodeUSTxt;
+        GPSY06000.Insert();
+
+        Clear(GPSY06000);
+        GPSY06000.CustomerVendor_ID := GPVendor.VENDORID;
+        GPSY06000.ADRSCODE := AddressCodeRemitToTxt;
+        GPSY06000.EFTBankCode := '';
+        GPSY06000.BANKNAME := 'Bank Name 2';
+        GPSY06000.EFTBankBranchCode := '01234';
+        GPSY06000.EFTBankAcct := '56789078';
+        GPSY06000.EFTTransitRoutingNo := '123456789';
+        GPSY06000.CURNCYID := CurrencyCodeUSTxt;
+        GPSY06000.Insert();
+
+        Clear(GPSY06000);
+        GPSY06000.CustomerVendor_ID := GPVendor.VENDORID;
+        GPSY06000.ADRSCODE := AddressCodeOtherTxt;
+        GPSY06000.EFTBankCode := '';
+        GPSY06000.BANKNAME := 'Bank Name 3';
+        GPSY06000.EFTBankBranchCode := '01234';
+        GPSY06000.EFTBankAcct := '56789078';
+        GPSY06000.EFTTransitRoutingNo := '123456789';
+        GPSY06000.CURNCYID := CurrencyCodeUSTxt;
+        GPSY06000.Insert();
 #pragma warning restore AA0139
     end;
 
