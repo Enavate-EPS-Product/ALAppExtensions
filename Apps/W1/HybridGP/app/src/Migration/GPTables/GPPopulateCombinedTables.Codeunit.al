@@ -607,6 +607,8 @@ codeunit 40125 "GP Populate Combined Tables"
         GPMC40000: Record "GP MC40000";
         FoundCurrency: Boolean;
     begin
+        UpdateGLSetupUnitRoundingPrecisionIfNeeded();
+
         GPIV00101Inventory.SetFilter(ITEMTYPE, '<>3');
         if not GPIV00101Inventory.FindSet() then
             exit;
@@ -683,6 +685,25 @@ codeunit 40125 "GP Populate Combined Tables"
 
             GPItem.Insert();
         until GPIV00101Inventory.Next() = 0;
+    end;
+
+    local procedure UpdateGLSetupUnitRoundingPrecisionIfNeeded()
+    var
+        GPIV00101: Record "GP IV00101";
+        GeneralLedgerSetup: Record "General Ledger Setup";
+        GPItemAggregate: Query "GP Item Aggregate";
+        MaxItemPrecision: Decimal;
+    begin
+        GPItemAggregate.Open();
+        GPItemAggregate.Read();
+        MaxItemPrecision := GPIV00101.GetRoundingPrecision(GPItemAggregate.DECPLCUR);
+        GPItemAggregate.Close();
+
+        GeneralLedgerSetup.Get();
+        if MaxItemPrecision < GeneralLedgerSetup."Unit-Amount Rounding Precision" then begin
+            GeneralLedgerSetup."Unit-Amount Rounding Precision" := MaxItemPrecision;
+            GeneralLedgerSetup.Modify();
+        end;
     end;
 
     internal procedure PopulateGPItemTransactions()
