@@ -29,7 +29,13 @@
                              "name":  "Sales and Inventory Forecast",
                              "publisher":  "Microsoft",
                              "version":  "22.3.0.0"
-                         }
+                        },
+                        {
+                            "id": "e6328152-bb29-4664-9dae-3bc7eaae1fd8",
+                            "name": "Email - Outlook REST API",
+                            "publisher": "Microsoft",
+                            "version": "22.3.0.0"
+                        }
                      ],
     "screenshots":  [
 

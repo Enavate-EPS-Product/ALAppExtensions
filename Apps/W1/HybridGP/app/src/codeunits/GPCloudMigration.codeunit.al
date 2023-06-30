@@ -8,6 +8,7 @@ codeunit 4025 "GP Cloud Migration"
         AssistedCompanySetupStatus: Record "Assisted Company Setup Status";
         HelperFunctions: Codeunit "Helper Functions";
         HybridGPManagement: Codeunit "Hybrid GP Management";
+        GPMigrationNotifier: Codeunit "GP Migration Notifier";
         SetupStatus: Enum "Company Setup Status";
     begin
         if AssistedCompanySetupStatus.Get(CompanyName()) then begin
@@ -30,6 +31,8 @@ codeunit 4025 "GP Cloud Migration"
             HybridGPManagement.InvokeCompanyUpgrade(Rec, HybridCompanyStatus.Name);
             exit;
         end;
+
+        GPMigrationNotifier.SendMigrationNotification("Migration Event Type"::"Migration Finished");
 
         if Rec.Find() then begin
             Rec.Status := Rec.Status::Completed;

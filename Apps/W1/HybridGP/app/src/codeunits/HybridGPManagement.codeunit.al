@@ -24,6 +24,7 @@ codeunit 4016 "Hybrid GP Management"
 
         UpdateStatusOnHybridReplicationCompleted(RunId, NotificationText);
         HandleInitializationofGPSynchronization(RunId, SubscriptionId, NotificationText);
+        AttemptAutoRunDataUpgrade();
     end;
 
     [EventSubscriber(ObjectType::Page, Page::"Hybrid Cloud Setup Wizard", 'OnHandleCloseWizard', '', false, false)]
@@ -157,12 +158,24 @@ codeunit 4016 "Hybrid GP Management"
         end;
     end;
 
+    local procedure AttemptAutoRunDataUpgrade()
+    var
+        HybridReplicationSummary: Record "Hybrid Replication Summary";
+        HybridCloudManagement: Codeunit "Hybrid Cloud Management";
+    begin
+        HybridReplicationSummary.SetCurrentKey("Start Time");
+        if HybridReplicationSummary.FindLast() then
+            if HybridReplicationSummary.Status = HybridReplicationSummary.Status::UpgradePending then
+                HybridCloudManagement.RunDataUpgrade(HybridReplicationSummary);
+    end;
+
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Hybrid Cloud Management", 'OnInvokeDataUpgrade', '', false, false)]
     local procedure InvokeDataUpgrade(var HybridReplicationSummary: Record "Hybrid Replication Summary"; var Handled: Boolean)
     var
         HybridCompanyStatus: Record "Hybrid Company Status";
         HybridCloudManagement: Codeunit "Hybrid Cloud Management";
         HybridGPWizard: Codeunit "Hybrid GP Wizard";
+        GPMigrationNotifier: Codeunit "GP Migration Notifier";
     begin
         if Handled then
             exit;
@@ -178,6 +191,8 @@ codeunit 4016 "Hybrid GP Management"
 
         HybridCompanyStatus.SetRange("Upgrade Status", HybridCompanyStatus."Upgrade Status"::Pending);
         HybridCompanyStatus.FindFirst();
+
+        GPMigrationNotifier.SendMigrationNotification("Migration Event Type"::"Migration Started");
 
         InvokeCompanyUpgrade(HybridReplicationSummary, HybridCompanyStatus.Name);
         Handled := true;

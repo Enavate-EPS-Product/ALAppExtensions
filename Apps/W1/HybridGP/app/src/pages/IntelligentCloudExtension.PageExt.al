@@ -19,6 +19,21 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
 
     actions
     {
+        modify(RunReplicationNow)
+        {
+            trigger OnAfterAction()
+            var
+                GPMigrationNotifier: Codeunit "GP Migration Notifier";
+            begin
+                GPMigrationNotifier.SendMigrationNotification("Migration Event Type"::"Replication Started");
+            end;
+        }
+
+        modify(RunDataUpgrade)
+        {
+            Visible = false;
+        }
+
         addafter(RunReplicationNow)
         {
             action(ConfigureGPMigration)
@@ -72,6 +87,23 @@ pageextension 4015 "Intelligent Cloud Extension" extends "Intelligent Cloud Mana
                         WizardIntegration.ScheduleGPHistoricalSnapshotMigration();
                         Message(SnapshotJobRunningMsg);
                     end;
+                end;
+            }
+
+            action(EmailNotifications)
+            {
+                ApplicationArea = All;
+                Caption = 'Email Notifications';
+                ToolTip = 'Manage who gets notified with migration notifications.';
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                PromotedCategory = Process;
+                Image = Email;
+
+                trigger OnAction()
+                begin
+                    Page.Run(Page::"GP Migration Email Addresses");
                 end;
             }
         }

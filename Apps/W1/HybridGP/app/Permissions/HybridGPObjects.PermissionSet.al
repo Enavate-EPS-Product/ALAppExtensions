@@ -144,5 +144,8 @@ permissionset 4029 "HybridGP - Objects"
                     page "Hist. Migration Status Factbox" = X,
                     table "GP POP10100" = X,
                     table "GP POP10110" = X,
-                    table "GP PM00204" = X;
+                    table "GP PM00204" = X,
+                    table "GP Migration Email Address" = X,
+                    codeunit "GP Migration Notifier" = X,
+                    page "GP Migration Email Addresses" = X;
 }
