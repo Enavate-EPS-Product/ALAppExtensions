@@ -1,7 +1,7 @@
 table 41006 "GP Migration Email Address"
 {
     Caption = 'GP Migration Email Address';
-    DataClassification = ToBeClassified;
+    DataClassification = CustomerContent;
     DataPerCompany = false;
 
     fields
