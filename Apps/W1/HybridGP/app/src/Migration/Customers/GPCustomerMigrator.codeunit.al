@@ -117,7 +117,7 @@ codeunit 4018 "GP Customer Migrator"
                     Sender.CreatePaymentTermsIfNeeded(Copystr(MigrationGPCustTrans.PYMTRMID, 1, 10), MigrationGPCustTrans.PYMTRMID, PaymentTermsFormula);
                 end;
                 Sender.SetGeneralJournalLinePaymentTerms(CopyStr(MigrationGPCustTrans.PYMTRMID, 1, 10));
-                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 20) + '-' + CopyStr(MigrationGPCustTrans.GLDocNo, 1, 14));
+                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 35));
             until MigrationGPCustTrans.Next() = 0;
 
         MigrationGPCustTrans.Reset();
@@ -145,7 +145,7 @@ codeunit 4018 "GP Customer Migrator"
                     Sender.CreatePaymentTermsIfNeeded(Copystr(MigrationGPCustTrans.PYMTRMID, 1, 10), MigrationGPCustTrans.PYMTRMID, PaymentTermsFormula);
                 end;
                 Sender.SetGeneralJournalLinePaymentTerms(CopyStr(MigrationGPCustTrans.PYMTRMID, 1, 10));
-                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 20) + '-' + CopyStr(MigrationGPCustTrans.GLDocNo, 1, 14));
+                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 35));
             until MigrationGPCustTrans.Next() = 0;
 
         MigrationGPCustTrans.Reset();
@@ -174,7 +174,7 @@ codeunit 4018 "GP Customer Migrator"
                     Sender.CreatePaymentTermsIfNeeded(Copystr(MigrationGPCustTrans.PYMTRMID, 1, 10), MigrationGPCustTrans.PYMTRMID, PaymentTermsFormula);
                 end;
                 Sender.SetGeneralJournalLinePaymentTerms(CopyStr(MigrationGPCustTrans.PYMTRMID, 1, 10));
-                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 20) + '-' + CopyStr(MigrationGPCustTrans.GLDocNo, 1, 14));
+                Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(MigrationGPCustTrans.DOCNUMBR, 1, 35));
             until MigrationGPCustTrans.Next() = 0;
     end;
 #pragma warning restore AA0207
