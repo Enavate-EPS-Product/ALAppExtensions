@@ -260,6 +260,7 @@ codeunit 4022 "GP Vendor Migrator"
         Vendor: Record Vendor;
         GenBusinessPostingGroup: Record "Gen. Business Posting Group";
         VendorPostingGroup: Record "Vendor Posting Group";
+        KnownCountries: Record "Known Countries";
         HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
         VendorNo: Code[20];
@@ -274,6 +275,9 @@ codeunit 4022 "GP Vendor Migrator"
         Address2: Text[50];
         City: Text[30];
         State: Text[30];
+        FoundKnownCountry: Boolean;
+        CountryCodeISO2: Code[2];
+        CountryName: Text[50];
     begin
         VendorNo := CopyStr(GPVendor.VENDORID, 1, MaxStrLen(Vendor."No."));
         VendorName := CopyStr(GPVendor.VENDNAME.TrimEnd(), 1, MaxStrLen(VendorName));
@@ -288,7 +292,7 @@ codeunit 4022 "GP Vendor Migrator"
         City := CopyStr(GPVendor.CITY, 1, MaxStrLen(City));
         State := CopyStr(GPVendor.STATE, 1, MaxStrLen(State));
         ZipCode := CopyStr(GPVendor.ZIPCODE, 1, MaxStrLen(ZipCode));
-        Country := CopyStr(GPVendor.COUNTRY, 1, MaxStrLen(Country));
+        Country := CopyStr(GPVendor.COUNTRY.Trim(), 1, MaxStrLen(Country));
         ShipMethod := CopyStr(GPVendor.SHIPMTHD, 1, MaxStrLen(ShipMethod));
         PaymentTerms := CopyStr(GPVendor.PYMTRMID, 1, MaxStrLen(PaymentTerms));
 
@@ -296,9 +300,16 @@ codeunit 4022 "GP Vendor Migrator"
             if not HelperFunctions.StringEqualsCaseInsensitive(VendorName2, VendorName) then
                 VendorDataMigrationFacade.SetName2(VendorName2);
 
-        if (Country <> '') then
-            HelperFunctions.CreateCountryIfNeeded(Country, Country)
-        else begin
+        if Country <> '' then begin
+            KnownCountries.SearchKnownCountry(Country, FoundKnownCountry, CountryCodeISO2, CountryName);
+            if FoundKnownCountry then begin
+                HelperFunctions.CreateCountryIfNeeded(CountryCodeISO2, CountryName);
+                Country := CountryCodeISO2;
+            end else
+                HelperFunctions.CreateCountryIfNeeded(Country, Country)
+        end;
+
+        if Country = '' then begin
             CompanyInformation.Get();
             Country := CompanyInformation."Country/Region Code";
         end;

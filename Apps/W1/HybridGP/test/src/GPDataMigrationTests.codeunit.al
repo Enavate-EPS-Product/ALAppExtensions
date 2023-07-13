@@ -50,6 +50,55 @@ codeunit 139664 "GP Data Migration Tests"
         TestMoneyCurrencyCodeTxt: Label 'TESTMONEY', Locked = true;
 
     [Test]
+    procedure TestKnownCountries()
+    var
+        KnownCountries: Record "Known Countries";
+        FoundKnownCountry: Boolean;
+        CountryCodeISO2: Code[2];
+        CountryName: Text[50];
+    begin
+        KnownCountries.SearchKnownCountry('UniteD STATES', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('US', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('United States', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('USA', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('US', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('United States', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('US', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('US', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('United States', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('CaNAda', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('CA', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('Canada', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('CAN', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('CA', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('Canada', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('CA', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(true, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('CA', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('Canada', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(false, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('', CountryName, 'Found country name is incorrect.');
+
+        KnownCountries.SearchKnownCountry('SATURN', FoundKnownCountry, CountryCodeISO2, CountryName);
+        Assert.AreEqual(false, FoundKnownCountry, 'Country was not found.');
+        Assert.AreEqual('', CountryCodeISO2, 'ISO2 code is incorrect.');
+        Assert.AreEqual('', CountryName, 'Found country name is incorrect.');
+    end;
+
+    [Test]
     [TransactionModel(TransactionModel::AutoRollback)]
     procedure TestGPCustomerImport()
     var
@@ -129,7 +178,7 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('Toyota Land', Customer."Address 2", 'Address2 of Migrated Customer is wrong');
         Assert.AreEqual('!What a city!', Customer.City, 'City of Migrated Customer is wrong');
         Assert.AreEqual('84953', Customer."Post Code", 'Post Code of Migrated Customer is wrong');
-        Assert.AreEqual('USA', Customer."Country/Region Code", 'Country/Region of Migrated Customer is wrong');
+        Assert.AreEqual('US', Customer."Country/Region Code", 'Country/Region of Migrated Customer is wrong');
         Assert.AreEqual('KNOBL-CHUCK-001', Customer."Salesperson Code", 'Salesperson Code of Migrated Customer is wrong');
         Assert.AreEqual('MAIL', Customer."Shipment Method Code", 'Shipment Method Code of Migrated Customer is wrong');
         Assert.AreEqual(true, Customer."Print Statements", 'Print Statements of Migrated Customer is wrong');
@@ -253,7 +302,7 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('Toyota Land', Customer."Address 2", 'Address2 of Migrated Customer is wrong');
         Assert.AreEqual('!What a city!', Customer.City, 'City of Migrated Customer is wrong');
         Assert.AreEqual('84953', Customer."Post Code", 'Post Code of Migrated Customer is wrong');
-        Assert.AreEqual('USA', Customer."Country/Region Code", 'Country/Region of Migrated Customer is wrong');
+        Assert.AreEqual('US', Customer."Country/Region Code", 'Country/Region of Migrated Customer is wrong');
         Assert.AreEqual('KNOBL-CHUCK-001', Customer."Salesperson Code", 'Salesperson Code of Migrated Customer is wrong');
         Assert.AreEqual('MAIL', Customer."Shipment Method Code", 'Shipment Method Code of Migrated Customer is wrong');
         Assert.AreEqual(true, Customer."Print Statements", 'Print Statements of Migrated Customer is wrong');

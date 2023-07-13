@@ -260,19 +260,29 @@ codeunit 4018 "GP Customer Migrator"
     local procedure MigrateCustomerDetails(MigrationGPCustomer: Record "GP Customer"; CustomerDataMigrationFacade: Codeunit "Customer Data Migration Facade")
     var
         CompanyInformation: Record "Company Information";
+        KnownCountries: Record "Known Countries";
         HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
         Country: Code[10];
         AddressFormatToSet: Option "Post Code+City","City+Post Code","City+County+Post Code","Blank Line+Post Code+City";
         ContactAddressFormatToSet: Option First,"After Company Name",Last;
+        FoundKnownCountry: Boolean;
+        CountryCodeISO2: Code[2];
+        CountryName: Text[50];
     begin
         if not CustomerDataMigrationFacade.CreateCustomerIfNeeded(CopyStr(MigrationGPCustomer.CUSTNMBR, 1, 20), CopyStr(MigrationGPCustomer.CUSTNAME, 1, 50)) then
             exit;
 
-        if (CopyStr(MigrationGPCustomer.COUNTRY, 1, 10) <> '') then begin
-            Country := CopyStr(MigrationGPCustomer.COUNTRY, 1, 10);
-            CustomerDataMigrationFacade.CreateCountryIfNeeded(Country, Country, AddressFormatToSet::"Post Code+City", ContactAddressFormatToSet::"After Company Name");
-        end else begin
+        Country := CopyStr(MigrationGPCustomer.COUNTRY.Trim(), 1, 10);
+        if Country <> '' then begin
+            KnownCountries.SearchKnownCountry(Country, FoundKnownCountry, CountryCodeISO2, CountryName);
+            if FoundKnownCountry then
+                Country := CustomerDataMigrationFacade.CreateCountryIfNeeded(CountryCodeISO2, CountryName, AddressFormatToSet::"Post Code+City", ContactAddressFormatToSet::"After Company Name")
+            else
+                Country := CustomerDataMigrationFacade.CreateCountryIfNeeded(Country, Country, AddressFormatToSet::"Post Code+City", ContactAddressFormatToSet::"After Company Name")
+        end;
+
+        if Country = '' then begin
             CompanyInformation.Get();
             Country := CompanyInformation."Country/Region Code";
         end;
