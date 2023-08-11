@@ -993,37 +993,6 @@ codeunit 40125 "GP Populate Combined Tables"
         GPPostingAccoutns.Insert();
     end;
 
-    internal procedure CleanupCombinedTables()
-    var
-        GPAccount: Record "GP Account";
-        GPFiscalPeriods: Record "GP Fiscal Periods";
-        GPGLTransactions: Record "GP GLTransactions";
-        GPCustomer: Record "GP Customer";
-        GPCustomerTransactions: Record "GP Customer Transactions";
-        GPVendor: Record "GP Vendor";
-        GPVendorTransactions: Record "GP Vendor Transactions";
-        GPItem: Record "GP Item";
-        GPItemTransactions: Record "GP Item Transactions";
-        GPCodes: Record "GP Codes";
-        GPSegments: Record "GP Segments";
-        GPPostingAccoutns: Record "GP Posting Accounts";
-        GPRMOpen: Record GPRMOpen;
-    begin
-        GPAccount.DeleteAll();
-        GPFiscalPeriods.DeleteAll();
-        GPGLTransactions.DeleteAll();
-        GPCustomer.DeleteAll();
-        GPCustomerTransactions.DeleteAll();
-        GPVendor.DeleteAll();
-        GPVendorTransactions.DeleteAll();
-        GPItem.DeleteAll();
-        GPItemTransactions.DeleteAll();
-        GPCodes.DeleteAll();
-        GPSegments.DeleteAll();
-        GPPostingAccoutns.DeleteAll();
-        GPRMOpen.DeleteAll();
-    end;
-
     internal procedure PopulateGPCompanySettings()
     var
         GPCompanyMigrationSettings: Record "GP Company Migration Settings";

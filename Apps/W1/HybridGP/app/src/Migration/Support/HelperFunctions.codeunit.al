@@ -941,181 +941,17 @@ Codeunit 4037 "Helper Functions"
     end;
 
 
+#if not CLEAN23
+    [Obsolete('Cleaning up tables before running the migration is no longer wanted.', '23.0')]
     procedure Cleanup();
-    var
-        GPGLTransactions: Record "GP GLTransactions";
-        GPAccount: Record "GP Account";
-        GPCustomer: Record "GP Customer";
-        GPCustomerAddress: Record "GP Customer Address";
-        GPCustomerTransactions: Record "GP Customer Transactions";
-        GPItem: Record "GP Item";
-        GPItemLocation: Record "GP Item Location";
-        GPVendor: Record "GP Vendor";
-        GPVendorAddress: Record "GP Vendor Address";
-        GPVendorTransactions: Record "GP Vendor Transactions";
-        GPCodes: Record "GP Codes";
-        GPPostingAccounts: Record "GP Posting Accounts";
-        GPSegments: Record "GP Segments";
-        GPFiscalPeriods: Record "GP Fiscal Periods";
-        GPPaymentTerms: Record "GP Payment Terms";
-        GPBankMSTR: Record "GP Bank MSTR";
-        GPCheckbookMSTR: Record "GP Checkbook MSTR";
-        GPCheckbookTransactions: Record "GP Checkbook Transactions";
-        GPSY40100: Record "GP SY40100";
-        GPSY40101: Record "GP SY40101";
-        GPSY06000: Record "GP SY06000";
-        GPMC40200: Record "GP MC40200";
-        GPPM00100: Record "GP PM00100";
-        GPPM00200: Record "GP PM00200";
-        GPRM00101: Record "GP RM00101";
-        GPRM00201: Record "GP RM00201";
-        GPIV00101: Record "GP IV00101";
-        GPIV40400: Record "GP IV40400";
     begin
-        GPAccount.DeleteAll();
-        GPGLTransactions.DeleteAll();
-
-        GPCustomer.DeleteAll();
-        GPCustomerAddress.DeleteAll();
-        GPCustomerTransactions.DeleteAll();
-
-        GPItem.DeleteAll();
-        GPItemLocation.DeleteAll();
-
-        GPVendor.DeleteAll();
-        GPVendorAddress.DeleteAll();
-        GPVendorTransactions.DeleteAll();
-
-        GPCodes.DeleteAll();
-        GPPostingAccounts.DeleteAll();
-        GPSegments.DeleteAll();
-        GPFiscalPeriods.DeleteAll();
-        GPPaymentTerms.DeleteAll();
-
-        GPBankMSTR.DeleteAll();
-        GPCheckbookMSTR.DeleteAll();
-        GPCheckbookTransactions.DeleteAll();
-
-        GPSY40100.DeleteAll();
-        GPSY40101.DeleteAll();
-
-        GPSY06000.DeleteAll();
-        GPMC40200.DeleteAll();
-
-        GPPM00100.DeleteAll();
-        GPPM00200.DeleteAll();
-
-        GPRM00101.DeleteAll();
-        GPRM00201.DeleteAll();
-
-        GPIV00101.DeleteAll();
-        GPIV40400.DeleteAll();
-
-        Session.LogMessage('00007GH', 'Cleaned up staging tables.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
     end;
 
+    [Obsolete('Cleaning up tables before running the migration is no longer wanted.', '23.0')]
     procedure CleanupBeforeSynchronization();
-    var
-        GLAccount: Record "G/L Account";
-        GLEntry: Record "G/L Entry";
-        Customer: Record Customer;
-        CustLedgerEntry: Record "Cust. Ledger Entry";
-        Dimension: Record Dimension;
-        DimensionValue: Record "Dimension Value";
-        DimensionSetEntry: Record "Dimension Set Entry";
-        DetailedCustLedgEntry: Record "Detailed Cust. Ledg. Entry";
-        Vendor: Record Vendor;
-        VendorLedgerEntry: Record "Vendor Ledger Entry";
-        DetailedVendorLedgEntry: Record "Detailed Vendor Ledg. Entry";
-        DataMigrationStatus: Record "Data Migration Status";
-        Item: Record Item;
-        ItemLedgerEntry: Record "Item Ledger Entry";
-        AvgCostAdjmtEntryPoint: Record "Avg. Cost Adjmt. Entry Point";
-        ValueEntry: Record "Value Entry";
-        ItemUnitOfMeasure: Record "Item Unit of Measure";
-        PaymentTerms: Record "Payment Terms";
-        PaymentTermTranslation: Record "Payment Term Translation";
-        DataMigrationEntity: Record "Data Migration Entity";
-        ItemTrackingCode: Record "Item Tracking Code";
-        GenJournalLine: Record "Gen. Journal Line";
-        GLItemLedgerRelation: Record "G/L - Item Ledger Relation";
-        GLRegister: Record "G/L Register";
-        Location: Record Location;
-        TrackingSpecification: Record "Tracking Specification";
-        ReservationEntry: Record "Reservation Entry";
-        ItemJournalLine: Record "Item Journal Line";
-        PostValueEntryToGL: Record "Post Value Entry to G/L";
-        BankAccount: Record "Bank Account";
-        BankAccountPostingGroup: Record "Bank Account Posting Group";
-        BankAccountLedgerEntry: Record "Bank Account Ledger Entry";
-        BankAccReconciliation: Record "Bank Acc. Reconciliation";
-        BankAccReconciliationLine: Record "Bank Acc. Reconciliation Line";
-        PurchaseHeader: Record "Purchase Header";
-        PurchaseLine: Record "Purchase Line";
-        OverReceiptCode: Record "Over-Receipt Code";
-        AccountingPeriod: Record "Accounting Period";
     begin
-        GPConfiguration.DeleteAll();
-        GLEntry.DeleteAll(true);
-        GLRegister.DeleteAll(true);
-        CustLedgerEntry.DeleteAll(true);
-        DetailedCustLedgEntry.DeleteAll(true);
-        Customer.DeleteAll(true);
-        PurchaseLine.ModifyAll("Qty. Rcd. Not Invoiced", 0);
-        PurchaseLine.DeleteAll(true);
-        PurchaseHeader.DeleteAll(true);
-        VendorLedgerEntry.DeleteAll(true);
-        DetailedVendorLedgEntry.DeleteAll(true);
-        Vendor.DeleteAll(true);
-        ItemLedgerEntry.DeleteAll(true);
-        AvgCostAdjmtEntryPoint.DeleteAll(true);
-        ValueEntry.DeleteAll(true);
-        PostValueEntryToGL.DeleteAll(true);
-        TrackingSpecification.DeleteAll(true);
-        ReservationEntry.DeleteAll(true);
-        ItemJournalLine.DeleteAll(true);
-        Item.DeleteAll(true);
-        ItemUnitOfMeasure.DeleteAll(true);
-        GLItemLedgerRelation.DeleteAll(true);
-        ResetGLDimensionSetup();
-        DimensionSetEntry.DeleteAll(true);
-        DimensionValue.DeleteAll(true);
-        Dimension.DeleteAll(true);
-        PaymentTerms.DeleteAll(true);
-        PaymentTermTranslation.DeleteAll(true);
-        DataMigrationEntity.DeleteAll();
-        Location.DeleteAll(true);
-        ItemTrackingCode.DeleteAll(true);
-        BankAccountLedgerEntry.DeleteAll(true);
-        BankAccount.DeleteAll(true);
-
-        if OverReceiptCode.Get('GP') then
-            OverReceiptCode.Delete(true);
-
-        BankAccountPostingGroup.Reset();
-        BankAccountPostingGroup.SetFilter(Code, PostingGroupCodeTxt + '*');
-        if not BankAccountPostingGroup.IsEmpty() then
-            BankAccountPostingGroup.DeleteAll();
-
-        BankAccReconciliationLine.DeleteAll(true);
-        BankAccReconciliation.DeleteAll(true);
-
-        DataMigrationStatus.Reset();
-        DataMigrationStatus.SetRange("Migration Type", GetMigrationTypeTxt());
-        if not DataMigrationStatus.IsEmpty() then
-            DataMigrationStatus.DeleteAll();
-
-        CleanupGenJournalBatches();
-        CleanupVatPostingSetup();
-        GenJournalLine.DeleteAll(true);
-        GLAccount.DeleteAll(true);
-
-        AccountingPeriod.DeleteAll();
-
-        Commit();
-        Session.LogMessage('00007GI', 'Cleaned up before Synchronization.', Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', GetTelemetryCategory());
-        SetPreMigrationCleanupCompleted();
     end;
+#endif
 
     procedure SetTransactionProcessedFlag();
     begin
@@ -1912,10 +1748,6 @@ Codeunit 4037 "Helper Functions"
     procedure CheckMigrationStatus()
     begin
         GPConfiguration.GetSingleInstance();
-        if not GPConfiguration."PreMigration Cleanup Completed" then begin
-            CreateDataMigrationErrorRecord('PreMigration cleanup not completed.');
-            exit;
-        end;
 
         if not GPConfiguration."Dimensions Created" then
             CreateDataMigrationErrorRecord('Dimensions not created.');
