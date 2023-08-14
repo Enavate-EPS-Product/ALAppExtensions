@@ -303,54 +303,14 @@ Codeunit 4037 "Helper Functions"
         CustomerDataMigrationFacade.CreateCountryIfNeeded(CountryCode, CountryName, AddressFormatToSet::"City+County+Post Code", ContactAddressFormatToSet::"After Company Name");
     end;
 
+    [Obsolete('Data cleanup is no longer performed before migration.', '23.0')]
     procedure CleanupGenJournalBatches()
-    var
-        GenJournalBatch: Record "Gen. Journal Batch";
     begin
-        GenJournalBatch.Reset();
-        GenJournalBatch.SetRange("Journal Template Name", GeneralTemplateNameTxt);
-        GenJournalBatch.SetFilter(Name, PostingGroupCodeTxt + '*');
-        if GenJournalBatch.FindSet() then
-            repeat
-                GenJournalBatch.Delete(true);
-            until GenJournalBatch.Next() = 0;
-
-        if ValidateCountry('GB') then begin
-            GenJournalBatch.Reset();
-            GenJournalBatch.SetFilter(Name, '= CASH');
-            GenJournalBatch.SetFilter("No. Series", '= GJNL-PMT');
-            if GenJournalBatch.FindFirst() then begin
-                GenJournalBatch."No. Series" := '';
-                GenJournalBatch.Modify(true);
-                Commit();
-            end;
-        end;
     end;
 
+    [Obsolete('Data cleanup is no longer performed before migration.', '23.0')]
     procedure CleanupVatPostingSetup()
-    var
-        VATPostingSetup: Record "VAT Posting Setup";
     begin
-        if ValidateCountry('GB') then
-            if VATPostingSetup.FindSet(true, false) then begin
-                repeat
-                    VATPostingSetup."Sales VAT Account" := '';
-                    VATPostingSetup."Purchase VAT Account" := '';
-                    VATPostingSetup."Reverse Chrg. VAT Acc." := '';
-                    VATPostingSetup.Modify(TRUE);
-                until VATPostingSetup.Next() = 0;
-                Commit();
-            end;
-    end;
-
-    local procedure ValidateCountry(CountryCode: Code[10]): Boolean
-    var
-        ApplicationSystemConstants: Codeunit "Application System Constants";
-    begin
-        if StrPos(ApplicationSystemConstants.ApplicationVersion(), CountryCode) = 1 then
-            exit(true);
-
-        exit(false);
     end;
 
     local procedure GetAcctCategoryEntryNo(Category: Option): Integer
@@ -1300,24 +1260,6 @@ Codeunit 4037 "Helper Functions"
 
         if Modified then
             GLSetup.Modify();
-    end;
-
-    local procedure ResetGLDimensionSetup()
-    var
-        GLSetup: Record "General Ledger Setup";
-    begin
-        GLSetup.Get();
-        GLSetup."Global Dimension 1 Code" := '';
-        GLSetup."Global Dimension 2 Code" := '';
-        GLSetup."Shortcut Dimension 1 Code" := '';
-        GLSetup."Shortcut Dimension 2 Code" := '';
-        GLSetup."Shortcut Dimension 3 Code" := '';
-        GLSetup."Shortcut Dimension 4 Code" := '';
-        GLSetup."Shortcut Dimension 5 Code" := '';
-        GLSetup."Shortcut Dimension 6 Code" := '';
-        GLSetup."Shortcut Dimension 7 Code" := '';
-        GLSetup."Shortcut Dimension 8 Code" := '';
-        GLSetup.Modify();
     end;
 
     local procedure GetGlobalDimensionNo(DimensionCode: Code[20]): Integer
