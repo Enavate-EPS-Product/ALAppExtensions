@@ -1613,13 +1613,6 @@ Codeunit 4037 "Helper Functions"
         GPConfiguration.Modify();
     end;
 
-    local procedure SetPreMigrationCleanupCompleted()
-    begin
-        GPConfiguration.GetSingleInstance();
-        GPConfiguration."PreMigration Cleanup Completed" := true;
-        GPConfiguration.Modify();
-    end;
-
     local procedure DimensionsCreated(): Boolean
     begin
         GPConfiguration.GetSingleInstance();
