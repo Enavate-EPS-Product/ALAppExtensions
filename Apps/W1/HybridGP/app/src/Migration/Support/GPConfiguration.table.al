@@ -33,6 +33,9 @@ table 4024 "GP Configuration"
         {
             DataClassification = SystemMetadata;
             InitValue = false;
+            ObsoleteState = Pending;
+            ObsoleteReason = 'Cleaning up tables before running the migration is no longer wanted.';
+            ObsoleteTag = '23.0';
         }
         field(8; "Dimensions Created"; Boolean)
         {
