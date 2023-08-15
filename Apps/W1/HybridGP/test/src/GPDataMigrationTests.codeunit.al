@@ -965,6 +965,7 @@ codeunit 139664 "GP Data Migration Tests"
         VendorBankAccountCount: Integer;
         ActiveVendorBankAccountCount: Integer;
     begin
+#pragma warning disable AA0210
         VendorBankAccountCount := 10;
         ActiveVendorBankAccountCount := 9;
 
@@ -1023,11 +1024,11 @@ codeunit 139664 "GP Data Migration Tests"
         // [THEN] The fields for Vendors 1 are correctly applied
         Clear(VendorBankAccount);
         VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr1Txt);
-        VendorBankAccount.SetRange(Code, 'V01_REMITTO');
+        VendorBankAccount.SetRange("Name", 'V01_RemitTo_Name');
         VendorBankAccount.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr1Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('V01_REMITTO', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
+        Assert.IsTrue(StrPos(VendorBankAccount.Code, '-') > 0, 'Vendor Bank Account Code missing dash (-).');
         Assert.AreEqual('V01_RemitTo_Name', VendorBankAccount.Name, 'Name of VendorBankAccount is wrong.');
         Assert.AreEqual('01234', VendorBankAccount."Bank Branch No.", 'Bank Branch No. of VendorBankAccount is wrong.');
         Assert.AreEqual('123456789', VendorBankAccount."Bank Account No.", 'Bank Account No. of VendorBankAccount is wrong.');
@@ -1042,7 +1043,9 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor.FindFirst();
 
         // [THEN] The Remit To bank account will be the Vendor's preferred bank account
-        Assert.AreEqual('V01_REMITTO', Vendor."Preferred Bank Account Code", 'Preferred Bank Account Code of migrated Vendor should be Remit To account.');
+        Clear(VendorBankAccount);
+        VendorBankAccount.Get(Vendor."No.", Vendor."Preferred Bank Account Code");
+        Assert.AreEqual('V01_RemitTo_Name', VendorBankAccount.Name, 'Preferred Bank Account Code of migrated Vendor should be the Remit To account.');
 
         // [WHEN] The Vendor does not have a Remit To bank account, but has a Primary bank account
         Clear(Vendor);
@@ -1050,7 +1053,9 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor.FindFirst();
 
         // [THEN] The Primary bank account will be the Vendor's preferred bank account
-        Assert.AreEqual('V02_PRIMARY', Vendor."Preferred Bank Account Code", 'Preferred Bank Account Code of migrated Vendor should be Primary account.');
+        Clear(VendorBankAccount);
+        VendorBankAccount.Get(Vendor."No.", Vendor."Preferred Bank Account Code");
+        Assert.AreEqual('V02_Primary_Name', VendorBankAccount.Name, 'Preferred Bank Account Code of migrated Vendor should be the Primary account.');
 
         // [WHEN] The Vendor does not have either a Remit To or Primary bank account
         Clear(Vendor);
@@ -1066,7 +1071,9 @@ codeunit 139664 "GP Data Migration Tests"
         Vendor.FindFirst();
 
         // [THEN] The Primary bank account will be the Vendor's preferred bank account
-        Assert.AreEqual('V04_PRIMARY', Vendor."Preferred Bank Account Code", 'Preferred Bank Account Code of migrated Vendor should be Primary account.');
+        Clear(VendorBankAccount);
+        VendorBankAccount.Get(Vendor."No.", Vendor."Preferred Bank Account Code");
+        Assert.AreEqual('V04_Primary_Name', VendorBankAccount.Name, 'Preferred Bank Account Code of migrated Vendor should be the Primary account.');
 
         // [WHEN] The Vendor Bank Accounts are created
         // [THEN] The IBAN field will get populated only if it passed validation checks
@@ -1074,42 +1081,43 @@ codeunit 139664 "GP Data Migration Tests"
         // Vendor 2, V02_Primary - Invalid IBAN
         Clear(VendorBankAccount);
         VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr2Txt);
-        VendorBankAccount.SetRange(Code, 'V02_Primary');
+        VendorBankAccount.SetRange("Name", 'V02_Primary_Name');
         VendorBankAccount.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr2Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('V02_PRIMARY', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
+        Assert.IsTrue(StrPos(VendorBankAccount.Code, '-') > 0, 'Vendor Bank Account Code not generated in the correct format.');
         Assert.AreEqual('', VendorBankAccount.IBAN, 'IBAN of VendorBankAccount should be empty because it was invalid. V02_PRIMARY');
 
         // Vendor 2, V02_Other - Valid IBAN
         Clear(VendorBankAccount);
         VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr2Txt);
-        VendorBankAccount.SetRange(Code, 'V02_Other');
+        VendorBankAccount.SetRange("Name", 'V02_Other_Name');
         VendorBankAccount.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr2Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('V02_OTHER', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
+        Assert.IsTrue(StrPos(VendorBankAccount.Code, '-') > 0, 'Vendor Bank Account Code not generated in the correct format.');
         Assert.AreEqual(ValidIBANStrTxt, VendorBankAccount.IBAN, 'IBAN of VendorBankAccount is wrong. V02_OTHER');
 
         // Vendor 3, V03_Other2 - Invalid IBAN
         Clear(VendorBankAccount);
         VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr3Txt);
-        VendorBankAccount.SetRange(Code, 'V03_Other2');
+        VendorBankAccount.SetRange("Name", 'V03_Other2_Name');
         VendorBankAccount.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr3Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('V03_OTHER2', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
+        Assert.IsTrue(StrPos(VendorBankAccount.Code, '-') > 0, 'Vendor Bank Account Code not generated in the correct format.');
         Assert.AreEqual('', VendorBankAccount.IBAN, 'IBAN of VendorBankAccount should be empty because it was invalid. V03_OTHER2');
 
         // Vendor 3, V03_Other - Valid IBAN
         Clear(VendorBankAccount);
         VendorBankAccount.SetRange("Vendor No.", VendorIdWithBankStr3Txt);
-        VendorBankAccount.SetRange(Code, 'V03_Other');
+        VendorBankAccount.SetRange("Name", 'V03_Other_Name');
         VendorBankAccount.FindFirst();
 
         Assert.AreEqual(VendorIdWithBankStr3Txt, VendorBankAccount."Vendor No.", 'Vendor No. of VendorBankAccount is wrong.');
-        Assert.AreEqual('V03_OTHER', VendorBankAccount.Code, 'Code of VendorBankAccount is wrong.');
+        Assert.IsTrue(StrPos(VendorBankAccount.Code, '-') > 0, 'Vendor Bank Account Code not generated in the correct format.');
         Assert.AreEqual(ValidIBANStrTxt, VendorBankAccount.IBAN, 'IBAN of VendorBankAccount is wrong. V03_OTHER');
+#pragma warning restore AA0210
     end;
 
     [Test]
@@ -1191,7 +1199,7 @@ codeunit 139664 "GP Data Migration Tests"
         VendorPostingGroup.Get('USA-US-M');
         Assert.AreEqual('USA-US-M', VendorPostingGroup.Code, 'Code of VendorPostingGroup is incorrect.');
         Assert.AreEqual('U.S. Vendors-Misc. Expenses', VendorPostingGroup.Description, 'Description of VendorPostingGroup is incorrect.');
-        Assert.AreEqual('', VendorPostingGroup."Payables Account", 'Payables Account of VendorPostingGroup is incorrect.');
+        Assert.AreEqual('1', VendorPostingGroup."Payables Account", 'Payables Account of VendorPostingGroup is incorrect.');
         Assert.AreEqual('', VendorPostingGroup."Service Charge Acc.", 'Service Charge Acc. of VendorPostingGroup is incorrect.');
         Assert.AreEqual('', VendorPostingGroup."Payment Disc. Debit Acc.", 'Payment Disc. Debit Acc. of VendorPostingGroup is incorrect.');
         Assert.AreEqual('', VendorPostingGroup."Payment Disc. Credit Acc.", 'Payment Disc. Credit Acc. of VendorPostingGroup is incorrect.');

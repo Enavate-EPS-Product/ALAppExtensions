@@ -569,6 +569,7 @@ codeunit 4022 "GP Vendor Migrator"
     procedure MigrateVendorEFTBankAccounts()
     var
         GPSY06000: Record "GP SY06000";
+        CounterGPSY06000: Record "GP SY06000";
         Vendor: Record Vendor;
         VendorBankAccount: Record "Vendor Bank Account";
         GeneralLedgerSetup: Record "General Ledger Setup";
@@ -576,14 +577,30 @@ codeunit 4022 "GP Vendor Migrator"
         VendorBankAccountExists: Boolean;
         CurrencyCode: Code[10];
         IBANCode: Code[50];
+        LastVendorNo: Code[20];
+        VendorBankAccountCounter: Integer;
+        TotalVendorBankAccounts: Integer;
+        BankCode: Code[20];
     begin
+        GPSY06000.SetCurrentKey(CustomerVendor_ID);
         GPSY06000.SetRange("INACTIVE", false);
         if not GPSY06000.FindSet() then
             exit;
 
+        Clear(LastVendorNo);
         repeat
             Clear(VendorBankAccount);
             if Vendor.Get(GPSY06000.CustomerVendor_ID) then begin
+                if (Vendor."No." = LastVendorNo) then
+                    VendorBankAccountCounter := VendorBankAccountCounter + 1
+                else begin
+                    VendorBankAccountCounter := 1;
+                    CounterGPSY06000.SetRange(CustomerVendor_ID, Vendor."No.");
+                    CounterGPSY06000.SetRange("INACTIVE", false);
+                    TotalVendorBankAccounts := CounterGPSY06000.Count();
+                end;
+
+                LastVendorNo := Vendor."No.";
                 CurrencyCode := CopyStr(GPSY06000.CURNCYID, 1, MaxStrLen(CurrencyCode));
                 HelperFunctions.CreateCurrencyIfNeeded(CurrencyCode);
                 CreateSwiftCodeIfNeeded(GPSY06000.SWIFTADDR);
@@ -592,12 +609,13 @@ codeunit 4022 "GP Vendor Migrator"
                 if not IsValidIBANCode(IBANCode) then
                     IBANCode := '';
 
-                VendorBankAccountExists := VendorBankAccount.Get(Vendor."No.", GPSY06000.EFTBankCode);
+                BankCode := GetBankAccountCode(Vendor."No.", VendorBankAccountCounter, TotalVendorBankAccounts);
+                VendorBankAccountExists := VendorBankAccount.Get(Vendor."No.", BankCode);
                 VendorBankAccount.Validate("Vendor No.", Vendor."No.");
-                VendorBankAccount.Validate("Code", GPSY06000.EFTBankCode);
+                VendorBankAccount.Validate("Code", BankCode);
                 VendorBankAccount.Validate("Name", GPSY06000.BANKNAME);
                 VendorBankAccount.Validate("Bank Branch No.", GPSY06000.EFTBankBranchCode);
-                VendorBankAccount.Validate("Bank Account No.", CopyStr(GPSY06000.EFTBankAcct, 1, 30));
+                VendorBankAccount.Validate("Bank Account No.", CopyStr(GPSY06000.EFTBankAcct, 1, MaxStrLen(VendorBankAccount."Bank Account No.")));
                 VendorBankAccount.Validate("Transit No.", GPSY06000.EFTTransitRoutingNo);
                 VendorBankAccount.Validate("IBAN", IBANCode);
                 VendorBankAccount.Validate("SWIFT Code", GPSY06000.SWIFTADDR);
@@ -611,9 +629,43 @@ codeunit 4022 "GP Vendor Migrator"
                 else
                     VendorBankAccount.Modify();
 
-                SetPreferredBankAccountIfNeeded(GPSY06000, Vendor);
+                SetPreferredBankAccountIfNeeded(GPSY06000, Vendor, BankCode, TotalVendorBankAccounts);
             end;
         until GPSY06000.Next() = 0;
+    end;
+
+    local procedure GetBankAccountCode(VendorNo: Code[20]; var BankAccountCounter: Integer; TotalVendorBankAccounts: Integer): Code[20]
+    var
+        BankCode: Code[20];
+        MaxSupportedVendorNoLength: Integer;
+    begin
+        if TotalVendorBankAccounts = 1 then
+            exit(VendorNo);
+
+        // Prevent over flow
+        MaxSupportedVendorNoLength := MaxStrLen(BankCode) - StrLen(Format(TotalVendorBankAccounts)) - 1;
+#pragma warning disable AA0139
+        if StrLen(VendorNo) > MaxSupportedVendorNoLength then
+            VendorNo := CopyStr(VendorNo, 1, MaxSupportedVendorNoLength);
+#pragma warning restore AA0139
+
+        // The Vendor has more than one account, append a number to the code
+        BankCode := CopyStr(VendorNo + '-' + Format(BankAccountCounter), 1, MaxStrLen(BankCode));
+        while BankAccountAlreadyExists(VendorNo, BankCode) do begin
+            BankAccountCounter := BankAccountCounter + 1;
+            BankCode := CopyStr(VendorNo + '-' + Format(BankAccountCounter), 1, MaxStrLen(BankCode));
+        end;
+
+        exit(BankCode);
+    end;
+
+    local procedure BankAccountAlreadyExists(VendorNo: Code[20]; BankCode: Code[20]): Boolean
+    var
+        VendorBankAccount: Record "Vendor Bank Account";
+    begin
+        VendorBankAccount.SetRange("Vendor No.", VendorNo);
+        VendorBankAccount.SetRange(Code, BankCode);
+        exit(not VendorBankAccount.IsEmpty());
     end;
 
     local procedure IsValidIBANCode(IBANCode: Code[100]): Boolean
@@ -652,7 +704,7 @@ codeunit 4022 "GP Vendor Migrator"
         end;
     end;
 
-    local procedure SetPreferredBankAccountIfNeeded(GPSY06000: Record "GP SY06000"; var Vendor: Record Vendor)
+    local procedure SetPreferredBankAccountIfNeeded(GPSY06000: Record "GP SY06000"; var Vendor: Record Vendor; NewBankCode: Code[20]; TotalVendorBankAccounts: Integer)
     var
         SearchGPSY06000: Record "GP SY06000";
         GPPM00200: Record "GP PM00200";
@@ -680,8 +732,8 @@ codeunit 4022 "GP Vendor Migrator"
                 end;
         end;
 
-        if ShouldSetAsPrimaryAccount then begin
-            Vendor.Validate(Vendor."Preferred Bank Account Code", GPSY06000.EFTBankCode);
+        if ShouldSetAsPrimaryAccount or (TotalVendorBankAccounts = 1) then begin
+            Vendor.Validate(Vendor."Preferred Bank Account Code", NewBankCode);
             Vendor.Modify(true);
         end;
     end;
