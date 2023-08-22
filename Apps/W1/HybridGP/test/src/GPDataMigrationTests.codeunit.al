@@ -226,9 +226,12 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.IsTrue(GenJournalLine.FindFirst(), 'Could not locate Gen. Journal Line.');
         Assert.AreEqual(HelperFunctions.GetPostingAccountNumber('ReceivablesAccount'), GenJournalLine."Bal. Account No.", 'Incorrect Bal. Account No. on Gen. Journal Line.');
 
-
         // [WHEN] Customer addresses are migrated
         // [THEN] Email addresses are included with the addresses when they are valid
+        Customer.SetRange("No.", '#1');
+        Customer.FindFirst();
+        Assert.AreEqual('GoodEmailAddress@testing.tst;support@testing.tst', Customer."E-Mail", 'E-Mail of Migrated Customer is wrong');
+
         Assert.IsTrue(ShipToAddress.Get('#1', 'PRIMARY'), 'Customer primary address does not exist.');
         Assert.AreEqual('GoodEmailAddress@testing.tst', ShipToAddress."E-Mail", 'Customer primary address email was not set correctly.');
 
@@ -240,6 +243,47 @@ codeunit 139664 "GP Data Migration Tests"
 
         Assert.IsTrue(ShipToAddress.Get('#1', 'OTHER'), 'Customer other address does not exist.');
         Assert.AreEqual('', ShipToAddress."E-Mail", 'Customer other address email should be empty.');
+    end;
+
+    [Test]
+    [TransactionModel(TransactionModel::AutoRollback)]
+    procedure TestEmailAddressSelection()
+    begin
+        // [SCENARIO] Data migrated from GP contains records and email info in SY01200
+
+        Clear(GPSY01200);
+        GPSY01200.EmailToAddress := 'longeremailaddressshouldnotbeselected@test.net';
+        GPSY01200.EmailCcAddress := 'ANOTHEREMAILADDRESS@test.net';
+        GPSY01200.EmailBccAddress := 'anotheremailaddress@test.net';
+        GPSY01200.INET1 := 'shortemail@test.net';
+
+        // [WHEN] 20 is the max length
+        // [THEN] The shorter email in INET1 will be selected
+        Assert.AreEqual('shortemail@test.net', GPSY01200.GetSingleEmailAddress(20), 'Incorrect email address. (20 max length)');
+        Assert.AreEqual('shortemail@test.net', GPSY01200.GetAllEmailAddressesText(20), 'Incorrect multiple email text. (20 max length)');
+
+        // [WHEN] 50 is the max length
+        // [THEN] Only the EmailToAddress will be selected
+        Assert.AreEqual('longeremailaddressshouldnotbeselected@test.net', GPSY01200.GetSingleEmailAddress(50), 'Incorrect email address. (50 max length)');
+        Assert.AreEqual('longeremailaddressshouldnotbeselected@test.net', GPSY01200.GetAllEmailAddressesText(50), 'Incorrect multiple email text. (50 max length)');
+
+        // [WHEN] 100 is the max length
+        // [THEN] The EmailToAddress will be selected since the max is large enough
+        Assert.AreEqual('longeremailaddressshouldnotbeselected@test.net', GPSY01200.GetSingleEmailAddress(100), 'Incorrect email address. (100 max length)');
+
+        // [THEN] All non-duplicate email addresses will be selected
+        Assert.AreEqual('longeremailaddressshouldnotbeselected@test.net;ANOTHEREMAILADDRESS@test.net;shortemail@test.net', GPSY01200.GetAllEmailAddressesText(100), 'Incorrect multiple email text. (100 max length)');
+
+        // [WHEN] The only valid email address is INET1, and it's within the max length boundary
+        Clear(GPSY01200);
+        GPSY01200.EmailToAddress := '';
+        GPSY01200.EmailCcAddress := 'bad data;';
+        GPSY01200.EmailBccAddress := '';
+        GPSY01200.INET1 := 'OnlyEmailAddress@test.net';
+
+        // [THEN] The correct email address will be selected
+        Assert.AreEqual('OnlyEmailAddress@test.net', GPSY01200.GetSingleEmailAddress(80), 'Incorrect email address. (80 max length)');
+        Assert.AreEqual('OnlyEmailAddress@test.net', GPSY01200.GetAllEmailAddressesText(80), 'Incorrect email address. (80 max length)');
     end;
 
     [Test]
@@ -1621,10 +1665,16 @@ codeunit 139664 "GP Data Migration Tests"
 
     local procedure CreateCustomerData()
     begin
+        Clear(GPRM00101);
+        GPRM00101.CUSTNMBR := '!WOW!';
+        GPRM00101.CUSTNAME := 'Oh! What a feeling!';
+        GPRM00101.ADRSCODE := '';
+        GPRM00101.Insert();
+
         Clear(GPCustomer);
-        GPCustomer.CUSTNMBR := '!WOW!';
-        GPCustomer.CUSTNAME := 'Oh! What a feeling!';
-        GPCustomer.STMTNAME := 'Oh! What a feeling!';
+        GPCustomer.CUSTNMBR := GPRM00101.CUSTNMBR;
+        GPCustomer.CUSTNAME := GPRM00101.CUSTNAME;
+        GPCustomer.STMTNAME := GPRM00101.CUSTNAME;
         GPCustomer.ADDRESS1 := '';
         GPCustomer.ADDRESS2 := 'Toyota Land';
         GPCustomer.CITY := '!What a city!';
@@ -1648,10 +1698,16 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer.TAXEXMT1 := '';
         GPCustomer.Insert();
 
+        Clear(GPRM00101);
+        GPRM00101.CUSTNMBR := '"AMERICAN"';
+        GPRM00101.CUSTNAME := '"American Clothing"';
+        GPRM00101.ADRSCODE := '';
+        GPRM00101.Insert();
+
         Clear(GPCustomer);
-        GPCustomer.CUSTNMBR := '"AMERICAN"';
-        GPCustomer.CUSTNAME := '"American Clothing"';
-        GPCustomer.STMTNAME := '"American Clothing"';
+        GPCustomer.CUSTNMBR := GPRM00101.CUSTNMBR;
+        GPCustomer.CUSTNAME := GPRM00101.CUSTNAME;
+        GPCustomer.STMTNAME := GPRM00101.CUSTNAME;
         GPCustomer.ADDRESS1 := '';
         GPCustomer.ADDRESS2 := '';
         GPCustomer.CITY := '"CITY"';
@@ -1675,10 +1731,16 @@ codeunit 139664 "GP Data Migration Tests"
         GPCustomer.TAXEXMT1 := '';
         GPCustomer.Insert();
 
+        Clear(GPRM00101);
+        GPRM00101.CUSTNMBR := '#1';
+        GPRM00101.CUSTNAME := '#1 Company';
+        GPRM00101.ADRSCODE := 'PRIMARY';
+        GPRM00101.Insert();
+
         Clear(GPCustomer);
-        GPCustomer.CUSTNMBR := '#1';
-        GPCustomer.CUSTNAME := '#1 Company';
-        GPCustomer.STMTNAME := '#1 Company';
+        GPCustomer.CUSTNMBR := GPRM00101.CUSTNMBR;
+        GPCustomer.CUSTNAME := GPRM00101.CUSTNAME;
+        GPCustomer.STMTNAME := GPRM00101.CUSTNAME;
         GPCustomer.ADDRESS1 := 'GPS Alley';
         GPCustomer.ADDRESS2 := '';
         GPCustomer.CITY := '#1 City';
@@ -1718,7 +1780,8 @@ codeunit 139664 "GP Data Migration Tests"
         GPSY01200.Master_Type := 'CUS';
         GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
         GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
-        GPSY01200.INET1 := 'GoodEmailAddress@testing.tst';
+        GPSY01200.EmailToAddress := 'GoodEmailAddress@testing.tst';
+        GPSY01200.INET1 := 'support@testing.tst';
         GPSY01200.Insert();
 
         Clear(GPCustomerAddress);
@@ -1737,7 +1800,8 @@ codeunit 139664 "GP Data Migration Tests"
         GPSY01200.Master_Type := 'CUS';
         GPSY01200.Master_ID := GPCustomerAddress.CUSTNMBR;
         GPSY01200.ADRSCODE := GPCustomerAddress.ADRSCODE;
-        GPSY01200.INET1 := 'GoodEmailAddress2@testing.tst';
+        GPSY01200.INET1 := 'AP@testing.tst';
+        GPSY01200.EmailToAddress := 'GoodEmailAddress2@testing.tst';
         GPSY01200.Insert();
 
         Clear(GPCustomerAddress);
@@ -1811,9 +1875,6 @@ codeunit 139664 "GP Data Migration Tests"
         GLAccount: Record "G/L Account";
         GPAccount: Record "GP Account";
     begin
-        GPRM00201.DeleteAll();
-        GPRM00101.DeleteAll();
-
         if not GPAccount.Get('1') then begin
             GPAccount.AcctNum := '1';
             GPAccount.AcctIndex := 1;
@@ -1879,23 +1940,17 @@ codeunit 139664 "GP Data Migration Tests"
         GPRM00201.RMWRACC := 0;
         GPRM00201.Insert();
 
-        GPRM00101.Init();
-        GPRM00101.CUSTNMBR := '!WOW!';
-        GPRM00101.CUSTNAME := 'Oh! What a feeling!';
+        GPRM00101.Get('!WOW!');
         GPRM00101.CUSTCLAS := 'TEST';
-        GPRM00101.Insert();
+        GPRM00101.Modify();
 
-        GPRM00101.Init();
-        GPRM00101.CUSTNMBR := '"AMERICAN"';
-        GPRM00101.CUSTNAME := '"American Clothing"';
+        GPRM00101.Get('"AMERICAN"');
         GPRM00101.CUSTCLAS := 'USA-TEST-1';
-        GPRM00101.Insert();
+        GPRM00101.Modify();
 
-        GPRM00101.Init();
-        GPRM00101.CUSTNMBR := '#1';
-        GPRM00101.CUSTNAME := '#1 Company';
+        GPRM00101.Get('#1');
         GPRM00101.CUSTCLAS := 'USA-TEST-2';
-        GPRM00101.Insert();
+        GPRM00101.Modify();
 
         GPAccount.Init();
         GPAccount.AcctNum := 'TEST987';
