@@ -50,6 +50,21 @@ page 4050 "GP Migration Configuration"
                 Caption = 'Modules';
                 InstructionalText = 'Select the modules you would like migrated.';
 
+                field("Migrate GL Module"; Rec."Migrate GL Module")
+                {
+                    Caption = 'GL';
+                    ToolTip = 'Specifies whether to migrate the GL module.';
+                    ApplicationArea = All;
+
+                    trigger OnValidate()
+                    begin
+                        if PrepSettingsForFieldUpdate() then
+                            repeat
+                                GPCompanyAdditionalSettings.Validate("Migrate GL Module", Rec."Migrate GL Module");
+                                GPCompanyAdditionalSettings.Modify();
+                            until GPCompanyAdditionalSettings.Next() = 0;
+                    end;
+                }
                 field("Migrate Bank Module"; Rec."Migrate Bank Module")
                 {
                     Caption = 'Bank';
@@ -642,6 +657,7 @@ page 4050 "GP Migration Configuration"
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Vendor Classes", Rec."Migrate Vendor Classes");
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Customer Classes", Rec."Migrate Customer Classes");
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Item Classes", Rec."Migrate Item Classes");
+                    GPCompanyAdditionalSettingsEachCompany.Validate("Migrate GL Module", Rec."Migrate GL Module");
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Bank Module", Rec."Migrate Bank Module");
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Payables Module", Rec."Migrate Payables Module");
                     GPCompanyAdditionalSettingsEachCompany.Validate("Migrate Receivables Module", Rec."Migrate Receivables Module");
@@ -705,6 +721,7 @@ page 4050 "GP Migration Configuration"
         Rec.Validate("Migrate Vendor Classes", GPCompanyAdditionalSettingsInit."Migrate Vendor Classes");
         Rec.Validate("Migrate Customer Classes", GPCompanyAdditionalSettingsInit."Migrate Customer Classes");
         Rec.Validate("Migrate Item Classes", GPCompanyAdditionalSettingsInit."Migrate Item Classes");
+        Rec.Validate("Migrate GL Module", GPCompanyAdditionalSettingsInit."Migrate GL Module");
         Rec.Validate("Migrate Bank Module", GPCompanyAdditionalSettingsInit."Migrate Bank Module");
         Rec.Validate("Migrate Payables Module", GPCompanyAdditionalSettingsInit."Migrate Payables Module");
         Rec.Validate("Migrate Receivables Module", GPCompanyAdditionalSettingsInit."Migrate Receivables Module");

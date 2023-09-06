@@ -25,6 +25,9 @@ codeunit 4017 "GP Account Migrator"
         if RecordIdToMigrate.TableNo() <> Database::"GP Account" then
             exit;
 
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
+            exit;
+
         if GPCompanyAdditionalSettings.GetMigrateOnlyGLMaster() then
             exit;
 
@@ -49,6 +52,9 @@ codeunit 4017 "GP Account Migrator"
         if RecordIdToMigrate.TableNo() <> Database::"GP Account" then
             exit;
 
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
+            exit;
+
         if GPCompanyAdditionalSettings.GetMigrateOnlyGLMaster() then
             exit;
 
@@ -68,9 +74,13 @@ codeunit 4017 "GP Account Migrator"
 #endif
     var
         GPAccount: Record "GP Account";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         HelperFunctions: Codeunit "Helper Functions";
     begin
         if RecordIdToMigrate.TableNo() <> Database::"GP Account" then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
             exit;
 
         GPAccount.Get(RecordIdToMigrate);
@@ -118,8 +128,12 @@ codeunit 4017 "GP Account Migrator"
 #endif
     var
         GPAccount: Record "GP Account";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
     begin
         if RecordIdToMigrate.TableNo() <> Database::"GP Account" then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
             exit;
 
         GPAccount.Get(RecordIdToMigrate);
@@ -164,8 +178,7 @@ codeunit 4017 "GP Account Migrator"
             exit;
 
         PostingGroupCode := PostingGroupCodeTxt + format(InitialYear) + 'BB';
-        GPFiscalPeriods.SetRange(YEAR1, InitialYear);
-        if GPFiscalPeriods.FindFirst() then begin
+        if GPFiscalPeriods.Get(0, InitialYear) then begin
             DataMigrationFacadeHelper.CreateGeneralJournalBatchIfNeeded(CopyStr(PostingGroupCode, 1, 10), '', '');
             DataMigrationFacadeHelper.CreateGeneralJournalLine(
                 GenJournalLine,

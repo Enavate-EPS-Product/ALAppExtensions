@@ -77,7 +77,10 @@ codeunit 4019 "GP Item Migrator"
         ItemDataMigrationFacade.SetStandardCost(GPItem.StandardCost);
         ItemDataMigrationFacade.SetCostingMethod(GetCostingMethod(GPItem));
         ItemDataMigrationFacade.SetBaseUnitOfMeasure(GPItem.BaseUnitOfMeasure);
-        ItemDataMigrationFacade.SetGeneralProductPostingGroup(CopyStr(DefaultPostingGroupCodeTxt, 1, 20));
+
+        if GPCompanyAdditionalSettings.GetGLModuleEnabled() then
+            ItemDataMigrationFacade.SetGeneralProductPostingGroup(CopyStr(DefaultPostingGroupCodeTxt, 1, 20));
+
         ItemDataMigrationFacade.SetNetWeight(GPItem.ShipWeight);
         ItemDataMigrationFacade.SetSearchDescription(GPItem.SearchDescription);
         ItemDataMigrationFacade.SetPurchUnitOfMeasure(GPItem.PurchUnitOfMeasure);
