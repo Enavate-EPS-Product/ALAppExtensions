@@ -41,6 +41,7 @@ codeunit 4022 "GP Vendor Migrator"
     internal procedure OnMigrateVendorPostingGroups(var Sender: Codeunit "Vendor Data Migration Facade"; RecordIdToMigrate: RecordId; ChartOfAccountsMigrated: Boolean)
 #endif
     var
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
         HelperFunctions: Codeunit "Helper Functions";
         PostingGroupNo: Code[20];
     begin
@@ -48,6 +49,9 @@ codeunit 4022 "GP Vendor Migrator"
             exit;
 
         if RecordIdToMigrate.TableNo() <> Database::"GP Vendor" then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
             exit;
 
         Sender.CreatePostingSetupIfNeeded(
@@ -88,6 +92,9 @@ codeunit 4022 "GP Vendor Migrator"
             exit;
 
         if RecordIdToMigrate.TableNo() <> Database::"GP Vendor" then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
             exit;
 
         if GPCompanyAdditionalSettings.GetMigrateOnlyPayablesMaster() then

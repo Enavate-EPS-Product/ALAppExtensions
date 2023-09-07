@@ -107,6 +107,9 @@ codeunit 4019 "GP Item Migrator"
         if RecordIdToMigrate.TableNo() <> Database::"GP Item" then
             exit;
 
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
+            exit;
+
         if GPItem.Get(RecordIdToMigrate) then
             MigrateItemInventoryPostingGroup(GPItem, Sender);
     end;
@@ -136,6 +139,9 @@ codeunit 4019 "GP Item Migrator"
             exit;
 
         if RecordIdToMigrate.TableNo() <> Database::"GP Item" then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetGLModuleEnabled() then
             exit;
 
         if GPCompanyAdditionalSettings.GetMigrateOnlyInventoryMaster() then
