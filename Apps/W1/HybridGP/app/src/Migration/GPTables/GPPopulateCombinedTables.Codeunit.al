@@ -90,7 +90,6 @@ codeunit 40125 "GP Populate Combined Tables"
         GPSY40101: Record "GP SY40101";
         GPFiscalPeriods: Record "GP Fiscal Periods";
         ExistingGPFiscalPeriods: Record "GP Fiscal Periods";
-        OutlookSynchTypeConv: Codeunit "Outlook Synch. Type Conv";
     begin
         GPSY40100.SetRange(SERIES, 0);
 
@@ -102,10 +101,10 @@ codeunit 40125 "GP Populate Combined Tables"
             if GPSY40101.Get(GPSY40100.YEAR1) then begin
                 GPFiscalPeriods.PERIODID := GPSY40100.PERIODID;
                 GPFiscalPeriods.YEAR1 := GPSY40100.YEAR1;
-                GPFiscalPeriods.PERIODDT := DT2Date(OutlookSynchTypeConv.LocalDT2UTC(GPSY40100.PERIODDT));
-                GPFiscalPeriods.PERDENDT := DT2Date(OutlookSynchTypeConv.LocalDT2UTC(GPSY40100.PERDENDT));
+                GPFiscalPeriods.PERIODDT := DT2Date(GPSY40100.PERIODDT);
+                GPFiscalPeriods.PERDENDT := DT2Date(GPSY40100.PERDENDT);
 
-                if not ExistingGPFiscalPeriods.Get(GPFiscalPeriods.PERIODDT, GPFiscalPeriods.YEAR1) then
+                if not ExistingGPFiscalPeriods.Get(GPFiscalPeriods.PERIODID, GPFiscalPeriods.YEAR1) then
                     GPFiscalPeriods.Insert();
             end;
         until GPSY40100.Next() = 0;
@@ -130,6 +129,7 @@ codeunit 40125 "GP Populate Combined Tables"
         SegmentCount := GetTotalSegmentCount();
         CurrentKey := 1;
         GPGL10110.SetFilter(PERDBLNC, '<>0');
+        GPGL10110.SetFilter(PERIODID, '>0');
         GPGL10110.SetRange(GL00100ACCTYPE1Exist, true);
         GPGL10110.SetCurrentKey(YEAR1, PERIODID, ACTNUMBR_1, ACTNUMBR_2, ACTNUMBR_3, ACTNUMBR_4, ACTNUMBR_5, ACTNUMBR_6, ACTNUMBR_7, ACTNUMBR_8);
         if GPGL10110.FindSet() then
