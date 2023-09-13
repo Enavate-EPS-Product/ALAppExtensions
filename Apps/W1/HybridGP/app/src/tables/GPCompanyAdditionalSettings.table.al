@@ -126,15 +126,9 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if Rec."Migrate Bank Module" then
-                    if not Rec."Migrate GL Module" then
-                        Rec.Validate("Migrate GL Module", true);
-
                 if not Rec."Migrate Bank Module" then begin
+                    Rec.Validate("Migrate Only Bank Master", false);
                     Rec.Validate("Migrate Inactive Checkbooks", false);
-
-                    if not Rec."Migrate GL Module" then
-                        Rec.Validate("Migrate Only Bank Master", true);
                 end;
             end;
         }
@@ -249,7 +243,7 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if not Rec."Migrate Only GL Master" then
+                if Rec."Migrate Only GL Master" then
                     if not Rec."Migrate GL Module" then
                         Rec.Validate("Migrate GL Module", true);
             end;
@@ -261,8 +255,13 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if not Rec."Migrate Only Bank Master" then
-                    Rec.Validate("Migrate Bank Module", true);
+                if Rec."Migrate Only Bank Master" then begin
+                    if not Rec."Migrate Bank Module" then
+                        Rec.Validate("Migrate Bank Module", true)
+                end else
+                    if not Rec."Migrate GL Module" then
+                        if Rec."Migrate Bank Module" then
+                            Rec.Validate("Migrate GL Module", true);
             end;
         }
         field(24; "Migrate Only Payables Master"; Boolean)
@@ -272,10 +271,13 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if Rec."Migrate Only Payables Master" then
-                    Rec.Validate("Migrate Payables Module", true)
-                else
-                    Rec.Validate("Migrate GL Module", true);
+                if Rec."Migrate Only Payables Master" then begin
+                    if not Rec."Migrate Payables Module" then
+                        Rec.Validate("Migrate Payables Module", true)
+                end else
+                    if not Rec."Migrate GL Module" then
+                        if Rec."Migrate Payables Module" then
+                            Rec.Validate("Migrate GL Module", true);
             end;
         }
         field(25; "Migrate Only Rec. Master"; Boolean)
@@ -285,10 +287,13 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if Rec."Migrate Only Rec. Master" then
-                    Rec.Validate("Migrate Receivables Module", true)
-                else
-                    Rec.Validate("Migrate GL Module", true);
+                if Rec."Migrate Only Rec. Master" then begin
+                    if not Rec."Migrate Receivables Module" then
+                        Rec.Validate("Migrate Receivables Module", true)
+                end else
+                    if not Rec."Migrate GL Module" then
+                        if Rec."Migrate Receivables Module" then
+                            Rec.Validate("Migrate GL Module", true);
             end;
         }
         field(26; "Migrate Only Inventory Master"; Boolean)
@@ -298,10 +303,13 @@ table 40105 "GP Company Additional Settings"
 
             trigger OnValidate()
             begin
-                if Rec."Migrate Only Inventory Master" then
-                    Rec.Validate("Migrate Inventory Module", true)
-                else
-                    Rec.Validate("Migrate GL Module", true);
+                if Rec."Migrate Only Inventory Master" then begin
+                    if not Rec."Migrate Inventory Module" then
+                        Rec.Validate("Migrate Inventory Module", true)
+                end else
+                    if not Rec."Migrate GL Module" then
+                        if Rec."Migrate Inventory Module" then
+                            Rec.Validate("Migrate GL Module", true);
             end;
         }
         field(27; "Migrate Inactive Items"; Boolean)
@@ -396,16 +404,23 @@ table 40105 "GP Company Additional Settings"
                         AllowedToMakeChange := Confirm(DisableGLModuleQst);
 
                 if not Rec."Migrate GL Module" and AllowedToMakeChange then begin
-                    Rec.Validate("Migrate Bank Module", false);
                     Rec.Validate("Migrate Open POs", false);
                     Rec.Validate("Migrate Customer Classes", false);
                     Rec.Validate("Migrate Item Classes", false);
                     Rec.Validate("Migrate Vendor Classes", false);
-                    Rec.Validate("Migrate Only GL Master", true);
-                    Rec.Validate("Migrate Only Bank Master", true);
-                    Rec.Validate("Migrate Only Inventory Master", true);
-                    Rec.Validate("Migrate Only Payables Master", true);
-                    Rec.Validate("Migrate Only Rec. Master", true);
+                    Rec.Validate("Migrate Only GL Master", false);
+
+                    if Rec."Migrate Bank Module" then
+                        Rec.Validate("Migrate Only Bank Master", true);
+
+                    if Rec."Migrate Inventory Module" then
+                        Rec.Validate("Migrate Only Inventory Master", true);
+
+                    if Rec."Migrate Payables Module" then
+                        Rec.Validate("Migrate Only Payables Master", true);
+
+                    if Rec."Migrate Receivables Module" then
+                        Rec.Validate("Migrate Only Rec. Master", true);
                 end;
             end;
         }
@@ -654,6 +669,15 @@ table 40105 "GP Company Additional Settings"
         exit(false);
     end;
 
+    procedure AreAllModulesDisabled(): Boolean
+    begin
+        exit(not Rec."Migrate GL Module"
+            and not Rec."Migrate Bank Module"
+            and not Rec."Migrate Inventory Module"
+            and not Rec."Migrate Payables Module"
+            and not Rec."Migrate Receivables Module");
+    end;
+
     var
-        DisableGLModuleQst: Label 'Are you sure you want to disable the GL module? This action will result in no migration of GL accounts or transactions across any module.';
+        DisableGLModuleQst: Label 'Are you sure you want to disable the General Ledger module? This action will result in no migration of General Ledger accounts or transactions across any module.';
 }

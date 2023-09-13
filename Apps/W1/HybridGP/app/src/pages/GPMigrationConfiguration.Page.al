@@ -52,8 +52,8 @@ page 4050 "GP Migration Configuration"
 
                 field("Migrate GL Module"; Rec."Migrate GL Module")
                 {
-                    Caption = 'GL';
-                    ToolTip = 'Specifies whether to migrate the GL module.';
+                    Caption = 'General Ledger';
+                    ToolTip = 'Specifies whether to migrate the General Ledger module.';
                     ApplicationArea = All;
 
                     trigger OnValidate()
@@ -760,6 +760,10 @@ page 4050 "GP Migration Configuration"
             if (not Confirm(CompanyMissingDimensionExitQst)) then
                 exit(false);
 
+        if Rec.AreAllModulesDisabled() then
+            if (not Confirm(AllModulesDisabledExitQst)) then
+                exit(false);
+
         if ShowManagementPromptOnClose then
             if Confirm(OpenCloudMigrationPageQst) then
                 Page.Run(page::"Intelligent Cloud Management");
@@ -822,5 +826,6 @@ page 4050 "GP Migration Configuration"
         CompanyMissingDimensionExitQst: Label 'A Company is missing a Dimension. Are you sure you want to exit?';
         OpenCloudMigrationPageQst: Label 'Would you like to open the Cloud Migration Management page to manage your data migrations?';
         ResetAllQst: Label 'Are you sure? This will reset all company migration settings to their default values.';
+        AllModulesDisabledExitQst: Label 'All modules are disabled and nothing will migrate (with the exception of the Snapshot if configured). Are you sure you want to exit?';
         EnableDisableAllHistTrx: Boolean;
 }
