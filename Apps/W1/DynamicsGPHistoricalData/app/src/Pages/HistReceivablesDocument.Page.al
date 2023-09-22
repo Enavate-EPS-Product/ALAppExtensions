@@ -166,6 +166,18 @@ page 41006 "Hist. Receivables Document"
                     ToolTip = 'Specifies the value of the User field.';
                 }
             }
+            group(Apply)
+            {
+                Caption = 'Receivables Apply';
+
+                part(HistReceivablesApplyList; "Hist. Receivables Apply List")
+                {
+                    Caption = 'Historical Receivables Apply List';
+                    ShowFilter = false;
+                    ApplicationArea = All;
+                    SubPageLink = "Customer No." = field("Customer No."), "Apply To Document No." = field("Document No.");
+                }
+            }
         }
     }
 

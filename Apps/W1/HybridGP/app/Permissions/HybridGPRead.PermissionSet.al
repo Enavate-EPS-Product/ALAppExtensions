@@ -116,5 +116,9 @@ permissionset 4032 "HybridGP - Read"
                     tabledata "GP POP10100" = R,
                     tabledata "GP POP10110" = R,
                     tabledata "GP PM00204" = R,
-                    tabledata "GP Known Countries" = R;
+                    tabledata "GP Known Countries" = R,
+                    tabledata "GP PM10200" = R,
+                    tabledata "GP PM30300" = R,
+                    tabledata "GP RM20201" = R,
+                    tabledata "GP RM30201" = R;
 }

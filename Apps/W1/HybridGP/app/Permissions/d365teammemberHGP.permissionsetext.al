@@ -105,5 +105,9 @@ permissionsetextension 4027 "D365 TEAM MEMBER - HGP" extends "D365 TEAM MEMBER"
                   tabledata "GP POP10100" = RIMD,
                   tabledata "GP POP10110" = RIMD,
                   tabledata "GP PM00204" = RIMD,
-                  tabledata "GP Known Countries" = RIMD;
+                  tabledata "GP Known Countries" = RIMD,
+                  tabledata "GP PM10200" = RIMD,
+                  tabledata "GP PM30300" = RIMD,
+                  tabledata "GP RM20201" = RIMD,
+                  tabledata "GP RM30201" = RIMD;
 }

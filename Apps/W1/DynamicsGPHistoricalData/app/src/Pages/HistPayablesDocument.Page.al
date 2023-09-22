@@ -176,6 +176,18 @@ page 41008 "Hist. Payables Document"
                     ToolTip = 'Specifies the value of the User field.';
                 }
             }
+            group(Apply)
+            {
+                Caption = 'Payables Apply';
+
+                part(HistPayablesApplyList; "Hist. Payables Apply List")
+                {
+                    Caption = 'Historical Payables Apply List';
+                    ShowFilter = false;
+                    ApplicationArea = All;
+                    SubPageLink = "Vendor No." = field("Vendor No."), "Document Type" = field("Document Type"), "Voucher No." = field("Voucher No.");
+                }
+            }
         }
     }
 

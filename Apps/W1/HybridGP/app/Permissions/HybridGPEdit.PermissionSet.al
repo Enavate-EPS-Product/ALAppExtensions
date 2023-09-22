@@ -116,5 +116,9 @@ permissionset 4031 "HybridGP - Edit"
                     tabledata "GP POP10100" = IMD,
                     tabledata "GP POP10110" = IMD,
                     tabledata "GP PM00204" = IMD,
-                    tabledata "GP Known Countries" = IMD;
+                    tabledata "GP Known Countries" = IMD,
+                    tabledata "GP PM10200" = IMD,
+                    tabledata "GP PM30300" = IMD,
+                    tabledata "GP RM20201" = IMD,
+                    tabledata "GP RM30201" = IMD;
 }
