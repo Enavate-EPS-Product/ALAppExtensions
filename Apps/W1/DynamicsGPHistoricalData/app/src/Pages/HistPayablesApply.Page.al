@@ -96,7 +96,7 @@ page 41023 "Hist. Payables Apply"
                 }
                 field("Apply From Currency Code"; Rec."Apply From Currency Code")
                 {
-                    ToolTip = 'Specifies the value of the Apply From Currency ID field.';
+                    ToolTip = 'Specifies the value of the Apply From Currency Code field.';
                 }
                 field("Apply From Apply Amount"; Rec."Apply From Apply Amount")
                 {
@@ -124,7 +124,7 @@ page 41023 "Hist. Payables Apply"
                 }
                 field("Actual Disc. Available Taken"; Rec."Actual Disc. Available Taken")
                 {
-                    ToolTip = 'Specifies the value of the Actual Discount Available Taken field.';
+                    ToolTip = 'Specifies the value of the Actual Disc. Available Taken field.';
                 }
                 field("Actual Write Off Amount"; Rec."Actual Write Off Amount")
                 {
@@ -136,7 +136,7 @@ page 41023 "Hist. Payables Apply"
                 }
                 field("Apply From Denom. Exch. Rate"; Rec."Apply From Denom. Exch. Rate")
                 {
-                    ToolTip = 'Specifies the value of the Apply From Denomination Exchange Rate field.';
+                    ToolTip = 'Specifies the value of the Apply From Denom. Exchange Rate field.';
                 }
                 field("PPS Amount Deducted"; Rec."PPS Amount Deducted")
                 {

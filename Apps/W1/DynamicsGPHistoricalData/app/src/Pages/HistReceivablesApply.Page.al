@@ -76,19 +76,19 @@ page 41024 "Hist. Receivables Apply"
                 }
                 field("Orig. Apply To Amount"; Rec."Orig. Apply To Amount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Apply To Amount field.';
+                    ToolTip = 'Specifies the value of the Orig. Apply To Amount field.';
                 }
                 field("Orig. Disc. Taken Amount"; Rec."Orig. Disc. Taken Amount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Discount Taken Amount field.';
+                    ToolTip = 'Specifies the value of the Orig. Disc. Taken Amount field.';
                 }
                 field("Orig. Disc. Available Taken"; Rec."Orig. Disc. Available Taken")
                 {
-                    ToolTip = 'Specifies the value of the Originating Discount Available Taken field.';
+                    ToolTip = 'Specifies the value of the Orig. Disc. Available Taken field.';
                 }
                 field("Orig. Write Off Amount"; Rec."Orig. Write Off Amount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Write Off Amount field.';
+                    ToolTip = 'Specifies the value of the Orig. Write Off Amount field.';
                 }
                 field("Apply To Exchange Rate"; Rec."Apply To Exchange Rate")
                 {
@@ -96,7 +96,7 @@ page 41024 "Hist. Receivables Apply"
                 }
                 field("Apply To Denom. Exch. Rate"; Rec."Apply To Denom. Exch. Rate")
                 {
-                    ToolTip = 'Specifies the value of the Apply To Denom. Exchange Rate field.';
+                    ToolTip = 'Specifies the value of the Apply To Denom. Exch. Rate field.';
                 }
                 field("Apply From Document No."; Rec."Apply From Document No.")
                 {
@@ -124,11 +124,11 @@ page 41024 "Hist. Receivables Apply"
                 }
                 field("Apply From Disc. Taken Amount"; Rec."Apply From Disc. Taken Amount")
                 {
-                    ToolTip = 'Specifies the value of the Apply From Discount Taken Amount field.';
+                    ToolTip = 'Specifies the value of the Apply From Disc. Taken Amount field.';
                 }
                 field("Apply From Disc. Avail. Taken"; Rec."Apply From Disc. Avail. Taken")
                 {
-                    ToolTip = 'Specifies the value of the Apply From Discount Avail. Taken field.';
+                    ToolTip = 'Specifies the value of the Apply From Disc. Avail. Taken field.';
                 }
                 field("Apply From Write Off Amount"; Rec."Apply From Write Off Amount")
                 {
@@ -140,11 +140,11 @@ page 41024 "Hist. Receivables Apply"
                 }
                 field("Actual Disc. Taken Amount"; Rec."Actual Disc. Taken Amount")
                 {
-                    ToolTip = 'Specifies the value of the Actual Discount Taken Amount field.';
+                    ToolTip = 'Specifies the value of the Actual Disc. Taken Amount field.';
                 }
                 field("Actual Disc. Avail. Taken"; Rec."Actual Disc. Avail. Taken")
                 {
-                    ToolTip = 'Specifies the value of the Actual Discount Avail. Taken field.';
+                    ToolTip = 'Specifies the value of the Actual Disc. Avail. Taken field.';
                 }
                 field("Actual Write Off Amount"; Rec."Actual Write Off Amount")
                 {
@@ -172,15 +172,15 @@ page 41024 "Hist. Receivables Apply"
                 }
                 field("Orig. Apply From Round Amount"; Rec."Orig. Apply From Round Amount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Apply From Round Amount field.';
+                    ToolTip = 'Specifies the value of the Orig. Apply From Round Amount field.';
                 }
                 field("Orig. Apply To Round Amount"; Rec."Orig. Apply To Round Amount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Apply To Round Amount field.';
+                    ToolTip = 'Specifies the value of the Orig. Apply To Round Amount field.';
                 }
                 field("Orig. Apply To Round Discount"; Rec."Orig. Apply To Round Discount")
                 {
-                    ToolTip = 'Specifies the value of the Originating Apply To Round Discount field.';
+                    ToolTip = 'Specifies the value of the Orig. Apply To Round Discount field.';
                 }
                 field("GST Discount Amount"; Rec."GST Discount Amount")
                 {
