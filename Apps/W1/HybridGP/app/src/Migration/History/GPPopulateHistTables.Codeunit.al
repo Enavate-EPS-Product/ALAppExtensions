@@ -879,7 +879,6 @@ codeunit 40900 "GP Populate Hist. Tables"
             PopulatePayablesOpenApply(VendorNo, VendorName, VoucherNo, GPDocumentTypeId);
             PopulatePayablesHistApply(VendorNo, VendorName, VoucherNo, GPDocumentTypeId);
         end;
-
     end;
 
     local procedure PopulatePayablesOpenApply(VendorNo: Code[35]; VendorName: Text[65]; VoucherNo: Code[35]; GPDocumentTypeId: Integer)

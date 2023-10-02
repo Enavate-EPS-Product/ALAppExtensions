@@ -185,7 +185,7 @@ page 41008 "Hist. Payables Document"
                     Caption = 'Historical Payables Apply List';
                     ShowFilter = false;
                     ApplicationArea = All;
-                    SubPageLink = "Vendor No." = field("Vendor No."), "Document Type" = field("Document Type"), "Voucher No." = field("Voucher No.");
+                    SubPageLink = "Vendor No." = field("Vendor No."), "Apply To Document Type" = field("Document Type"), "Apply To Voucher No." = field("Voucher No.");
                 }
             }
         }
