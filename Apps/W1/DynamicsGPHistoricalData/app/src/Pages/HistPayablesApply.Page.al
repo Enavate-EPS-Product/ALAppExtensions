@@ -1,13 +1,11 @@
 page 41023 "Hist. Payables Apply"
 {
-    ApplicationArea = All;
     Caption = 'Historical Payables Apply';
     PageType = Card;
     SourceTable = "Hist. Payables Apply";
     DeleteAllowed = false;
     InsertAllowed = false;
     ModifyAllowed = false;
-    UsageCategory = History;
     DataCaptionExpression = DataCaptionExpressionTxt;
 
     layout

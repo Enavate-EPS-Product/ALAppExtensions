@@ -1,13 +1,11 @@
 page 41024 "Hist. Receivables Apply"
 {
-    ApplicationArea = All;
     Caption = 'Historical Receivables Apply';
     PageType = Card;
     SourceTable = "Hist. Receivables Apply";
     DeleteAllowed = false;
     InsertAllowed = false;
     ModifyAllowed = false;
-    UsageCategory = History;
     DataCaptionExpression = DataCaptionExpressionTxt;
 
     layout
