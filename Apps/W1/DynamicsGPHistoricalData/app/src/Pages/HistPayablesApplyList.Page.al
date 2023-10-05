@@ -41,4 +41,14 @@ page 41021 "Hist. Payables Apply List"
             }
         }
     }
+
+    procedure FilterByVoucherNo(DocType: Enum "Hist. Payables Doc. Type"; VoucherNo: Code[35])
+    begin
+        if DocType = Rec."Document Type"::Invoice then
+            Rec.SetRange("Apply To Voucher No.", VoucherNo)
+        else
+            Rec.SetRange("Voucher No.", VoucherNo);
+
+        CurrPage.Update();
+    end;
 }
