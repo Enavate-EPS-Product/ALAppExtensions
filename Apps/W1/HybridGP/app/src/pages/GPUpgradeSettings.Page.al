@@ -44,6 +44,23 @@ page 40043 "GP Upgrade Settings"
                     ToolTip = 'Specifies whether to log all record changes during upgrade. This method will make the data upgrade slower.';
                 }
             }
+
+            group(HistoricalSnapshot)
+            {
+                Caption = 'Historical Snapshot';
+                field(SnapshotMode; Rec."Snapshot Mode")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Snapshot Mode';
+                    ToolTip = 'Specifies whether to schedule the Historical Snapshot as a Session or Job Queue.';
+                }
+                field(SnapshotTimeout; Rec."Snapshot Timeout")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Snapshot Timeout';
+                    ToolTip = 'Specifies the timeout duration of the Historical Snapshot Session or Job.';
+                }
+            }
         }
     }
 

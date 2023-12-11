@@ -153,6 +153,7 @@ codeunit 4035 "Wizard Integration"
     var
         GPConfiguration: Record "GP Configuration";
         JobQueueEntry: Record "Job Queue Entry";
+        GPUpgradeSettings: Record "GP Upgrade Settings";
         HybridCloudManagement: Codeunit "Hybrid Cloud Management";
         UserPermissions: Codeunit "User Permissions";
         TimeoutDuration: Duration;
@@ -161,37 +162,71 @@ codeunit 4035 "Wizard Integration"
         IsHandled: Boolean;
         OverrideTimeoutDuration: Duration;
         OverrideMaxAttempts: Integer;
+        SessionId: Integer;
     begin
-        if not UserPermissions.IsSuper(UserSecurityId()) then
-            exit;
+        GPUpgradeSettings.GetonInsertGPUpgradeSettings(GPUpgradeSettings);
 
-        if not TaskScheduler.CanCreateTask() then
-            exit;
+        if GPUpgradeSettings."Snapshot Mode" = GPUpgradeSettings."Snapshot Mode"::"Background session" then begin
+            if Session.StartSession(SessionId, Codeunit::"GP Populate Hist. Tables", CompanyName(), GPUpgradeSettings, GPUpgradeSettings."Snapshot Timeout") then begin
+                SendStartSnapshotResultMessage('', TelemetrySnapshotScheduledMsg, false);
+                if GPConfiguration.Get() then begin
+                    GPConfiguration."Historical Job Ran" := true;
+                    GPConfiguration.Modify();
+                end;
+            end else begin
+                SendStartSnapshotResultMessage('', TelemetrySnapshotFailedToStartSessionMsg, true);
+                exit;
+            end;
+        end else begin
+            if not UserPermissions.IsSuper(UserSecurityId()) then begin
+                SendStartSnapshotResultMessage('', TelemetrySnapshotFailedToStartNotSuperMsg, true);
+                exit;
+            end;
 
-        if not JobQueueEntry.WritePermission then
-            exit;
+            if not TaskScheduler.CanCreateTask() then begin
+                SendStartSnapshotResultMessage('', TelemetrySnapshotFailedToStartCannotCreateTaskMsg, true);
+                exit;
+            end;
 
-        TimeoutDuration := GetDefaultGPHistoricalMigrationJobTimeoutDuration();
-        MaxAttempts := GetDefaultGPHistoricalMigrationJobMaxAttempts();
+            if not JobQueueEntry.WritePermission then begin
+                SendStartSnapshotResultMessage('', TelemetrySnapshotFailedToStartMissingJobQueueWritePermissionMsg, true);
+                exit;
+            end;
 
-        OnBeforeCreateGPHistoricalMigrationJob(IsHandled, OverrideTimeoutDuration, OverrideMaxAttempts);
-        if IsHandled then begin
-            TimeoutDuration := OverrideTimeoutDuration;
-            MaxAttempts := OverrideMaxAttempts;
+            TimeoutDuration := GetDefaultGPHistoricalMigrationJobTimeoutDuration();
+            MaxAttempts := GetDefaultGPHistoricalMigrationJobMaxAttempts();
+
+            OnBeforeCreateGPHistoricalMigrationJob(IsHandled, OverrideTimeoutDuration, OverrideMaxAttempts);
+            if IsHandled then begin
+                TimeoutDuration := OverrideTimeoutDuration;
+                MaxAttempts := OverrideMaxAttempts;
+            end;
+
+            QueueCategory := HybridCloudManagement.GetJobQueueCategory();
+
+            CreateAndScheduleBackgroundJob(Codeunit::"GP Populate Hist. Tables",
+                    TimeoutDuration,
+                    MaxAttempts,
+                    QueueCategory,
+                    GPSnapshotJobDescriptionTxt);
+
+            SendStartSnapshotResultMessage('', TelemetrySnapshotScheduledMsg, false);
+            if GPConfiguration.Get() then begin
+                GPConfiguration."Historical Job Ran" := true;
+                GPConfiguration.Modify();
+            end;
         end;
+    end;
 
-        QueueCategory := HybridCloudManagement.GetJobQueueCategory();
+    local procedure SendStartSnapshotResultMessage(TelemetryEventId: Text; MessageText: Text; IsError: Boolean)
+    begin
+        if IsError then
+            Session.LogMessage(TelemetryEventId, MessageText, Verbosity::Error, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', HelperFunctions.GetTelemetryCategory())
+        else
+            Session.LogMessage(TelemetryEventId, MessageText, Verbosity::Normal, DataClassification::SystemMetadata, TelemetryScope::ExtensionPublisher, 'Category', HelperFunctions.GetTelemetryCategory());
 
-        CreateAndScheduleBackgroundJob(Codeunit::"GP Populate Hist. Tables",
-                TimeoutDuration,
-                MaxAttempts,
-                QueueCategory,
-                GPSnapshotJobDescriptionTxt);
-
-        if GPConfiguration.Get() then begin
-            GPConfiguration."Historical Job Ran" := true;
-            GPConfiguration.Modify();
-        end;
+        if GuiAllowed() then
+            Message(MessageText);
     end;
 
     [IntegrationEvent(false, false)]
@@ -224,4 +259,9 @@ codeunit 4035 "Wizard Integration"
 
     var
         GPSnapshotJobDescriptionTxt: Label 'Migrate GP Historical Snapshot';
+        TelemetrySnapshotScheduledMsg: Label 'GP Historical Snapshot is now scheduled.', Locked = true;
+        TelemetrySnapshotFailedToStartSessionMsg: Label 'GP Historical Snapshot could not start a new Session.', Locked = true;
+        TelemetrySnapshotFailedToStartNotSuperMsg: Label 'GP Historical Snapshot could not start, the User does not have Super permissions.', Locked = true;
+        TelemetrySnapshotFailedToStartCannotCreateTaskMsg: Label 'GP Historical Snapshot could not start, the User does not have permission to create a scheduled task.', Locked = true;
+        TelemetrySnapshotFailedToStartMissingJobQueueWritePermissionMsg: Label 'GP Historical Snapshot could not start, the User does not have Write permission to the Job Queue table.', Locked = true;
 }

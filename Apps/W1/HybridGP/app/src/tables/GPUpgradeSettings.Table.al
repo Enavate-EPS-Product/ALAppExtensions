@@ -60,6 +60,18 @@ table 40150 "GP Upgrade Settings"
             DataClassification = CustomerContent;
             Caption = 'Replication Completed';
         }
+
+        field(11; "Snapshot Mode"; Option)
+        {
+            DataClassification = CustomerContent;
+            OptionCaption = 'Background session,Job Queue';
+            OptionMembers = "Background session","Job Queue";
+        }
+        field(12; "Snapshot Timeout"; Duration)
+        {
+            DataClassification = CustomerContent;
+            Caption = 'Snapshot Timeout';
+        }
     }
     keys
     {
@@ -75,6 +87,7 @@ table 40150 "GP Upgrade Settings"
         if not GPUpgradeSettings.Get() then begin
             GPUpgradeSettings."Upgrade Duration" := HybridGPManagement.GetDefaultJobTimeout();
             GPUpgradeSettings."One Step Upgrade Delay" := GetUpgradeDelay();
+            GPUpgradeSettings."Snapshot Timeout" := GetDefaultSnapshotTimeout();
             GPUpgradeSettings.Insert();
             GPUpgradeSettings.Get();
         end;
@@ -83,6 +96,11 @@ table 40150 "GP Upgrade Settings"
     internal procedure GetUpgradeDelay(): Duration
     begin
         exit(30 * 1000); // 30 seconds
+    end;
+
+    internal procedure GetDefaultSnapshotTimeout(): Duration
+    begin
+        exit(48 * 60 * 60 * 1000); // 48 hours
     end;
 
     var

@@ -623,6 +623,9 @@ page 4050 "GP Migration Configuration"
                 Caption = 'Upgrade settings';
                 ToolTip = 'Change the settings for the GP upgrade.';
                 RunObject = page "GP Upgrade Settings";
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedOnly = true;
                 Image = Setup;
 
             }
