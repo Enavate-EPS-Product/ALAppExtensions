@@ -134,11 +134,6 @@ codeunit 4035 "Wizard Integration"
         exit(codeunit::"Wizard Integration");
     end;
 
-    local procedure GetDefaultGPHistoricalMigrationJobTimeoutDuration(): Integer
-    begin
-        exit(48 * 60 * 60 * 1000); // 48 hours
-    end;
-
     local procedure GetDefaultGPHistoricalMigrationJobMaxAttempts(): Integer
     begin
         exit(10);
@@ -193,7 +188,7 @@ codeunit 4035 "Wizard Integration"
                 exit;
             end;
 
-            TimeoutDuration := GetDefaultGPHistoricalMigrationJobTimeoutDuration();
+            TimeoutDuration := GPUpgradeSettings."Snapshot Timeout";
             MaxAttempts := GetDefaultGPHistoricalMigrationJobMaxAttempts();
 
             OnBeforeCreateGPHistoricalMigrationJob(IsHandled, OverrideTimeoutDuration, OverrideMaxAttempts);
