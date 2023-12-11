@@ -48,6 +48,7 @@ page 40043 "GP Upgrade Settings"
             group(HistoricalSnapshot)
             {
                 Caption = 'Historical Snapshot';
+
                 field(SnapshotMode; Rec."Snapshot Mode")
                 {
                     ApplicationArea = All;
@@ -60,6 +61,23 @@ page 40043 "GP Upgrade Settings"
                     Caption = 'Snapshot Timeout';
                     ToolTip = 'Specifies the timeout duration of the Historical Snapshot Session or Job.';
                 }
+            }
+
+            label(SnapshotModesHeader)
+            {
+                ApplicationArea = All;
+                Caption = 'Historical Snapshot modes';
+                Style = Strong;
+            }
+            label(SnapshotModeBackgroundSession)
+            {
+                ApplicationArea = All;
+                Caption = 'Background session: Choose this option if you are a Delegated Admin.';
+            }
+            label(SnapshotModeJobQueue)
+            {
+                ApplicationArea = All;
+                Caption = 'Job Queue: Choose this option if the Companies have a substantial volume of historical data. Required permissions include Super user, permission to schedule a task, and have Write permission to the Job Queue table. Delegated Admins should not choose this option as they don''t meet the requirements.';
             }
         }
     }
