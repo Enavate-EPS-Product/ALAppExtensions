@@ -1068,6 +1068,82 @@ codeunit 4037 "Helper Functions"
         exit(UnpostedLines);
     end;
 
+    local procedure GetGLBatchCountWithUnpostedLinesForCompany(CompanyNameTxt: Text; TemplateName: Text; BatchNameFilter: text): Integer
+    var
+        GenJournalBatch: Record "Gen. Journal Batch";
+        GenJournalLine: Record "Gen. Journal Line";
+        UnpostedBatchCount: Integer;
+    begin
+        GenJournalBatch.ChangeCompany(CompanyNameTxt);
+        GenJournalLine.ChangeCompany(CompanyNameTxt);
+
+        GenJournalBatch.SetRange("Journal Template Name", TemplateName);
+        GenJournalBatch.SetFilter(Name, BatchNameFilter);
+        if GenJournalBatch.FindSet() then
+            repeat
+                GenJournalLine.SetRange("Journal Template Name", GenJournalBatch."Journal Template Name");
+                GenJournalLine.SetRange("Journal Batch Name", GenJournalBatch.Name);
+                if not GenJournalLine.IsEmpty() then
+                    UnpostedBatchCount := UnpostedBatchCount + 1;
+            until GenJournalBatch.Next() = 0;
+
+        exit(UnpostedBatchCount);
+    end;
+
+    local procedure GetItemBatchCountWithUnpostedLinesForCompany(CompanyNameTxt: Text): Integer
+    var
+        ItemJournalBatch: Record "Item Journal Batch";
+        ItemJournalLine: Record "Item Journal Line";
+        UnpostedBatchCount: Integer;
+    begin
+        ItemJournalBatch.ChangeCompany(CompanyNameTxt);
+        ItemJournalLine.ChangeCompany(CompanyNameTxt);
+
+        ItemJournalBatch.SetFilter(Name, 'GPITEM*');
+        if ItemJournalBatch.FindSet() then
+            repeat
+                ItemJournalLine.SetRange("Journal Batch Name", ItemJournalBatch.Name);
+                if not ItemJournalLine.IsEmpty() then
+                    UnpostedBatchCount += UnpostedBatchCount + 1;
+            until ItemJournalBatch.Next() = 0;
+
+        exit(UnpostedBatchCount);
+    end;
+
+    internal procedure GetUnpostedBatchCountForCompany(CompanyNameTxt: Text; var TotalGLBatchCount: Integer; var TotalItemBatchCount: Integer)
+    var
+        HybridCompanyStatus: Record "Hybrid Company Status";
+        GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+    begin
+        TotalGLBatchCount := 0;
+        TotalItemBatchCount := 0;
+
+        if not HybridCompanyStatus.Get(CompanyNameTxt) then
+            exit;
+
+        if not (HybridCompanyStatus."Upgrade Status" = HybridCompanyStatus."Upgrade Status"::Completed) then
+            exit;
+
+        if GPCompanyAdditionalSettings.GetSkipAllPosting() then
+            exit;
+
+        if not GPCompanyAdditionalSettings.GetSkipPostingAccountBatches() then
+            TotalGLBatchCount := GetGLBatchCountWithUnpostedLinesForCompany(CompanyNameTxt, GeneralTemplateNameTxt, PostingGroupCodeTxt + '*');
+
+        if not GPCompanyAdditionalSettings.GetSkipPostingCustomerBatches() then
+            TotalGLBatchCount += GetGLBatchCountWithUnpostedLinesForCompany(CompanyNameTxt, GeneralTemplateNameTxt, CustomerBatchNameTxt);
+
+        if not GPCompanyAdditionalSettings.GetSkipPostingVendorBatches() then
+            TotalGLBatchCount += GetGLBatchCountWithUnpostedLinesForCompany(CompanyNameTxt, GeneralTemplateNameTxt, VendorBatchNameTxt);
+
+        if not GPCompanyAdditionalSettings.GetSkipPostingBankBatches() then
+            TotalGLBatchCount += GetGLBatchCountWithUnpostedLinesForCompany(CompanyNameTxt, GeneralTemplateNameTxt, BankBatchNameTxt);
+
+        // TODO: Uncomment this when the recent Item posting change is publically available in the GitHub repo...
+        //if not GPCompanyAdditionalSettings.GetSkipPostingItemBatches() then
+        TotalItemBatchCount := GetItemBatchCountWithUnpostedLinesForCompany(CompanyNameTxt);
+    end;
+
     procedure PostGLTransactions()
     var
         GenJournalLine: Record "Gen. Journal Line";
