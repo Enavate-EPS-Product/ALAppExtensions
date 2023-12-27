@@ -21,6 +21,7 @@ codeunit 40108 "GP PO Migrator"
         GPCodeTxt: Label 'GP', Locked = true;
         ItemJournalBatchNameTxt: Label 'GPPOITEMS', Comment = 'Item journal batch name for item adjustments', Locked = true;
         SimpleInvJnlNameTxt: Label 'DEFAULT', Comment = 'The default name of the item journal', Locked = true;
+        MigrationLogAreaTxt: Label 'PO', Locked = true;
         ItemJnlBatchLineNo: Integer;
         PostPurchaseOrderNoList: List of [Text];
         InitialAutomaticCostAdjustmentType: Enum "Automatic Cost Adjustment Type";
@@ -35,6 +36,7 @@ codeunit 40108 "GP PO Migrator"
         GeneralLedgerSetup: Record "General Ledger Setup";
         Vendor: Record Vendor;
         InventorySetup: Record "Inventory Setup";
+        GPMigrationLog: Record "GP Migration Log";
         DataMigrationErrorLogging: Codeunit "Data Migration Error Logging";
         PurchaseDocumentType: Enum "Purchase Document Type";
         PurchaseDocumentStatus: Enum "Purchase Document Status";
@@ -97,7 +99,10 @@ codeunit 40108 "GP PO Migrator"
                 PurchaseLine.SetRange("Document No.", PurchaseHeader."No.");
                 if PurchaseLine.IsEmpty() then
                     PurchaseHeader.Delete();
-            end;
+            end
+            else
+                GPMigrationLog.InsertLog(MigrationLogAreaTxt, GPPOP10100.PONUMBER, 'PO was skipped because the Vendor has not been migrated.');
+
         until GPPOP10100.Next() = 0;
 
         PostReceivedPurchaseLines();
