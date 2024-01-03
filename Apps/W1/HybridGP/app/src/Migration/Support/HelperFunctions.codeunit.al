@@ -36,6 +36,7 @@ using Microsoft.Finance.Currency;
 using Microsoft.Finance.GeneralLedger.Posting;
 using Microsoft.DataMigration;
 using Microsoft.Utilities;
+using System.Environment.Configuration;
 
 codeunit 4037 "Helper Functions"
 {
@@ -107,6 +108,7 @@ codeunit 4037 "Helper Functions"
         CloudMigrationTok: Label 'CloudMigration', Locked = true;
         GeneralTemplateNameTxt: Label 'GENERAL', Locked = true;
         NotAllJournalLinesPostedMsg: Label 'Not all journal lines were posted. Number of unposted lines - %1.', Comment = '%1 Number of unposted lines';
+        MigratedFromGPDescriptionTxt: Label 'Migrated from GP', Locked = true;
 
     procedure GetTextFromJToken(JToken: JsonToken; Path: Text): Text
     var
@@ -1896,6 +1898,25 @@ codeunit 4037 "Helper Functions"
     procedure StringEqualsCaseInsensitive(Text1: Text; Text2: Text): Boolean
     begin
         exit(UpperCase(Text1) = UpperCase(Text2));
+    end;
+
+    internal procedure MigrateRecordNote(NoteIndex: Integer; RecordId: RecordId)
+    var
+        GPSY03900: Record "GP SY03900";
+        RecordLink: Record "Record Link";
+        RecordLinkManagement: Codeunit "Record Link Management";
+    begin
+        if GPSY03900.Get(NoteIndex) then begin
+            RecordLink."Link ID" := 0;
+            RecordLink."Record ID" := RecordId;
+            RecordLink.Company := CopyStr(CompanyName(), 1, MaxStrLen(RecordLink.Company));
+            RecordLink.Description := MigratedFromGPDescriptionTxt;
+            RecordLink.Type := RecordLink.Type::Note;
+            RecordLink.Created := GPSY03900.DATE1;
+            RecordLink."User ID" := CopyStr(UserId(), 1, MaxStrLen(RecordLink."User ID"));
+            RecordLinkManagement.WriteNote(RecordLink, GPSY03900.TXTFIELD.TrimEnd());
+            RecordLink.Insert();
+        end;
     end;
 
     internal procedure CheckAndLogErrors()

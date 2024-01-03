@@ -343,7 +343,7 @@ codeunit 4018 "GP Customer Migrator"
         CustomerDataMigrationFacade.SetEmail(COPYSTR(MigrationGPCustomer.INET1, 1, 80));
         CustomerDataMigrationFacade.SetHomePage(COPYSTR(MigrationGPCustomer.INET2, 1, 80));
 
-        GPRM00101.SetLoadFields(ADRSCODE);
+        GPRM00101.SetLoadFields(ADRSCODE, NOTEINDX);
         if GPRM00101.Get(MigrationGPCustomer.CUSTNMBR) then
             if GPSY01200.Get(CustomerEmailTypeCodeLbl, GPRM00101.CUSTNMBR, GPRM00101.ADRSCODE) then
                 CustomerDataMigrationFacade.SetEmail(CopyStr(GPSY01200.GetAllEmailAddressesText(MaxStrLen(Customer."E-Mail")), 1, MaxStrLen(Customer."E-Mail")));
@@ -383,6 +383,10 @@ codeunit 4018 "GP Customer Migrator"
         end;
 
         CustomerDataMigrationFacade.ModifyCustomer(true);
+
+        if GPRM00101.NOTEINDX > 0 then
+            if Customer.Get(MigrationGPCustomer.CUSTNMBR) then
+                HelperFunctions.MigrateRecordNote(GPRM00101.NOTEINDX, Customer.RecordId());
     end;
 
     local procedure MigrateCustomerAddresses(MigrationGPCustomer: Record "GP Customer")

@@ -364,7 +364,7 @@ codeunit 4022 "GP Vendor Migrator"
         VendorDataMigrationFacade.SetEmail(COPYSTR(GPVendor.INET1, 1, MaxStrLen(Vendor."E-Mail")));
         VendorDataMigrationFacade.SetHomePage(COPYSTR(GPVendor.INET2, 1, MaxStrLen(Vendor."Home Page")));
 
-        GPPM00200.SetLoadFields(VADDCDPR);
+        GPPM00200.SetLoadFields(VADDCDPR, NOTEINDX);
         if GPPM00200.Get(VendorNo) then
             if GPSY01200.Get(VendorEmailTypeCodeLbl, VendorNo, GPPM00200.VADDCDPR) then
                 VendorDataMigrationFacade.SetEmail(CopyStr(GPSY01200.GetAllEmailAddressesText(MaxStrLen(Vendor."E-Mail")), 1, MaxStrLen(Vendor."E-Mail")));
@@ -387,6 +387,10 @@ codeunit 4022 "GP Vendor Migrator"
         end;
 
         VendorDataMigrationFacade.ModifyVendor(true);
+
+        if GPPM00200.NOTEINDX > 0 then
+            if Vendor.Get(VendorNo) then
+                HelperFunctions.MigrateRecordNote(GPPM00200.NOTEINDX, Vendor.RecordId());
     end;
 
     local procedure MigrateVendorAddresses(GPVendor: Record "GP Vendor")

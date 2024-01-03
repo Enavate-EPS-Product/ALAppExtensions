@@ -24,6 +24,7 @@ codeunit 139664 "GP Data Migration Tests"
         GPPOP10110: Record "GP POP10110";
         GPSY01200: Record "GP SY01200";
         Item: Record Item;
+        GPSY03900: Record "GP SY03900";
         GPTestHelperFunctions: Codeunit "GP Test Helper Functions";
         CustomerFacade: Codeunit "Customer Data Migration Facade";
         CustomerMigrator: Codeunit "GP Customer Migrator";
@@ -109,6 +110,7 @@ codeunit 139664 "GP Data Migration Tests"
         Customer: Record "Customer";
         GenJournalLine: Record "Gen. Journal Line";
         ShipToAddress: Record "Ship-to Address";
+        RecordLink: Record "Record Link";
         InitialGenJournalLineCount: Integer;
         CustomerCount: Integer;
     begin
@@ -192,6 +194,11 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('2% EOM/NET', Customer."Payment Terms Code", 'Payment Terms Code of Migrated Customer is wrong');
         Assert.AreEqual('S-N-NO-%S', Customer."Tax Area Code", 'Tax Area Code of Migrated Customer is wrong');
         Assert.AreEqual(true, Customer."Tax Liable", 'Tax Liable of Migrated Customer is wrong');
+
+        // Record notes
+        RecordLink.SetRange("Record ID", Customer.RecordId());
+        Assert.AreEqual(true, RecordLink.FindFirst(), 'Record note was not migrated');
+        Assert.AreEqual(true, RecordLink.Note.HasValue(), 'Record note does not have a value');
 
         // [WHEN] the Customer phone and/or fax were default (00000000000000)
         // [then] The phone and/or fax values are empty 
@@ -489,6 +496,7 @@ codeunit 139664 "GP Data Migration Tests"
         OrderAddress: Record "Order Address";
         RemitAddress: Record "Remit Address";
         GenJournalLine: Record "Gen. Journal Line";
+        RecordLink: Record "Record Link";
         InitialGenJournalLineCount: Integer;
         Country: Code[10];
         VendorCount: Integer;
@@ -575,6 +583,11 @@ codeunit 139664 "GP Data Migration Tests"
         Assert.AreEqual('3% 15TH/NE', Vendor."Payment Terms Code", 'Payment Terms Code of Migrated Vendor is wrong');
         Assert.AreEqual('P-N-TXB-%P*6', Vendor."Tax Area Code", 'Tax Area Code of Migrated Vendor is wrong');
         Assert.AreEqual(true, Vendor."Tax Liable", 'Tax Liable of Migrated Vendor is wrong');
+
+        // Record notes
+        RecordLink.SetRange("Record ID", Vendor.RecordId());
+        Assert.AreEqual(true, RecordLink.FindFirst(), 'Record note was not migrated');
+        Assert.AreEqual(true, RecordLink.Note.HasValue(), 'Record note does not have a value');
 
         // [THEN] The Order addresses will be created correctly
         OrderAddress.SetRange("Vendor No.", 'ACETRAVE0001');
@@ -1548,6 +1561,7 @@ codeunit 139664 "GP Data Migration Tests"
         PurchaseHeader: Record "Purchase Header";
         GenProductPostingGroup: Record "Gen. Product Posting Group";
         InventoryPostingGroup: Record "Inventory Posting Group";
+        RecordLink: Record "Record Link";
     begin
         if not BindSubscription(GPDataMigrationTests) then
             exit;
@@ -1567,6 +1581,8 @@ codeunit 139664 "GP Data Migration Tests"
         GPPOP10100.DeleteAll();
         GPPOP10110.DeleteAll();
         GPSY01200.DeleteAll();
+        GPSY03900.DeleteAll();
+        RecordLink.DeleteAll();
 
         if not GenBusPostingGroup.Get(PostingGroupCodeTxt) then begin
             GenBusPostingGroup.Validate("Code", PostingGroupCodeTxt);
@@ -1635,7 +1651,14 @@ codeunit 139664 "GP Data Migration Tests"
         GPRM00101.CUSTNMBR := '!WOW!';
         GPRM00101.CUSTNAME := 'Oh! What a feeling!';
         GPRM00101.ADRSCODE := '';
+        GPRM00101.NOTEINDX := 1;
         GPRM00101.Insert();
+
+        Clear(GPSY03900);
+        GPSY03900.NOTEINDX := 1;
+        GPSY03900.DATE1 := System.CurrentDateTime();
+        GPSY03900.TXTFIELD := 'Note text';
+        GPSY03900.Insert();
 
         Clear(GPCustomer);
         GPCustomer.CUSTNMBR := GPRM00101.CUSTNMBR;
@@ -2263,6 +2286,12 @@ codeunit 139664 "GP Data Migration Tests"
         GPVendor.UPSZONE := 'T3';
         GPVendor.TXIDNMBR := '45-0029728';
         GPVendor.Insert();
+
+        Clear(GPSY03900);
+        GPSY03900.NOTEINDX := 2;
+        GPSY03900.DATE1 := System.CurrentDateTime();
+        GPSY03900.TXTFIELD := 'Note text';
+        GPSY03900.Insert();
 
         Clear(GPVendor);
         GPVendor.VENDORID := '11@20%';
@@ -4026,6 +4055,7 @@ codeunit 139664 "GP Data Migration Tests"
         Clear(GPPM00200);
         GPPM00200.VENDORID := '1160';
         GPPM00200.VNDCLSID := 'TEST';
+        GPPM00200.NOTEINDX := 2;
         GPPM00200.Insert();
 
         Clear(GPPM00100);
