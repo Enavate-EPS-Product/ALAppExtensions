@@ -1902,20 +1902,48 @@ codeunit 4037 "Helper Functions"
     internal procedure MigrateRecordNote(NoteIndex: Integer; RecordId: RecordId; Description: Text[250])
     var
         GPSY03900: Record "GP SY03900";
+    begin
+        if GPSY03900.Get(NoteIndex) then
+            MigrateRecordNoteDetail(GPSY03900.TXTFIELD.TrimEnd(), GPSY03900.DATE1, RecordId, Description);
+    end;
+
+    internal procedure MigrateRecordNoteDetail(NoteText: Text; NoteDate: DateTime; RecordId: RecordId; Description: Text[250])
+    var
         RecordLink: Record "Record Link";
         RecordLinkManagement: Codeunit "Record Link Management";
     begin
-        if GPSY03900.Get(NoteIndex) then begin
-            RecordLink."Link ID" := 0;
-            RecordLink."Record ID" := RecordId;
-            RecordLink.Company := CopyStr(CompanyName(), 1, MaxStrLen(RecordLink.Company));
-            RecordLink.Description := Description;
-            RecordLink.Type := RecordLink.Type::Note;
-            RecordLink.Created := GPSY03900.DATE1;
-            RecordLink."User ID" := CopyStr(UserId(), 1, MaxStrLen(RecordLink."User ID"));
-            RecordLinkManagement.WriteNote(RecordLink, GPSY03900.TXTFIELD.TrimEnd());
-            RecordLink.Insert();
-        end;
+        RecordLink."Link ID" := 0;
+        RecordLink."Record ID" := RecordId;
+        RecordLink.Company := CopyStr(CompanyName(), 1, MaxStrLen(RecordLink.Company));
+        RecordLink.Description := Description;
+        RecordLink.Type := RecordLink.Type::Note;
+        RecordLink.Created := NoteDate;
+        RecordLink."User ID" := CopyStr(UserId(), 1, MaxStrLen(RecordLink."User ID"));
+        RecordLinkManagement.WriteNote(RecordLink, NoteText);
+        RecordLink.Insert();
+    end;
+
+    internal procedure GetRecordNoteDetails(NoteIndex: Integer; var NoteText: Text; var RecordNoteDate: Date): Boolean
+    var
+        GPSY03900: Record "GP SY03900";
+        EntryDate: Date;
+    begin
+        Clear(NoteText);
+
+        if (NoteIndex < 1) then
+            exit(false);
+
+        if not GPSY03900.Get(NoteIndex) then
+            exit(false);
+
+        NoteText := GPSY03900.TXTFIELD.TrimEnd();
+
+        // Get the earliest note date
+        EntryDate := System.DT2Date(GPSY03900.DATE1);
+        if EntryDate < RecordNoteDate then
+            RecordNoteDate := EntryDate;
+
+        exit(true);
     end;
 
     internal procedure CheckAndLogErrors()
