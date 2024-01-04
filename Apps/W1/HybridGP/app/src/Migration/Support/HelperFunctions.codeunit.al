@@ -108,7 +108,6 @@ codeunit 4037 "Helper Functions"
         CloudMigrationTok: Label 'CloudMigration', Locked = true;
         GeneralTemplateNameTxt: Label 'GENERAL', Locked = true;
         NotAllJournalLinesPostedMsg: Label 'Not all journal lines were posted. Number of unposted lines - %1.', Comment = '%1 Number of unposted lines';
-        MigratedFromGPDescriptionTxt: Label 'Migrated from GP', Locked = true;
 
     procedure GetTextFromJToken(JToken: JsonToken; Path: Text): Text
     var
@@ -1900,7 +1899,7 @@ codeunit 4037 "Helper Functions"
         exit(UpperCase(Text1) = UpperCase(Text2));
     end;
 
-    internal procedure MigrateRecordNote(NoteIndex: Integer; RecordId: RecordId)
+    internal procedure MigrateRecordNote(NoteIndex: Integer; RecordId: RecordId; Description: Text[250])
     var
         GPSY03900: Record "GP SY03900";
         RecordLink: Record "Record Link";
@@ -1910,7 +1909,7 @@ codeunit 4037 "Helper Functions"
             RecordLink."Link ID" := 0;
             RecordLink."Record ID" := RecordId;
             RecordLink.Company := CopyStr(CompanyName(), 1, MaxStrLen(RecordLink.Company));
-            RecordLink.Description := MigratedFromGPDescriptionTxt;
+            RecordLink.Description := Description;
             RecordLink.Type := RecordLink.Type::Note;
             RecordLink.Created := GPSY03900.DATE1;
             RecordLink."User ID" := CopyStr(UserId(), 1, MaxStrLen(RecordLink."User ID"));

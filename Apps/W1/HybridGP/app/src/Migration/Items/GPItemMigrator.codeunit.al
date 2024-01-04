@@ -111,7 +111,7 @@ codeunit 4019 "GP Item Migrator"
         if GPIV00101.Get(GPItem.No) then
             if GPIV00101.NOTEINDX > 0 then
                 if Item.Get(GPItem.No) then
-                    HelperFunctions.MigrateRecordNote(GPIV00101.NOTEINDX, Item.RecordId());
+                    HelperFunctions.MigrateRecordNote(GPIV00101.NOTEINDX, Item.RecordId(), 'GP Item: ' + Item."No.");
     end;
 
 #if not CLEAN22

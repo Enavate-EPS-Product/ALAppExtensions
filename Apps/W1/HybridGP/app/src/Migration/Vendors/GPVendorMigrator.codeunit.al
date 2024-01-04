@@ -7,6 +7,7 @@ using Microsoft.Finance.GeneralLedger.Setup;
 using System.Email;
 using Microsoft.Purchases.Remittance;
 using Microsoft.Bank.Setup;
+using Microsoft.Finance.GeneralLedger.Journal;
 
 codeunit 4022 "GP Vendor Migrator"
 {
@@ -100,8 +101,10 @@ codeunit 4022 "GP Vendor Migrator"
         GPVendor: Record "GP Vendor";
         GPVendorTransactions: Record "GP Vendor Transactions";
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GenJournalLine: Record "Gen. Journal Line";
         DataMigrationFacadeHelper: Codeunit "Data Migration Facade Helper";
         DataMigrationErrorLogging: Codeunit "Data Migration Error Logging";
+        HelperFunctions: Codeunit "Helper Functions";
         PaymentTermsFormula: DateFormula;
         PayablesAccountNo: Code[20];
     begin
@@ -200,6 +203,19 @@ codeunit 4022 "GP Vendor Migrator"
                 end;
                 Sender.SetGeneralJournalLinePaymentTerms(CopyStr(GPVendorTransactions.PYMTRMID, 1, 10));
                 Sender.SetGeneralJournalLineExternalDocumentNo(CopyStr(GPVendorTransactions.DOCNUMBR.Trim(), 1, 35));
+            until GPVendorTransactions.Next() = 0;
+
+        // Record notes
+        Clear(GPVendorTransactions);
+        GPVendorTransactions.SetRange(VENDORID, GPVendor.VENDORID);
+        GPVendorTransactions.SetFilter(NOTEINDX, '>%1', 0);
+        if GPVendorTransactions.FindSet() then
+            repeat
+                Clear(GenJournalLine);
+                GenJournalLine.SetRange("Journal Batch Name", VendorBatchNameTxt);
+                GenJournalLine.SetRange("Document No.", GPVendorTransactions.GLDocNo);
+                if GenJournalLine.FindFirst() then
+                    HelperFunctions.MigrateRecordNote(GPVendorTransactions.NOTEINDX, GenJournalLine.RecordId(), 'GP Vendor transaction: ' + Format(GenJournalLine."Document Type") + ' ' + GenJournalLine."Document No.");
             until GPVendorTransactions.Next() = 0;
     end;
 #pragma warning restore AA0207
@@ -390,7 +406,7 @@ codeunit 4022 "GP Vendor Migrator"
 
         if GPPM00200.NOTEINDX > 0 then
             if Vendor.Get(VendorNo) then
-                HelperFunctions.MigrateRecordNote(GPPM00200.NOTEINDX, Vendor.RecordId());
+                HelperFunctions.MigrateRecordNote(GPPM00200.NOTEINDX, Vendor.RecordId(), 'GP Vendor: ' + Vendor."No.");
     end;
 
     local procedure MigrateVendorAddresses(GPVendor: Record "GP Vendor")
