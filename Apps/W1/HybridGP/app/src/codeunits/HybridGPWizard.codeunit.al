@@ -143,6 +143,8 @@ codeunit 4015 "Hybrid GP Wizard"
         HybridCompany: Record "Hybrid Company";
         HybridCompanyStatus: Record "Hybrid Company Status";
         HybridReplicationDetail: Record "Hybrid Replication Detail";
+        GPMigrationValidationEntry: Record "GP Migration Validation Entry";
+        GPMigrationValidation: Record "GP Migration Validation";
     begin
         GPCompanyMigrationSettings.Reset();
         if GPCompanyMigrationSettings.FindSet() then
@@ -159,6 +161,12 @@ codeunit 4015 "Hybrid GP Wizard"
 
         if not HybridReplicationDetail.IsEmpty() then
             HybridReplicationDetail.DeleteAll();
+            
+        if not GPMigrationValidationEntry.IsEmpty() then
+            GPMigrationValidationEntry.DeleteAll();
+
+        if not GPMigrationValidation.IsEmpty() then
+            GPMigrationValidation.DeleteAll();
     end;
 
     [EventSubscriber(ObjectType::Table, Database::"Company", 'OnAfterDeleteEvent', '', false, false)]
@@ -169,6 +177,8 @@ codeunit 4015 "Hybrid GP Wizard"
         HybridCompany: Record "Hybrid Company";
         HybridCompanyStatus: Record "Hybrid Company Status";
         HybridReplicationDetail: Record "Hybrid Replication Detail";
+        GPMigrationValidationEntry: Record "GP Migration Validation Entry";
+        GPMigrationValidation: Record "GP Migration Validation";
     begin
         if Rec.IsTemporary() then
             exit;
@@ -188,6 +198,13 @@ codeunit 4015 "Hybrid GP Wizard"
         HybridReplicationDetail.SetRange("Company Name", Rec.Name);
         if not HybridReplicationDetail.IsEmpty() then
             HybridReplicationDetail.DeleteAll();
+            
+        GPMigrationValidationEntry.SetRange(Name, Rec.Name);
+        if not GPMigrationValidationEntry.IsEmpty() then
+            GPMigrationValidationEntry.DeleteAll();
+
+        if GPMigrationValidation.Get(Rec.Name) then
+            GPMigrationValidation.DeleteAll();
     end;
 
     local procedure ProcessesAreRunning(): Boolean

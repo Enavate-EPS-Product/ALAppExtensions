@@ -153,5 +153,12 @@ permissionset 4029 "HybridGP - Objects"
                     table "GP PM10200" = X,
                     table "GP PM30300" = X,
                     table "GP RM20201" = X,
-                    table "GP RM30201" = X;
+                    table "GP RM30201" = X,
+                    table "GP Migration Validation" = X,
+                    table "GP Migration Validation Entry" = X,
+                    table "GP Migration Validation Buffer" = X,
+                    page "GP Company Validation List" = X,
+                    page "GP Migration Validation" = X,
+                    page "GP Migration Validation List" = X,
+                    codeunit "GP Migration Validation Mgmt." = X;
 }

@@ -21,6 +21,7 @@ codeunit 4025 "GP Cloud Migration"
         GPMigrationErrorHandler: Codeunit "GP Migration Error Handler";
         HybridHandleGPUpgradeError: Codeunit "Hybrid Handle GP Upgrade Error";
         GPCollectAllModifications: Codeunit "GP Collect All Modifications";
+        GPMigrationValidationMgmt: Codeunit "GP Migration Validation Mgmt.";
         Success: Boolean;
     begin
         GPMigrationErrorHandler.ClearErrorOccured();
@@ -68,6 +69,8 @@ codeunit 4025 "GP Cloud Migration"
 
         Rec.Status := Rec.Status::Completed;
         Rec.Modify();
+
+        GPMigrationValidationMgmt.StartMigrationValidation();
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"GP Cloud Migration", 'OnUpgradeGPCompany', '', false, false)]

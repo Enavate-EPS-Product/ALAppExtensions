@@ -108,5 +108,8 @@ permissionsetextension 4026 "D365 BASIC ISV - HGP" extends "D365 BASIC ISV"
                   tabledata "GP PM10200" = RIMD,
                   tabledata "GP PM30300" = RIMD,
                   tabledata "GP RM20201" = RIMD,
-                  tabledata "GP RM30201" = RIMD;
+                  tabledata "GP RM30201" = RIMD,
+                  tabledata "GP Migration Validation" = RIMD,
+                  tabledata "GP Migration Validation Entry" = RIMD,
+                  tabledata "GP Migration Validation Buffer" = RIMD;
 }
