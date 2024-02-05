@@ -145,6 +145,7 @@ table 40105 "GP Company Additional Settings"
             begin
                 if not Rec."Migrate Payables Module" then begin
                     Rec.Validate("Migrate Inactive Vendors", false);
+                    Rec.Validate("Migrate Temporary Vendors", false);
                     Rec.Validate("Migrate Open POs", false);
                     Rec.Validate("Migrate Vendor Classes", false);
                     Rec.Validate("Migrate Only Payables Master", false);
@@ -436,6 +437,17 @@ table 40105 "GP Company Additional Settings"
             DataClassification = SystemMetadata;
             InitValue = false;
         }
+        field(42; "Migrate Temporary Vendors"; Boolean)
+        {
+            DataClassification = SystemMetadata;
+            InitValue = true;
+
+            trigger OnValidate()
+            begin
+                if Rec."Migrate Temporary Vendors" then
+                    Rec.Validate("Migrate Payables Module", true);
+            end;
+        }
     }
 
     keys
@@ -511,6 +523,12 @@ table 40105 "GP Company Additional Settings"
     begin
         GetSingleInstance();
         exit(Rec."Migrate Inactive Vendors");
+    end;
+
+    procedure GetMigrateTemporaryVendors(): Boolean
+    begin
+        GetSingleInstance();
+        exit(Rec."Migrate Temporary Vendors");
     end;
 
     procedure GetMigrateInactiveItems(): Boolean

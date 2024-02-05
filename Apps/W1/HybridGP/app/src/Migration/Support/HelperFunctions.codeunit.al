@@ -1005,11 +1005,23 @@ codeunit 4037 "Helper Functions"
     var
         GPVendor: Record "GP Vendor";
         GPCompanyAdditionalSettings: Record "GP Company Additional Settings";
+        GPVendorMigrator: Codeunit "GP Vendor Migrator";
+        IsTemporaryVendor: Boolean;
+        HasOpenPurchaseOrders: Boolean;
+        HasOpenTransactions: Boolean;
+        VendorCount: Integer;
     begin
         if not GPCompanyAdditionalSettings.GetPayablesModuleEnabled() then
             exit(0);
 
-        exit(GPVendor.Count());
+        if GPVendor.FindSet() then
+            repeat
+                if GPVendorMigrator.ShouldMigrateVendor(GPVendor.VENDORID, IsTemporaryVendor, HasOpenPurchaseOrders, HasOpenTransactions) then
+                    VendorCount := VendorCount + 1;
+
+            until GPVendor.Next() = 0;
+
+        exit(VendorCount);
     end;
 
     procedure RemoveEmptyGLTransactions()
