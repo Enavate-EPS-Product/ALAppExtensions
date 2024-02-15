@@ -29,7 +29,13 @@
                              "name":  "Sales and Inventory Forecast",
                              "publisher":  "Microsoft",
                              "version":  "24.0.0.0"
-                         }
+                        },
+                        {
+                            "id": "ea130081-c669-460f-a5f4-5dde14f03131",
+                            "name": "Statistical Accounts",
+                            "publisher": "Microsoft",
+                            "version": "24.0.0.0"
+                        }
                      ],
     "screenshots":  [
 

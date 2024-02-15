@@ -146,7 +146,12 @@ permissionset 4029 "HybridGP - Objects"
                     query "GP Item Aggregate" = X,
                     codeunit "GP Migration Error Handler" = X,
                     page "GP Migration Error Overview" = X,
+#if not CLEAN22
+#pragma warning disable AL0432
                     page "Hybrid GP Errors Overview Fb" = X,
+#pragma warning restore AL0432
+#endif
+                    page "Hybrid GP Overview Fb" = X,
                     table "GP Migration Error Overview" = X,
                     table "GP Upgrade Settings" = X,
                     codeunit "Start Data Upgrade" = X,
