@@ -32,16 +32,16 @@ codeunit 139678 "GP Checkbook Tests"
     var
         BankAccount: Record "Bank Account";
         GenJournalLine: Record "Gen. Journal Line";
-        BankAccountLedgerEntryEntry: Record "Bank Account Ledger Entry";
+        BankAccountLedgerEntry: Record "Bank Account Ledger Entry";
         HelperFunctions: Codeunit "Helper Functions";
     begin
         // [SCENARIO] CheckBooks are migrated from GP
         // [GIVEN] There are no records in the BankAcount table
         ClearTables();
         GenJournalLine.DeleteAll();
-        BankAccountLedgerEntryEntry.Reset();
-        BankAccountLedgerEntryEntry.SetFilter("Bank Account No.", '%1|%2|%3|%4|%5', MyBankStr1Txt, MyBankStr2Txt, MyBankStr3Txt, MyBankStr4Txt, MyBankStr5Txt);
-        BankAccountLedgerEntryEntry.DeleteAll();
+        BankAccountLedgerEntry.Reset();
+        BankAccountLedgerEntry.SetFilter("Bank Account No.", '%1|%2|%3|%4|%5', MyBankStr1Txt, MyBankStr2Txt, MyBankStr3Txt, MyBankStr4Txt, MyBankStr5Txt);
+        BankAccountLedgerEntry.DeleteAll();
 
         // [GIVEN] Some records are created in the staging table
         CreateCheckbookData();
@@ -70,20 +70,20 @@ codeunit 139678 "GP Checkbook Tests"
         HelperFunctions.PostGLTransactions();
 
         // [THEN] Bank Account Ledger entries are created
-        BankAccountLedgerEntryEntry.SetRange("Bank Account No.", UpperCase(MyBankStr1Txt));
-        Assert.RecordCount(BankAccountLedgerEntryEntry, 4);
+        BankAccountLedgerEntry.SetRange("Bank Account No.", UpperCase(MyBankStr1Txt));
+        Assert.RecordCount(BankAccountLedgerEntry, 4);
 
-        BankAccountLedgerEntryEntry.SetRange("Bank Account No.", UpperCase(MyBankStr2Txt));
-        Assert.RecordCount(BankAccountLedgerEntryEntry, 2);
+        BankAccountLedgerEntry.SetRange("Bank Account No.", UpperCase(MyBankStr2Txt));
+        Assert.RecordCount(BankAccountLedgerEntry, 2);
 
-        BankAccountLedgerEntryEntry.SetRange("Bank Account No.", UpperCase(MyBankStr3Txt));
-        Assert.RecordCount(BankAccountLedgerEntryEntry, 0);
+        BankAccountLedgerEntry.SetRange("Bank Account No.", UpperCase(MyBankStr3Txt));
+        Assert.RecordCount(BankAccountLedgerEntry, 0);
 
-        BankAccountLedgerEntryEntry.SetRange("Bank Account No.", UpperCase(MyBankStr4Txt));
-        Assert.RecordCount(BankAccountLedgerEntryEntry, 4);
+        BankAccountLedgerEntry.SetRange("Bank Account No.", UpperCase(MyBankStr4Txt));
+        Assert.RecordCount(BankAccountLedgerEntry, 4);
 
-        BankAccountLedgerEntryEntry.SetRange("Bank Account No.", UpperCase(MyBankStr5Txt));
-        Assert.RecordCount(BankAccountLedgerEntryEntry, 7);
+        BankAccountLedgerEntry.SetRange("Bank Account No.", UpperCase(MyBankStr5Txt));
+        Assert.RecordCount(BankAccountLedgerEntry, 7);
     end;
 
     [Test]
