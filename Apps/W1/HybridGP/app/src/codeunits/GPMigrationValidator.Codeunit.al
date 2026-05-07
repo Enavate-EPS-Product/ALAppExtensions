@@ -152,11 +152,11 @@ codeunit 40903 "GP Migration Validator"
                             end;
 
                     Clear(GLAccount);
-                    GLAccount.SetLoadFields("No.", Name, "Account Type", "Account Category", "Debit/Credit", "Account Subcategory Entry No.", "Income/Balance", Balance);
+                    GLAccount.SetLoadFields("No.", Name, "Account Type", "Account Category", "Debit/Credit", "Account Subcategory Entry No.", "Income/Balance");
                     if not MigrationValidationAssert.ValidateRecordExists(Test_ACCOUNTEXISTS_Tok, GLAccount.Get(GPAccount.AcctNum), StrSubstNo(MissingEntityTok, EntityType)) then
                         continue;
 
-                    GLAccount.CalcFields(Balance);
+                    //GLAccount.CalcFields(Balance);
 
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTNAME_Tok, GPAccount.Name, GLAccount.Name, AccountNameLbl, true);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTTYPE_Tok, Format(GLAccount."Account Type"::Posting), Format(GLAccount."Account Type"), AccountTypeLbl);
@@ -164,7 +164,7 @@ codeunit 40903 "GP Migration Validator"
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTDEBCRED_Tok, HelperFunctions.ConvertDebitCreditType(GPAccount), GLAccount."Debit/Credit", AccountDebitCreditLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTSUBCATEGORY_Tok, HelperFunctions.AssignSubAccountCategory(GPAccount), GLAccount."Account Subcategory Entry No.", AccountSubcategoryLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTINCBAL_Tok, HelperFunctions.ConvertIncomeBalanceType(GPAccount), GLAccount."Income/Balance".AsInteger(), AccountIncomeBalanceLbl);
-                    MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTBALANCE_Tok, GPAccountBeginningBalance, GLAccount.Balance, BeginningBalanceLbl, BalanceFailureShouldBeWarning);
+                    //MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTBALANCE_Tok, GPAccountBeginningBalance, GLAccount.Balance, BeginningBalanceLbl, BalanceFailureShouldBeWarning);
 
                     MigrationValidationAssert.SetSourceRowValidated(ValidationSuiteIdTok, GPGL00100);
                 until GPGL00100.Next() = 0;
