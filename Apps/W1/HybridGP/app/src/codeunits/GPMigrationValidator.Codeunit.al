@@ -156,15 +156,12 @@ codeunit 40903 "GP Migration Validator"
                     if not MigrationValidationAssert.ValidateRecordExists(Test_ACCOUNTEXISTS_Tok, GLAccount.Get(GPAccount.AcctNum), StrSubstNo(MissingEntityTok, EntityType)) then
                         continue;
 
-                    //GLAccount.CalcFields(Balance);
-
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTNAME_Tok, GPAccount.Name, GLAccount.Name, AccountNameLbl, true);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTTYPE_Tok, Format(GLAccount."Account Type"::Posting), Format(GLAccount."Account Type"), AccountTypeLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTCATEGORY_Tok, HelperFunctions.ConvertAccountCategory(GPAccount), GLAccount."Account Category".AsInteger(), AccountCategoryLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTDEBCRED_Tok, HelperFunctions.ConvertDebitCreditType(GPAccount), GLAccount."Debit/Credit", AccountDebitCreditLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTSUBCATEGORY_Tok, HelperFunctions.AssignSubAccountCategory(GPAccount), GLAccount."Account Subcategory Entry No.", AccountSubcategoryLbl);
                     MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTINCBAL_Tok, HelperFunctions.ConvertIncomeBalanceType(GPAccount), GLAccount."Income/Balance".AsInteger(), AccountIncomeBalanceLbl);
-                    //MigrationValidationAssert.ValidateAreEqual(Test_ACCOUNTBALANCE_Tok, GPAccountBeginningBalance, GLAccount.Balance, BeginningBalanceLbl, BalanceFailureShouldBeWarning);
 
                     MigrationValidationAssert.SetSourceRowValidated(ValidationSuiteIdTok, GPGL00100);
                 until GPGL00100.Next() = 0;
@@ -1241,7 +1238,6 @@ codeunit 40903 "GP Migration Validator"
         AddTest(Test_ACCOUNTDEBCRED_Tok, 'G/L Account', 'Debit/Credit');
         AddTest(Test_ACCOUNTSUBCATEGORY_Tok, 'G/L Account', 'Account Subcategory');
         AddTest(Test_ACCOUNTINCBAL_Tok, 'G/L Account', 'Income/Balance');
-        AddTest(Test_ACCOUNTBALANCE_Tok, 'G/L Account', 'Balance');
         AddTest(Test_STATACCOUNTEXISTS_Tok, 'Statistical Account', 'Missing Account');
         AddTest(Test_STATACCOUNTNAME_Tok, 'Statistical Account', 'Name');
         AddTest(Test_STATACCOUNTDIM1_Tok, 'Statistical Account', 'Dimension 1');
@@ -1461,7 +1457,6 @@ codeunit 40903 "GP Migration Validator"
         Test_ACCOUNTDEBCRED_Tok: Label 'ACCOUNTDEBCRED', Locked = true;
         Test_ACCOUNTSUBCATEGORY_Tok: Label 'ACCOUNTSUBCATEGORY', Locked = true;
         Test_ACCOUNTINCBAL_Tok: Label 'ACCOUNTINCBAL', Locked = true;
-        Test_ACCOUNTBALANCE_Tok: Label 'ACCOUNTBALANCE', Locked = true;
         Test_STATACCOUNTEXISTS_Tok: Label 'STATACCOUNTEXISTS', Locked = true;
         Test_STATACCOUNTNAME_Tok: Label 'STATACCOUNTNAME', Locked = true;
         Test_STATACCOUNTDIM1_Tok: Label 'STATACCOUNTDIM1', Locked = true;
