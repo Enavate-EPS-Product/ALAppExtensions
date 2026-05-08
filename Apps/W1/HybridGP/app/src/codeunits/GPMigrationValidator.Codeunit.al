@@ -62,7 +62,6 @@ codeunit 40903 "GP Migration Validator"
         GPGLTransactions: Record "GP GLTransactions";
         GPFiscalPeriods: Record "GP Fiscal Periods";
         HelperFunctions: Codeunit "Helper Functions";
-        BalanceFailureShouldBeWarning: Boolean;
         GPAccountNo: Code[20];
         GPAccountBeginningBalance: Decimal;
         AccountFilter: Text;
@@ -71,7 +70,6 @@ codeunit 40903 "GP Migration Validator"
         ValidatedAccountNos: List of [Text];
     begin
         EntityType := GlAccountEntityCaptionLbl;
-        BalanceFailureShouldBeWarning := (TotalUnpostedGLBatchCount > 0);
 
         // GP
         if GPCompanyAdditionalSettings.GetGLModuleEnabled() then begin
@@ -79,7 +77,6 @@ codeunit 40903 "GP Migration Validator"
             GPGL00100.SetFilter(MNACSGMT, '<>%1', '');
             if GPGL00100.FindSet() then
                 repeat
-                    GPAccountBeginningBalance := 0;
                     GPAccountNo := CopyStr(GPGL00100.MNACSGMT.TrimEnd(), 1, MaxStrLen(GPAccountNo));
                     if ValidatedAccountNos.Contains(GPAccountNo) then
                         continue;
